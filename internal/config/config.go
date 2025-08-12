@@ -18,7 +18,7 @@ const (
 // Cryptographic Configuration
 const (
 	SaltSize = 32 // Argon2id salt size
-	KeySize  = 32 // AES-256 key size
+	KeySize  = 64 // AES-256 key size
 )
 
 // File Processing Configuration

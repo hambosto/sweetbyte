@@ -26,14 +26,14 @@ func NewProcessor(key []byte) (*Processor, error) {
 		return nil, fmt.Errorf("encryption key must be at least %d bytes long", config.KeySize)
 	}
 
-	firstCipher, err := cipher.NewAESCipher(key[:config.KeySize])
+	firstCipher, err := cipher.NewAESCipher(key[:32])
 	if err != nil {
 		return nil, fmt.Errorf("failed to create aes cipher: %w", err)
 	}
 
-	secondCipher, err := cipher.NewXChaCha20Cipher(key[:config.KeySize])
+	secondCipher, err := cipher.NewXChaCha20Cipher(key[32:64])
 	if err != nil {
-		return nil, fmt.Errorf("failed to create chacha20 cipher: %w", err)
+		return nil, fmt.Errorf("failed to create chacha20 cipher: %w %d", err, len(key))
 	}
 
 	encoder, err := encoding.NewEncoder(config.DataShards, config.ParityShards)
