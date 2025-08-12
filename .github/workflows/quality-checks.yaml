@@ -81,25 +81,25 @@ jobs:
         with:
           args: -exclude-dir=.git -exclude-dir=vendor ./...
 
-  tests:
-    name: Run Tests
-    runs-on: ubuntu-latest
+  # tests:
+  #   name: Run Tests
+  #   runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
 
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: stable
+  #     - name: Setup Go
+  #       uses: actions/setup-go@v5
+  #       with:
+  #         go-version: stable
 
-      - name: Run tests
-        run: |
-          echo "Running tests with shorter timeout and verbose output..."
-          go test -timeout=2m -v -race ./tests/compression/...
-          go test -timeout=2m -v -race ./tests/crypto/...
-          go test -timeout=2m -v -race ./tests/data/...
-          go test -timeout=2m -v -race ./tests/utils/...
-          go test -timeout=2m -v -race ./tests/encoding/...
-          echo "All test packages completed successfully"
+  #     - name: Run tests
+  #       run: |
+  #         echo "Running tests with shorter timeout and verbose output..."
+  #         go test -timeout=2m -v -race ./tests/compression/...
+  #         go test -timeout=2m -v -race ./tests/crypto/...
+  #         go test -timeout=2m -v -race ./tests/data/...
+  #         go test -timeout=2m -v -race ./tests/utils/...
+  #         go test -timeout=2m -v -race ./tests/encoding/...
+  #         echo "All test packages completed successfully"

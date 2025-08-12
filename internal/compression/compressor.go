@@ -65,11 +65,9 @@ func (c *Compressor) Decompress(data []byte) ([]byte, error) {
 	}
 	defer reader.Close() //nolint:errcheck
 
-	limitReader := io.LimitReader(reader, 10<<20)
-
 	// Read decompressed data
 	var buf bytes.Buffer
-	if _, err := io.Copy(&buf, limitReader); err != nil {
+	if _, err := io.Copy(&buf, io.LimitReader(reader, 10<<20)); err != nil {
 		return nil, errors.ErrDecompressionFailed
 	}
 
