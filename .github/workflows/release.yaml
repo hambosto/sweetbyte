@@ -1,0 +1,105 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build & Release
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - goos: windows
+            goarch: amd64
+          - goos: windows
+            goarch: arm64
+          - goos: linux
+            goarch: amd64
+          - goos: linux
+            goarch: arm64
+          - goos: darwin
+            goarch: amd64
+          - goos: darwin
+            goarch: arm64
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go environment
+        uses: actions/setup-go@v5
+        with:
+          go-version: 'stable'
+          check-latest: true
+
+      - name: Extract version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        if: matrix.goos == 'linux' && matrix.goarch == 'amd64'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.get_version.outputs.VERSION }}
+          name: "${{ steps.get_version.outputs.VERSION }}"
+          generate_release_notes: true
+          make_latest: true
+
+      - name: Build Go binary
+        id: build
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          VERSION: ${{ steps.get_version.outputs.version }}
+        run: |
+          set -euo pipefail
+          FILENAME="sweetbyte-${VERSION}-${GOOS}-${GOARCH}"
+          EXT=""
+          if [[ "$GOOS" == "windows" ]]; then
+            EXT=".exe"
+          fi
+
+          BINARY_NAME="${FILENAME}${EXT}"
+          OUTPUT_DIR=dist/${FILENAME}
+          mkdir -p "$OUTPUT_DIR"
+
+          CGO_ENABLED=0 go build -v -trimpath -ldflags "-extldflags '-static' -s -w" -o "$OUTPUT_DIR/$BINARY_NAME" .
+
+          # Make *nix binaries executable
+          if [[ "$GOOS" != "windows" ]]; then
+            chmod +x "$OUTPUT_DIR/$BINARY_NAME"
+          fi
+
+          # Zip the binary
+          cd dist
+          zip -r "${FILENAME}.zip" "$FILENAME"
+          cd ..
+
+          echo "ASSET_NAME=dist/${FILENAME}.zip" >> "$GITHUB_OUTPUT"
+
+      - name: Generate checksums
+        id: checksum
+        run: |
+          ASSET="${{ steps.build.outputs.ASSET_NAME }}"
+          HASH=$(shasum -a 256 "$ASSET" | cut -d ' ' -f1)
+          FILENAME=$(basename "$ASSET")
+          echo "HASH=$HASH" >> $GITHUB_OUTPUT
+          echo "FILENAME=$FILENAME" >> $GITHUB_OUTPUT
+          echo "Generated checksum: $HASH for $FILENAME"
+
+      - name: Upload to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.build.outputs.ASSET_NAME }}
+          tag_name: ${{ steps.get_version.outputs.VERSION }}
+          make_latest: true
+          append_body: true
+          body: |
+            **${{ matrix.goos }}-${{ matrix.goarch }}:**
+            `sha256(${{ steps.checksum.outputs.FILENAME }}) = ${{ steps.checksum.outputs.HASH }}`
