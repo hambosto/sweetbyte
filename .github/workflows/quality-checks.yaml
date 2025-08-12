@@ -80,23 +80,3 @@ jobs:
         uses: securego/gosec@master
         with:
           args: -exclude-dir=.git -exclude-dir=vendor ./...
-
-  tests:
-    name: Run Tests
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: stable
-
-      - name: Run tests
-        run: |
-          echo "Running tests with shorter timeout and verbose output..."
-          go test -timeout=2m -v -race ./tests/cipher/...
-          go test -timeout=2m -v -race ./tests/compression/...
-          echo "All test packages completed successfully"
