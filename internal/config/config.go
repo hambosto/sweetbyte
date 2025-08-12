@@ -2,9 +2,9 @@ package config
 
 // Application Configuration
 const (
-	AppName       = "hexwarden"
-	AppVersion    = "1.1"
-	FileExtension = ".hex"
+	AppName       = "SweetByte"
+	AppVersion    = "1.0"
+	FileExtension = ".swb"
 )
 
 // Processing Configuration

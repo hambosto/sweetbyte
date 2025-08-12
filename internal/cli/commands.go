@@ -63,7 +63,7 @@ func (c *CLI) createEncryptCommand() *cobra.Command {
 		Use:   "encrypt [flags]",
 		Short: "Encrypt a file",
 		Long:  "Encrypt a file using AES-256-GCM with Reed-Solomon error correction",
-		Example: `  sweetbyte encrypt -i document.txt -o document.txt.hex
+		Example: `  sweetbyte encrypt -i document.txt -o document.txt.swb
   sweetbyte encrypt -i document.txt -p mypassword --delete-source
   sweetbyte encrypt -i document.txt --secure-delete`,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -72,7 +72,7 @@ func (c *CLI) createEncryptCommand() *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&inputFile, "input", "i", "", "Input file to encrypt (required)")
-	cmd.Flags().StringVarP(&outputFile, "output", "o", "", "Output encrypted file (default: input + .hex)")
+	cmd.Flags().StringVarP(&outputFile, "output", "o", "", "Output encrypted file (default: input + .swb)")
 	cmd.Flags().StringVarP(&password, "password", "p", "", "Encryption password (will prompt if not provided)")
 	cmd.Flags().BoolVar(&deleteSource, "delete-source", false, "Delete source file after encryption")
 	cmd.Flags().BoolVar(&secureDelete, "secure-delete", false, "Use secure deletion (slower but unrecoverable)")
@@ -99,16 +99,16 @@ func (c *CLI) createDecryptCommand() *cobra.Command {
 		Use:   "decrypt [flags]",
 		Short: "Decrypt a file",
 		Long:  "Decrypt a file encrypted with sweetbyte",
-		Example: `  sweetbyte decrypt -i document.txt.hex -o document.txt
-  sweetbyte decrypt -i document.txt.hex -p mypassword
-  sweetbyte decrypt -i document.txt.hex --delete-source`,
+		Example: `  sweetbyte decrypt -i document.txt.swb -o document.txt
+  sweetbyte decrypt -i document.txt.swb -p mypassword
+  sweetbyte decrypt -i document.txt.swb --delete-source`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return c.runDecrypt(inputFile, outputFile, password, deleteSource, secureDelete)
 		},
 	}
 
 	cmd.Flags().StringVarP(&inputFile, "input", "i", "", "Input file to decrypt (required)")
-	cmd.Flags().StringVarP(&outputFile, "output", "o", "", "Output decrypted file (default: remove .hex extension)")
+	cmd.Flags().StringVarP(&outputFile, "output", "o", "", "Output decrypted file (default: remove .swb extension)")
 	cmd.Flags().StringVarP(&password, "password", "p", "", "Decryption password (will prompt if not provided)")
 	cmd.Flags().BoolVar(&deleteSource, "delete-source", false, "Delete source file after decryption")
 	cmd.Flags().BoolVar(&secureDelete, "secure-delete", false, "Use secure deletion (slower but unrecoverable)")

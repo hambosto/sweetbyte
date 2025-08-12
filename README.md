@@ -78,7 +78,7 @@ Decryption is the exact reverse of the encryption pipeline, unwrapping each laye
 
 ## 📦 File Format
 
-Encrypted files (`.hex`) have a custom binary structure designed for security and efficiency.
+Encrypted files (`.swb`) have a custom binary structure designed for security and efficiency.
 
 #### Overall Structure
 An encrypted file consists of a fixed-size header followed by a series of variable-length data chunks.
@@ -143,7 +143,7 @@ For scripting and automation, use the `encrypt` and `decrypt` commands.
 **To Encrypt a File:**
 ```sh
 # Basic encryption (will prompt for password)
-sweetbyte encrypt -i my_document.txt -o my_document.hex
+sweetbyte encrypt -i my_document.txt -o my_document.swb
 
 # Provide a password and delete the original file after encryption
 sweetbyte encrypt -i my_document.txt -p "my-secret-password" --delete-source
@@ -152,10 +152,10 @@ sweetbyte encrypt -i my_document.txt -p "my-secret-password" --delete-source
 **To Decrypt a File:**
 ```sh
 # Basic decryption (will prompt for password)
-sweetbyte decrypt -i my_document.hex -o my_document.txt
+sweetbyte decrypt -i my_document.swb -o my_document.txt
 
 # Provide a password and securely delete the encrypted source file
-sweetbyte decrypt -i my_document.hex -p "my-secret-password" --delete-source --secure-delete
+sweetbyte decrypt -i my_document.swb -p "my-secret-password" --delete-source --secure-delete
 ```
 
 ## 🏗️ Building from Source
