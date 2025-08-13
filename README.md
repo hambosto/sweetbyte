@@ -92,7 +92,7 @@ The header contains all the metadata required to decrypt the file.
 
 | Field           | Size (bytes) | Description                                           |
 | --------------- | ------------ | ----------------------------------------------------- |
-| **Magic Bytes** | 4            | `HWX2` - Identifies the file as a SweetByte file.     |
+| **Magic Bytes** | 4            | `SWX3` - Identifies the file as a SweetByte file.     |
 | **Salt**        | 32           | A unique, random salt for the Argon2id key derivation.|
 | **Original Size**| 8            | The size of the original, unencrypted file.           |
 | **Nonce**       | 16           | A unique nonce for the AEAD encryption.               |
