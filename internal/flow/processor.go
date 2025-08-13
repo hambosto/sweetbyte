@@ -62,20 +62,20 @@ func NewProcessor(key []byte) (*Processor, error) {
 
 // Encrypt compresses, pads, encrypts, and encodes the input data
 func (p *Processor) Encrypt(data []byte) ([]byte, error) {
-	// Step 1: First Pad the data
-	padded, err := p.padder.Pad(data)
-	if err != nil {
-		return nil, fmt.Errorf("padding failed: %w", err)
-	}
-
-	// Step 2: Compress the Padded data
-	compressed, err := p.compressor.Compress(padded)
+	// Step 1: Compress the Padded data
+	compressed, err := p.compressor.Compress(data)
 	if err != nil {
 		return nil, fmt.Errorf("compression failed: %w", err)
 	}
 
+	// Step 2: First Pad the data
+	padded, err := p.padder.Pad(compressed)
+	if err != nil {
+		return nil, fmt.Errorf("padding failed: %w", err)
+	}
+
 	// Step 3: First encryption with AES
-	firstEncrypted, err := p.firstCipher.Encrypt(compressed)
+	firstEncrypted, err := p.firstCipher.Encrypt(padded)
 	if err != nil {
 		return nil, fmt.Errorf("first encryption failed: %w", err)
 	}
@@ -115,17 +115,17 @@ func (p *Processor) Decrypt(data []byte) ([]byte, error) {
 		return nil, fmt.Errorf("second decryption failed: %w", err)
 	}
 
-	// Step 4: Decompress the decrypted data
-	decompressed, err := p.compressor.Decompress(secondDecrypted)
-	if err != nil {
-		return nil, fmt.Errorf("decompression failed: %w", err)
-	}
-
-	// Step 5: Remove padding from decompressed data
-	unpadded, err := p.padder.Unpad(decompressed)
+	// Step 4: Remove padding from decompressed data
+	unpadded, err := p.padder.Unpad(secondDecrypted)
 	if err != nil {
 		return nil, fmt.Errorf("unpadding failed: %w", err)
 	}
 
-	return unpadded, nil
+	// Step 5: Decompress the decrypted data
+	decompressed, err := p.compressor.Decompress(unpadded)
+	if err != nil {
+		return nil, fmt.Errorf("decompression failed: %w", err)
+	}
+
+	return decompressed, nil
 }

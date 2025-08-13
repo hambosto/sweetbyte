@@ -59,15 +59,15 @@ SweetByte was built with three core principles in mind:
 SweetByte processes data through a sophisticated pipeline to ensure confidentiality, integrity, and resilience.
 
 ```
-Original Data ➔ [Padding] ➔ [Compression] ➔ [AES Encrypt] ➔ [XChaCha20 Encrypt] ➔ [Reed-Solomon Encode] ➔ Encrypted File
+Original Data ➔ [Compression] ➔ [Padding] ➔ [AES Encrypt] ➔ [XChaCha20 Encrypt] ➔ [Reed-Solomon Encode] ➔ Encrypted File
 ```
 
 #### Encryption Flow
 When encrypting a file, the data passes through the following stages:
 
-1.  **PKCS7 Padding:** The raw data is padded to a specific block size, a prerequisite for block ciphers.
-2.  **Zlib Compression:** The padded data is compressed to reduce its size.
-3.  **AES-256-GCM Encryption:** The compressed data is encrypted with AES, the industry standard.
+1.  **Zlib Compression:** The raw data is compressed to reduce its size.
+2.  **PKCS7 Padding:** The compressed data is padded to a specific block size, a prerequisite for block ciphers.
+3.  **AES-256-GCM Encryption:** The padded data is encrypted with AES, the industry standard.
 4.  **XChaCha20-Poly1305 Encryption:** The AES-encrypted ciphertext is then encrypted *again* with XChaCha20, adding a second, distinct layer of security.
 5.  **Reed-Solomon Encoding:** The final ciphertext is encoded with error correction data, making it resilient to corruption.
 

@@ -10,7 +10,7 @@ var (
 	ErrInvalidKey = errors.New("invalid encryption key")
 
 	// ErrInvalidKeySize indicates the key size is not supported by AES
-	ErrInvalidKeySize = errors.New("AES key must be 16, 24, or 32 bytes")
+	ErrInvalidKeySize = errors.New("key must be 32 bytes long")
 
 	// ErrEmptyPlaintext indicates plaintext data is empty or nil
 	ErrEmptyPlaintext = errors.New("plaintext cannot be empty")
