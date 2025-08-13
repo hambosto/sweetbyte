@@ -37,24 +37,9 @@ func (t *Terminal) PrintBanner() {
 	fmt.Println(banner)
 }
 
-// PrintSuccess prints a success message with formatting
-func (t *Terminal) PrintSuccess(message string) {
-	fmt.Printf("✅ %s\n", message)
-}
-
 // PrintError prints an error message with formatting
 func (t *Terminal) PrintError(message string) {
 	fmt.Printf("❌ %s\n", message)
-}
-
-// PrintWarning prints a warning message with formatting
-func (t *Terminal) PrintWarning(message string) {
-	fmt.Printf("⚠️  %s\n", message)
-}
-
-// PrintInfo prints an info message with formatting
-func (t *Terminal) PrintInfo(message string) {
-	fmt.Printf("ℹ️  %s\n", message)
 }
 
 // Cleanup performs terminal cleanup operations
