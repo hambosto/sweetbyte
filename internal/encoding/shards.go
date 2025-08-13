@@ -22,8 +22,15 @@ func NewShards(dataShards, parityShards int) *Shards {
 
 // Split splits input data into shards for encoding
 func (s *Shards) Split(data []byte) [][]byte {
-	shardSize := s.calculateShardSize(len(data))
-	shards := s.createEmptyShards(shardSize)
+	// calculates the size each shard should have
+	// Ensures all data fits by rounding up division
+	shardSize := (len(data) + s.dataShards - 1) / s.dataShards
+
+	// create empty shards creates a slice of empty byte slices for all shards
+	shards := make([][]byte, s.totalShards)
+	for i := range shards {
+		shards[i] = make([]byte, shardSize)
+	}
 
 	// Distribute data bytes across data shards
 	for i, b := range data {
@@ -83,19 +90,4 @@ func (s *Shards) Extract(shards [][]byte) ([]byte, error) {
 	}
 
 	return combined, nil
-}
-
-// calculateShardSize calculates the size each shard should have
-// Ensures all data fits by rounding up division
-func (s *Shards) calculateShardSize(dataLen int) int {
-	return (dataLen + s.dataShards - 1) / s.dataShards
-}
-
-// createEmptyShards creates a slice of empty byte slices for all shards
-func (s *Shards) createEmptyShards(shardSize int) [][]byte {
-	shards := make([][]byte, s.totalShards)
-	for i := range shards {
-		shards[i] = make([]byte, shardSize)
-	}
-	return shards
 }

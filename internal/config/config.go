@@ -43,7 +43,7 @@ const (
 
 // Header Format Constants
 const (
-	MagicBytes        = "HWX2" // File type identifier
+	MagicBytes        = "SWX3" // File type identifier
 	SaltSizeBytes     = 32     // Salt for KDF
 	OriginalSizeBytes = 8      // Size of original plaintext
 	NonceSizeBytes    = 16     // Nonce for AEAD encryption
