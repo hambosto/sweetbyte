@@ -2,13 +2,11 @@ package cli
 
 import (
 	"fmt"
-	"syscall"
 
-	"github.com/hambosto/sweetbyte/internal/errors"
 	"github.com/hambosto/sweetbyte/internal/files"
 	"github.com/hambosto/sweetbyte/internal/operations"
 	"github.com/hambosto/sweetbyte/internal/types"
-	"golang.org/x/term"
+	"github.com/hambosto/sweetbyte/internal/ui"
 )
 
 // CLIProcessor handles CLI-based encryption and decryption operations
@@ -16,6 +14,7 @@ type CLIProcessor struct {
 	encryptor   *operations.Encryptor
 	decryptor   *operations.Decryptor
 	fileManager *files.Manager
+	prompt      *ui.Prompt
 }
 
 // NewCLIProcessor creates a new CLI processor instance
@@ -24,6 +23,7 @@ func NewCLIProcessor() *CLIProcessor {
 		encryptor:   operations.NewEncryptor(),
 		decryptor:   operations.NewDecryptor(),
 		fileManager: files.NewManager(),
+		prompt:      ui.NewPrompt(),
 	}
 }
 
@@ -32,18 +32,9 @@ func (p *CLIProcessor) Encrypt(inputFile, outputFile, password string, deleteSou
 	// Get password if not provided
 	if password == "" {
 		var err error
-		password, err = p.promptPassword("Enter encryption password: ")
+		password, err = p.prompt.GetEncryptionPassword()
 		if err != nil {
-			return fmt.Errorf("failed to get password: %w", err)
-		}
-
-		confirmPassword, err := p.promptPassword("Confirm password: ")
-		if err != nil {
-			return fmt.Errorf("failed to confirm password: %w", err)
-		}
-
-		if password != confirmPassword {
-			return errors.ErrPasswordMismatch
+			return err
 		}
 	}
 
@@ -78,7 +69,7 @@ func (p *CLIProcessor) Decrypt(inputFile, outputFile, password string, deleteSou
 	// Get password if not provided
 	if password == "" {
 		var err error
-		password, err = p.promptPassword("Enter decryption password: ")
+		password, err = p.prompt.GetDecryptionPassword()
 		if err != nil {
 			return fmt.Errorf("failed to get password: %w", err)
 		}
@@ -107,15 +98,4 @@ func (p *CLIProcessor) Decrypt(inputFile, outputFile, password string, deleteSou
 
 	fmt.Printf("✓ File decrypted successfully: %s\n", outputFile)
 	return nil
-}
-
-// promptPassword prompts for a password without echoing to terminal
-func (p *CLIProcessor) promptPassword(prompt string) (string, error) {
-	fmt.Print(prompt)
-	bytePassword, err := term.ReadPassword(int(syscall.Stdin))
-	if err != nil {
-		return "", err
-	}
-	fmt.Println() // Add newline after password input
-	return string(bytePassword), nil
 }
