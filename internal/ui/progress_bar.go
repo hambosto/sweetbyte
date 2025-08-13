@@ -19,6 +19,7 @@ func NewProgressBar(totalSize int64, description string) *ProgressBar {
 		progressbar.OptionShowCount(),
 		progressbar.OptionFullWidth(),
 		progressbar.OptionShowBytes(true),
+		progressbar.OptionSetTheme(progressbar.ThemeUnicode),
 	)
 
 	return &ProgressBar{
