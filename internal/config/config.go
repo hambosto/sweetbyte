@@ -17,8 +17,9 @@ const (
 
 // Cryptographic Configuration
 const (
-	SaltSize = 32 // Argon2id salt size
-	KeySize  = 64 // AES-256 key size
+	SaltSize          = 32 // Argon2id salt size
+	MasterKeySize     = 64 // AES-256 key size
+	EncryptionKeySize = 32 // AES-256 key size
 )
 
 // File Processing Configuration
@@ -36,9 +37,9 @@ var (
 
 // Argon2id Parameters
 const (
-	ArgonTime    uint32 = 3         // Time cost
-	ArgonMemory  uint32 = 64 * 1024 // Memory cost (64MB)
-	ArgonThreads uint8  = 4         // Parallelism
+	ArgonTime    uint32 = 4          // Time cost
+	ArgonMemory  uint32 = 128 * 1024 // Memory cost (128MB)
+	ArgonThreads uint8  = 4          // Parallelism
 )
 
 // Header Format Constants

@@ -18,7 +18,7 @@ type AESCipher struct {
 // NewAESCipher creates a new AES cipher with the given key
 // The key must be 16, 24, or 32 bytes for AES-128, AES-192, or AES-256
 func NewAESCipher(key []byte) (*AESCipher, error) {
-	if len(key) != config.KeySize/2 {
+	if len(key) != config.EncryptionKeySize {
 		return nil, errors.ErrInvalidKeySize
 	}
 

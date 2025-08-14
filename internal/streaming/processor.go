@@ -68,7 +68,7 @@ func NewStreamProcessor(config StreamConfig) (*StreamProcessor, error) {
 
 // Validate validates the stream configuration
 func (c *StreamConfig) Validate() error {
-	if len(c.Key) != config.KeySize {
+	if len(c.Key) != config.MasterKeySize {
 		return errors.ErrInvalidKey
 	}
 	return nil

@@ -26,7 +26,7 @@ func Hash(password, salt []byte) ([]byte, error) {
 		config.ArgonTime,
 		config.ArgonMemory,
 		config.ArgonThreads,
-		config.KeySize,
+		config.MasterKeySize,
 	)
 
 	return key, nil

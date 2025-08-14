@@ -22,8 +22,8 @@ type Processor struct {
 
 // NewProcessor creates a new processor with the provided encryption key
 func NewProcessor(key []byte) (*Processor, error) {
-	if len(key) < config.KeySize {
-		return nil, fmt.Errorf("encryption key must be at least %d bytes long", config.KeySize)
+	if len(key) < config.MasterKeySize {
+		return nil, fmt.Errorf("encryption key must be at least %d bytes long", config.MasterKeySize)
 	}
 
 	firstCipher, err := cipher.NewAESCipher(key[:32])
