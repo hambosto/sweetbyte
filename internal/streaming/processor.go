@@ -11,14 +11,14 @@ import (
 
 	"github.com/hambosto/sweetbyte/internal/config"
 	"github.com/hambosto/sweetbyte/internal/errors"
-	"github.com/hambosto/sweetbyte/internal/flow"
+	"github.com/hambosto/sweetbyte/internal/processor"
 	"github.com/hambosto/sweetbyte/internal/types"
 	"github.com/hambosto/sweetbyte/internal/ui"
 )
 
 // StreamProcessor handles concurrent encryption/decryption streaming
 type StreamProcessor struct {
-	processor *flow.Processor
+	processor *processor.Processor
 	bar       *ui.ProgressBar
 	config    StreamConfig
 	pool      *Pool
@@ -47,7 +47,7 @@ func NewStreamProcessor(config StreamConfig) (*StreamProcessor, error) {
 		return nil, err
 	}
 
-	processor, err := flow.NewProcessor(config.Key)
+	processor, err := processor.NewProcessor(config.Key)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create processor: %w", err)
 	}
