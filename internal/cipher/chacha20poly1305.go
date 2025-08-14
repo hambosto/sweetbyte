@@ -39,7 +39,7 @@ func (c *XChaCha20Cipher) Encrypt(plaintext []byte) ([]byte, error) {
 		return nil, errors.ErrEmptyPlaintext
 	}
 
-	nonce := make([]byte, c.aead.NonceSize())
+	nonce := make([]byte, chacha20poly1305.NonceSizeX)
 	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
 		return nil, err
 	}
