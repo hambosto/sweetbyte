@@ -74,7 +74,7 @@ func (d *Decryptor) DecryptFile(srcPath, destPath, password string) error {
 	defer destFile.Close() //nolint:errcheck
 
 	// Create stream processor for decryption
-	config := streaming.Config{
+	config := streaming.StreamConfig{
 		Key:         key,
 		Processing:  options.Decryption,
 		Concurrency: config.MaxConcurrency,

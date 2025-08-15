@@ -71,7 +71,7 @@ func (e *Encryptor) EncryptFile(srcPath, destPath, password string) error {
 	}
 
 	// Create stream processor for encryption
-	config := streaming.Config{
+	config := streaming.StreamConfig{
 		Key:         key,
 		Processing:  options.Encryption,
 		Concurrency: config.MaxConcurrency,

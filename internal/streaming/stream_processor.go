@@ -4,40 +4,11 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"runtime"
 	"sync"
 
-	"github.com/hambosto/sweetbyte/internal/config"
 	"github.com/hambosto/sweetbyte/internal/errors"
-	"github.com/hambosto/sweetbyte/internal/options"
 	"github.com/hambosto/sweetbyte/internal/ui"
 )
-
-// Config holds stream processing configuration
-type Config struct {
-	Key         []byte
-	Processing  options.Processing
-	Concurrency int
-	ChunkSize   int
-}
-
-// Validate validates the stream configuration
-func (c *Config) Validate() error {
-	if len(c.Key) != config.MasterKeySize {
-		return errors.ErrInvalidKey
-	}
-	return nil
-}
-
-// ApplyDefaults applies default values to unset configuration fields
-func (c *Config) ApplyDefaults() {
-	if c.Concurrency <= 0 {
-		c.Concurrency = runtime.NumCPU()
-	}
-	if c.ChunkSize <= 0 {
-		c.ChunkSize = config.DefaultChunkSize
-	}
-}
 
 // Task represents a processing task for concurrent operations.
 type Task struct {
@@ -55,7 +26,7 @@ type TaskResult struct {
 
 // streamProcessor is the main streaming processor implementation
 type streamProcessor struct {
-	config        Config
+	streamConfig  StreamConfig
 	taskProcessor TaskProcessor
 	reader        ChunkReader
 	writer        ChunkWriter
@@ -63,7 +34,7 @@ type streamProcessor struct {
 }
 
 // NewStreamProcessor creates a new streaming processor
-func NewStreamProcessor(config Config) (Processor, error) {
+func NewStreamProcessor(config StreamConfig) (Processor, error) {
 	if err := config.Validate(); err != nil {
 		return nil, err
 	}
@@ -76,7 +47,7 @@ func NewStreamProcessor(config Config) (Processor, error) {
 	}
 
 	return &streamProcessor{
-		config:        config,
+		streamConfig:  config,
 		taskProcessor: taskProcessor,
 		reader:        NewChunkReader(config.Processing, config.ChunkSize),
 		pool:          NewWorkerPool(taskProcessor, config.Concurrency),
@@ -90,8 +61,8 @@ func (s *streamProcessor) Process(ctx context.Context, input io.Reader, output i
 	}
 
 	// Create progress bar
-	bar := ui.NewProgressBar(totalSize, s.config.Processing.String())
-	s.writer = NewChunkWriter(s.config.Processing, bar)
+	bar := ui.NewProgressBar(totalSize, s.streamConfig.Processing.String())
+	s.writer = NewChunkWriter(s.streamConfig.Processing, bar)
 
 	return s.runPipeline(ctx, input, output)
 }
