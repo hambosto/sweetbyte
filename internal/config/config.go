@@ -47,11 +47,10 @@ const (
 	MagicBytes        = "SWX3" // File type identifier
 	SaltSizeBytes     = 32     // Salt for KDF
 	OriginalSizeBytes = 8      // Size of original plaintext
-	NonceSizeBytes    = 16     // Nonce for AEAD encryption
 	IntegritySize     = 32     // SHA-256 hash size
 	AuthSize          = 32     // HMAC-SHA256 tag size
 	ChecksumSize      = 4      // CRC32 checksum size
-	TotalHeaderSize   = 128    // Fixed header size
+	TotalHeaderSize   = 112    // Fixed header size
 )
 
 // Stream Processing Constants

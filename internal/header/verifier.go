@@ -70,5 +70,4 @@ func (v *Verifier) writeCommonFields(w io.Writer) {
 	_, _ = w.Write([]byte(config.MagicBytes))
 	_, _ = w.Write(v.header.metadata.salt)
 	_, _ = w.Write(Uint64ToBytes(v.header.metadata.originalSize))
-	_, _ = w.Write(v.header.metadata.nonce)
 }

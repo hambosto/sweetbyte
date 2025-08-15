@@ -7,7 +7,6 @@ import (
 
 	"github.com/hambosto/sweetbyte/internal/config"
 	"github.com/hambosto/sweetbyte/internal/errors"
-	"github.com/hambosto/sweetbyte/internal/keys"
 )
 
 // Header represents the metadata prepended to encrypted files.
@@ -24,7 +23,6 @@ type Header struct {
 type Metadata struct {
 	salt         []byte
 	originalSize uint64
-	nonce        []byte
 }
 
 // Protection contains cryptographic verification data
@@ -39,15 +37,9 @@ func New(salt []byte, size uint64, key []byte) (*Header, error) {
 		return nil, err
 	}
 
-	nonce, err := keys.GetRandomSalt(config.NonceSizeBytes)
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate nonce: %w", err)
-	}
-
 	metadata := &Metadata{
 		salt:         CloneBytes(salt),
 		originalSize: size,
-		nonce:        nonce,
 	}
 
 	header := &Header{
@@ -82,11 +74,6 @@ func (h *Header) Salt() []byte {
 // OriginalSize returns the stored original plaintext size
 func (h *Header) OriginalSize() uint64 {
 	return h.metadata.originalSize
-}
-
-// Nonce returns a copy of the header's nonce
-func (h *Header) Nonce() []byte {
-	return CloneBytes(h.metadata.nonce)
 }
 
 // Verify authenticates the header using the provided key

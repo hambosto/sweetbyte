@@ -52,10 +52,6 @@ func (s *Serializer) validate() error {
 			len(h.metadata.salt), config.SaltSizeBytes,
 		},
 		{
-			len(h.metadata.nonce) != config.NonceSizeBytes, errors.ErrInvalidNonce,
-			len(h.metadata.nonce), config.NonceSizeBytes,
-		},
-		{
 			len(h.protection.integrityHash) != config.IntegritySize, errors.ErrInvalidIntegrity,
 			len(h.protection.integrityHash), config.IntegritySize,
 		},
@@ -82,7 +78,6 @@ func (s *Serializer) marshal() []byte {
 	buf = append(buf, []byte(config.MagicBytes)...)
 	buf = append(buf, h.metadata.salt...)
 	buf = append(buf, Uint64ToBytes(h.metadata.originalSize)...)
-	buf = append(buf, h.metadata.nonce...)
 	buf = append(buf, h.protection.integrityHash...)
 	buf = append(buf, h.protection.authTag...)
 

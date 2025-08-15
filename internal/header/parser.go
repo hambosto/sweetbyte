@@ -68,7 +68,6 @@ func (p *Parser) verifyMagic() error {
 func (p *Parser) parseMetadata(m *Metadata) error {
 	m.salt = CloneBytes(p.readBytes(config.SaltSizeBytes))
 	m.originalSize = p.readUint64()
-	m.nonce = CloneBytes(p.readBytes(config.NonceSizeBytes))
 	return nil
 }
 

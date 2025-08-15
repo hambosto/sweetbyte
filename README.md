@@ -154,7 +154,6 @@ The header contains all the metadata required to decrypt the file.
 | **Magic Bytes** | 4            | `SWX3` - Identifies the file as a SweetByte file.     |
 | **Salt**        | 32           | A unique, random salt for the Argon2id key derivation.|
 | **Original Size**| 8            | The size of the original, unencrypted file.           |
-| **Nonce**       | 16           | A unique nonce for the AEAD encryption.               |
 | **Integrity Hash**| 32           | A SHA-256 hash to verify header structural integrity. |
 | **Auth Tag**    | 32           | An HMAC-SHA256 tag to authenticate the header.        |
 | **Checksum**    | 4            | A CRC32 checksum to detect accidental corruption.     |
