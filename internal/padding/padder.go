@@ -4,24 +4,24 @@ import (
 	"fmt"
 )
 
-// Padder handles PKCS7 padding and unpadding operations
-type Padder struct {
+// PKCS7 handles PKCS7 padding and unpadding operations
+type PKCS7 struct {
 	blockSize int
 }
 
-// NewPadder creates a new padder with the specified block size
-func NewPadder(blockSize int) (*Padder, error) {
+// NewPKCS7 creates a new PKCS7 with the specified block size
+func NewPKCS7(blockSize int) (*PKCS7, error) {
 	if blockSize <= 0 || blockSize > 255 {
 		return nil, fmt.Errorf("padding failed: invalid block size %d, must be between 1 and 255", blockSize)
 	}
 
-	return &Padder{
+	return &PKCS7{
 		blockSize: blockSize,
 	}, nil
 }
 
 // Pad applies PKCS7 padding to the input data
-func (p *Padder) Pad(data []byte) ([]byte, error) {
+func (p *PKCS7) Pad(data []byte) ([]byte, error) {
 	if data == nil {
 		return nil, fmt.Errorf("padding failed: data is nil")
 	}
@@ -37,7 +37,7 @@ func (p *Padder) Pad(data []byte) ([]byte, error) {
 }
 
 // Unpad removes PKCS7 padding from the input data
-func (p *Padder) Unpad(data []byte) ([]byte, error) {
+func (p *PKCS7) Unpad(data []byte) ([]byte, error) {
 	if len(data) == 0 {
 		return nil, fmt.Errorf("unpadding failed: empty data")
 	}

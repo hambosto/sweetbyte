@@ -16,7 +16,7 @@ type Processor struct {
 	secondCipher *cipher.XChaCha20Cipher
 	encoder      *encoding.Encoder
 	compressor   *compression.Compressor
-	padder       *padding.Padder
+	padding      *padding.PKCS7
 }
 
 // NewProcessor creates a new processor with the provided encryption key
@@ -45,9 +45,9 @@ func NewProcessor(key []byte) (*Processor, error) {
 		return nil, fmt.Errorf("failed to create compressor: %w", err)
 	}
 
-	padder, err := padding.NewPadder(config.PaddingSize)
+	padder, err := padding.NewPKCS7(config.PaddingSize)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create padder: %w", err)
+		return nil, fmt.Errorf("failed to create pkcs7: %w", err)
 	}
 
 	return &Processor{
@@ -55,7 +55,7 @@ func NewProcessor(key []byte) (*Processor, error) {
 		secondCipher: secondCipher,
 		encoder:      encoder,
 		compressor:   compressor,
-		padder:       padder,
+		padding:      padder,
 	}, nil
 }
 
@@ -68,7 +68,7 @@ func (p *Processor) Encrypt(data []byte) ([]byte, error) {
 	}
 
 	// Step 2: First Pad the data
-	padded, err := p.padder.Pad(compressed)
+	padded, err := p.padding.Pad(compressed)
 	if err != nil {
 		return nil, fmt.Errorf("padding failed: %w", err)
 	}
@@ -115,7 +115,7 @@ func (p *Processor) Decrypt(data []byte) ([]byte, error) {
 	}
 
 	// Step 4: Remove padding from decompressed data
-	unpadded, err := p.padder.Unpad(secondDecrypted)
+	unpadded, err := p.padding.Unpad(secondDecrypted)
 	if err != nil {
 		return nil, fmt.Errorf("unpadding failed: %w", err)
 	}
