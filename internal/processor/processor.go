@@ -16,7 +16,7 @@ type Processor struct {
 	secondCipher *cipher.XChaCha20Cipher
 	encoder      *encoding.Encoder
 	compressor   *compression.Compressor
-	padding      *padding.PKCS7
+	padding      *padding.Padding
 }
 
 // NewProcessor creates a new processor with the provided encryption key
@@ -45,7 +45,7 @@ func NewProcessor(key []byte) (*Processor, error) {
 		return nil, fmt.Errorf("failed to create compressor: %w", err)
 	}
 
-	padder, err := padding.NewPKCS7(config.PaddingSize)
+	padder, err := padding.NewPadding(config.PaddingSize)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create pkcs7: %w", err)
 	}
