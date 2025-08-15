@@ -61,9 +61,8 @@ const (
 
 // Reed-Solomon Encoding Configuration
 const (
-	DataShards   = 4       // Number of data shards
-	ParityShards = 10      // Number of parity shards for error correction
-	MaxDataLen   = 1 << 30 // Maximum data length (1GB)
+	DataShards   = 4  // Number of data shards
+	ParityShards = 10 // Number of parity shards for error correction
 )
 
 // Padding Configuration

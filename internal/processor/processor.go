@@ -8,7 +8,6 @@ import (
 	"github.com/hambosto/sweetbyte/internal/config"
 	"github.com/hambosto/sweetbyte/internal/encoding"
 	"github.com/hambosto/sweetbyte/internal/padding"
-	"github.com/hambosto/sweetbyte/internal/types"
 )
 
 // Processor handles encryption/decryption operations with compression, padding, and encoding
@@ -41,7 +40,7 @@ func NewProcessor(key []byte) (*Processor, error) {
 		return nil, fmt.Errorf("failed to create encoder: %w", err)
 	}
 
-	compressor, err := compression.NewCompressor(types.LevelBestSpeed)
+	compressor, err := compression.NewCompressor(compression.LevelBestCompression)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create compressor: %w", err)
 	}

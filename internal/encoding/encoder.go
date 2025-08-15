@@ -3,9 +3,12 @@ package encoding
 import (
 	"fmt"
 
-	"github.com/hambosto/sweetbyte/internal/config"
-	"github.com/hambosto/sweetbyte/internal/errors"
 	"github.com/klauspost/reedsolomon"
+)
+
+// Reed-Solomon Encoding Configuration
+const (
+	MaxDataLen = 1 << 30 // Maximum data length (1GB)
 )
 
 // Encoder handles Reed-Solomon encoding and decoding operations
@@ -19,13 +22,13 @@ type Encoder struct {
 // NewEncoder creates a new Reed-Solomon encoder with the specified number of data and parity shards
 func NewEncoder(dataShards, parityShards int) (*Encoder, error) {
 	if dataShards <= 0 {
-		return nil, fmt.Errorf("%w: data shards must be positive", errors.ErrEncodingFailed)
+		return nil, fmt.Errorf("encoder failed: data shards must be positive")
 	}
 	if parityShards <= 0 {
-		return nil, fmt.Errorf("%w: parity shards must be positive", errors.ErrEncodingFailed)
+		return nil, fmt.Errorf("encoder failed: parity shards must be positive")
 	}
 	if dataShards+parityShards > 255 {
-		return nil, fmt.Errorf("%w: total shards cannot exceed 255", errors.ErrEncodingFailed)
+		return nil, fmt.Errorf("encoder failed: total shards cannot exceed 255")
 	}
 
 	enc, err := reedsolomon.New(dataShards, parityShards)
@@ -44,11 +47,10 @@ func NewEncoder(dataShards, parityShards int) (*Encoder, error) {
 // Encode encodes the input data using Reed-Solomon encoding
 func (e *Encoder) Encode(data []byte) ([]byte, error) {
 	if len(data) == 0 {
-		return nil, fmt.Errorf("%w: input data cannot be empty", errors.ErrEncodingFailed)
+		return nil, fmt.Errorf("encoding failed: input data cannot be empty")
 	}
-	if len(data) > config.MaxDataLen {
-		return nil, fmt.Errorf("%w: data size %d exceeds maximum %d bytes",
-			errors.ErrEncodingFailed, len(data), config.MaxDataLen)
+	if len(data) > MaxDataLen {
+		return nil, fmt.Errorf("encoding failed: data size %d exceeds maximum %d bytes", len(data), MaxDataLen)
 	}
 
 	shards := e.shards.Split(data)
@@ -64,11 +66,10 @@ func (e *Encoder) Decode(encoded []byte) ([]byte, error) {
 	totalShards := e.dataShards + e.parityShards
 
 	if len(encoded) == 0 {
-		return nil, fmt.Errorf("%w: encoded data cannot be empty", errors.ErrDecodingFailed)
+		return nil, fmt.Errorf("decoding failed: encoded data cannot be empty")
 	}
 	if len(encoded)%totalShards != 0 {
-		return nil, fmt.Errorf("%w: encoded data length %d not divisible by total shards %d",
-			errors.ErrDecodingFailed, len(encoded), totalShards)
+		return nil, fmt.Errorf("decoding failed: encoded data length %d not divisible by total shards %d", len(encoded), totalShards)
 	}
 
 	shards := e.shards.SplitEncoded(encoded)
@@ -77,19 +78,4 @@ func (e *Encoder) Decode(encoded []byte) ([]byte, error) {
 	}
 
 	return e.shards.Extract(shards)
-}
-
-// DataShards returns the number of data shards
-func (e *Encoder) DataShards() int {
-	return e.dataShards
-}
-
-// ParityShards returns the number of parity shards
-func (e *Encoder) ParityShards() int {
-	return e.parityShards
-}
-
-// TotalShards returns the total number of shards
-func (e *Encoder) TotalShards() int {
-	return e.dataShards + e.parityShards
 }

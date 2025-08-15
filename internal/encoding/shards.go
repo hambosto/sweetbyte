@@ -1,7 +1,7 @@
 package encoding
 
 import (
-	"github.com/hambosto/sweetbyte/internal/errors"
+	"fmt"
 )
 
 // Shards handles the splitting and combining of data shards
@@ -78,7 +78,7 @@ func (s *Shards) Combine(shards [][]byte) []byte {
 // Extract extracts the original data from the reconstructed data shards
 func (s *Shards) Extract(shards [][]byte) ([]byte, error) {
 	if len(shards) < s.dataShards {
-		return nil, errors.ErrDecodingFailed
+		return nil, fmt.Errorf("decoding failed: insufficient shards, have %d but need at least %d data shards", len(shards), s.dataShards)
 	}
 
 	shardSize := len(shards[0])

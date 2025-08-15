@@ -1,7 +1,7 @@
 package padding
 
 import (
-	"github.com/hambosto/sweetbyte/internal/errors"
+	"fmt"
 )
 
 // Padder handles PKCS7 padding and unpadding operations
@@ -12,7 +12,7 @@ type Padder struct {
 // NewPadder creates a new padder with the specified block size
 func NewPadder(blockSize int) (*Padder, error) {
 	if blockSize <= 0 || blockSize > 255 {
-		return nil, errors.ErrPaddingFailed
+		return nil, fmt.Errorf("padding failed: invalid block size %d, must be between 1 and 255", blockSize)
 	}
 
 	return &Padder{
@@ -23,7 +23,7 @@ func NewPadder(blockSize int) (*Padder, error) {
 // Pad applies PKCS7 padding to the input data
 func (p *Padder) Pad(data []byte) ([]byte, error) {
 	if data == nil {
-		return nil, errors.ErrPaddingFailed
+		return nil, fmt.Errorf("padding failed: data is nil")
 	}
 
 	padding := p.blockSize - (len(data) % p.blockSize)
@@ -39,27 +39,27 @@ func (p *Padder) Pad(data []byte) ([]byte, error) {
 // Unpad removes PKCS7 padding from the input data
 func (p *Padder) Unpad(data []byte) ([]byte, error) {
 	if len(data) == 0 {
-		return nil, errors.ErrUnpaddingFailed
+		return nil, fmt.Errorf("unpadding failed: empty data")
 	}
 
 	if len(data)%p.blockSize != 0 {
-		return nil, errors.ErrUnpaddingFailed
+		return nil, fmt.Errorf("unpadding failed: data length %d is not multiple of block size %d", len(data), p.blockSize)
 	}
 
 	padding := int(data[len(data)-1])
 
 	if padding == 0 || padding > p.blockSize {
-		return nil, errors.ErrUnpaddingFailed
+		return nil, fmt.Errorf("unpadding failed: invalid padding value %d, must be between 1 and %d", padding, p.blockSize)
 	}
 
 	if padding > len(data) {
-		return nil, errors.ErrUnpaddingFailed
+		return nil, fmt.Errorf("unpadding failed: padding value %d exceeds data length %d", padding, len(data))
 	}
 
 	// Verify padding bytes
 	for i := len(data) - padding; i < len(data); i++ {
 		if data[i] != byte(padding) {
-			return nil, errors.ErrUnpaddingFailed
+			return nil, fmt.Errorf("unpadding failed: invalid padding byte at position %d, expected %d got %d", i, padding, data[i])
 		}
 	}
 
