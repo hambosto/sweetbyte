@@ -6,7 +6,6 @@ import (
 	"github.com/klauspost/reedsolomon"
 )
 
-// Reed-Solomon Encoding Configuration
 const (
 	MaxDataLen = 1 << 30 // Maximum data length (1GB)
 )

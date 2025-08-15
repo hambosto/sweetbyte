@@ -3,10 +3,9 @@ package cipher
 import (
 	"crypto/cipher"
 	"crypto/rand"
+	"fmt"
 	"io"
 
-	"github.com/hambosto/sweetbyte/internal/config"
-	"github.com/hambosto/sweetbyte/internal/errors"
 	"golang.org/x/crypto/chacha20poly1305"
 )
 
@@ -19,13 +18,13 @@ type XChaCha20Cipher struct {
 // XChaCha20 uses a 192-bit nonce instead of ChaCha20's 96-bit nonce
 // The key must be exactly 32 bytes for XChaCha20
 func NewXChaCha20Cipher(key []byte) (*XChaCha20Cipher, error) {
-	if len(key) != config.EncryptionKeySize {
-		return nil, errors.ErrInvalidKeySize
+	if len(key) != 32 {
+		return nil, fmt.Errorf("invalid key size: got %d bytes, expected %d bytes", len(key), 32)
 	}
 
 	aead, err := chacha20poly1305.NewX(key)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create XChaCha20-Poly1305 cipher: %w", err)
 	}
 
 	return &XChaCha20Cipher{
@@ -36,12 +35,12 @@ func NewXChaCha20Cipher(key []byte) (*XChaCha20Cipher, error) {
 // Encrypt encrypts the plaintext and returns the ciphertext with nonce prepended
 func (c *XChaCha20Cipher) Encrypt(plaintext []byte) ([]byte, error) {
 	if len(plaintext) == 0 {
-		return nil, errors.ErrEmptyPlaintext
+		return nil, fmt.Errorf("encryption failed: plaintext is empty")
 	}
 
 	nonce := make([]byte, chacha20poly1305.NonceSizeX)
 	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("encryption failed: unable to generate nonce: %w", err)
 	}
 
 	ciphertext := c.aead.Seal(nonce, nonce, plaintext, nil)
@@ -51,12 +50,12 @@ func (c *XChaCha20Cipher) Encrypt(plaintext []byte) ([]byte, error) {
 // Decrypt decrypts the ciphertext (which should have nonce prepended) and returns the plaintext
 func (c *XChaCha20Cipher) Decrypt(ciphertext []byte) ([]byte, error) {
 	if len(ciphertext) == 0 {
-		return nil, errors.ErrEmptyCiphertext
+		return nil, fmt.Errorf("decryption failed: ciphertext is empty")
 	}
 
 	nonceSize := c.aead.NonceSize()
 	if len(ciphertext) < nonceSize {
-		return nil, errors.ErrDecryptionFailed
+		return nil, fmt.Errorf("decryption failed: ciphertext too short, got %d bytes but need at least %d bytes for nonce", len(ciphertext), nonceSize)
 	}
 
 	nonce := ciphertext[:nonceSize]
@@ -64,7 +63,7 @@ func (c *XChaCha20Cipher) Decrypt(ciphertext []byte) ([]byte, error) {
 
 	plaintext, err := c.aead.Open(nil, nonce, ciphertext, nil)
 	if err != nil {
-		return nil, errors.ErrDecryptionFailed
+		return nil, fmt.Errorf("decryption failed: %w", err)
 	}
 
 	return plaintext, nil
