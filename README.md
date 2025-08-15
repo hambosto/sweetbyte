@@ -1,4 +1,3 @@
-
 <div align="center">
 
 ```
@@ -20,6 +19,7 @@
 - [Why SweetByte?](#-why-sweetbyte)
 - [Core Features](#-core-features)
 - [How It Works: The Encryption Pipeline](#-how-it-works-the-encryption-pipeline)
+- [Architecture](#-architecture)
 - [File Format](#-file-format)
 - [Usage](#-usage)
 - [Building from Source](#️-building-from-source)
@@ -75,6 +75,65 @@ This multi-stage process results in a final file that is not only encrypted but 
 
 #### Decryption Flow
 Decryption is the exact reverse of the encryption pipeline, unwrapping each layer to securely restore the original data.
+
+## 🏛️ Architecture
+
+SweetByte is designed with a modular, layered architecture that separates concerns and promotes code reuse. The high-level structure can be visualized as follows:
+
+```mermaid
+graph TD
+    subgraph "User Interfaces"
+        A[CLI Mode]
+        B[Interactive Mode]
+    end
+
+    subgraph "Core Logic"
+        C[Operations]
+        D[Processor]
+        E[Streaming]
+    end
+
+    subgraph "Cryptographic & Data Processing"
+        F[Cipher]
+        G[Keys]
+        H[Header]
+        I[Compression]
+        J[Encoding]
+        K[Padding]
+    end
+
+    subgraph "Utilities & Support"
+        L[Files]
+        M[UI]
+        N[Config]
+        O[Errors]
+        P[Utils]
+    end
+
+    A --> C
+    B --> C
+
+    C --> D
+    D --> E
+
+    E --> F
+    E --> G
+    E --> H
+    E --> I
+    E --> J
+    E --> K
+
+    C --> L
+    B --> M
+    D --> N
+    C --> O
+    D --> P
+```
+
+- **User Interfaces:** The `cli` and `interactive` packages provide two distinct ways for users to interact with the application. Both interfaces are built on top of the `operations` package, which contains the high-level logic for encrypting and decrypting files.
+- **Core Logic:** The `operations`, `processor`, and `streaming` packages form the core of the application. The `operations` package orchestrates the overall workflow, the `processor` package manages the processing pipeline, and the `streaming` package handles the concurrent, chunk-based file processing.
+- **Cryptographic & Data Processing:** This layer contains the packages that implement the cryptographic and data processing operations. These packages are responsible for encryption, key derivation, header serialization, compression, error correction, and padding.
+- **Utilities & Support:** This layer provides a set of utility and support packages that are used throughout the application. These packages handle file management, UI components, configuration, error handling, and other miscellaneous tasks.
 
 ## 📦 File Format
 
@@ -181,14 +240,14 @@ SweetByte is built with a modular architecture, with each package handling a spe
 | `encoding`        | Manages Reed-Solomon error correction encoding and decoding.             |
 | `errors`          | Defines custom, descriptive error types used throughout the application. |
 | `files`           | Provides utilities for finding, managing, and securely deleting files.   |
-| `flow`            | Orchestrates the main encryption/decryption pipeline.                    |
 | `header`          | Manages the serialization, deserialization, and verification of the secure file header. |
 | `interactive`     | Implements the user-friendly interactive mode workflow.                  |
 | `keys`            | Handles key derivation using Argon2id and secure salt generation.        |
 | `operations`      | Contains the high-level logic for the main encrypt/decrypt file operations. |
+| `options`         | Defines the different modes and processing options for the application. |
 | `padding`         | Implements PKCS7 padding.                                                |
+| `processor`       | Manages the processing pipeline and orchestrates the flow of data through the different stages of encryption and decryption. |
 | `streaming`       | Manages concurrent, chunk-based file processing with a worker pool.      |
-| `types`           | Defines core data structures and types used across the project.          |
 | `ui`              | Provides UI components like interactive prompts, progress bars, and banners. |
 | `utils`           | Contains miscellaneous helper functions.                                 |
 
