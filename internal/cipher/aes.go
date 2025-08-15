@@ -6,6 +6,8 @@ import (
 	"crypto/rand"
 	"fmt"
 	"io"
+
+	"github.com/hambosto/sweetbyte/internal/config"
 )
 
 // AESCipher provides AES-GCM encryption and decryption
@@ -16,7 +18,7 @@ type AESCipher struct {
 // NewAESCipher creates a new AES cipher with the given key
 // The key must be 16, 24, or 32 bytes for AES-128, AES-192, or AES-256
 func NewAESCipher(key []byte) (*AESCipher, error) {
-	if len(key) != 32 {
+	if len(key) != config.EncryptionKeySize {
 		return nil, fmt.Errorf("invalid key size: got %d bytes, expected %d bytes", len(key), 32)
 	}
 

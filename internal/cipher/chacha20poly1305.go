@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/hambosto/sweetbyte/internal/config"
 	"golang.org/x/crypto/chacha20poly1305"
 )
 
@@ -18,7 +19,7 @@ type XChaCha20Cipher struct {
 // XChaCha20 uses a 192-bit nonce instead of ChaCha20's 96-bit nonce
 // The key must be exactly 32 bytes for XChaCha20
 func NewXChaCha20Cipher(key []byte) (*XChaCha20Cipher, error) {
-	if len(key) != 32 {
+	if len(key) != config.EncryptionKeySize {
 		return nil, fmt.Errorf("invalid key size: got %d bytes, expected %d bytes", len(key), 32)
 	}
 
