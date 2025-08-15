@@ -1,6 +1,7 @@
 package operations
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/hambosto/sweetbyte/internal/config"
@@ -70,11 +71,10 @@ func (e *Encryptor) EncryptFile(srcPath, destPath, password string) error {
 	}
 
 	// Create stream processor for encryption
-	config := streaming.StreamConfig{
+	config := streaming.Config{
 		Key:         key,
 		Processing:  types.Encryption,
 		Concurrency: config.MaxConcurrency,
-		QueueSize:   config.QueueSize,
 		ChunkSize:   config.DefaultChunkSize,
 	}
 
@@ -84,5 +84,5 @@ func (e *Encryptor) EncryptFile(srcPath, destPath, password string) error {
 	}
 
 	// Process the file
-	return processor.Process(srcFile, destFile, originalSize)
+	return processor.Process(context.Background(), srcFile, destFile, originalSize)
 }

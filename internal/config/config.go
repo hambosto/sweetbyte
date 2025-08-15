@@ -11,7 +11,6 @@ const (
 const (
 	DefaultChunkSize = 1 * 1024 * 1024 // 1MB chunks
 	MaxConcurrency   = 8               // Max worker threads
-	QueueSize        = 100             // Task queue buffer size
 	OverwritePasses  = 3               // Secure deletion passes
 )
 
@@ -27,6 +26,7 @@ var (
 	ExcludedDirs = []string{
 		"vendor/", "node_modules/", ".git", ".github",
 		".vscode/", "build/", "dist/", "target/",
+		".config", ".local", ".cache", ".ssh",
 	}
 
 	ExcludedExts = []string{

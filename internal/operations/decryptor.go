@@ -1,6 +1,7 @@
 package operations
 
 import (
+	"context"
 	"fmt"
 	"math"
 
@@ -73,11 +74,10 @@ func (d *Decryptor) DecryptFile(srcPath, destPath, password string) error {
 	defer destFile.Close() //nolint:errcheck
 
 	// Create stream processor for decryption
-	config := streaming.StreamConfig{
+	config := streaming.Config{
 		Key:         key,
 		Processing:  types.Decryption,
 		Concurrency: config.MaxConcurrency,
-		QueueSize:   config.QueueSize,
 		ChunkSize:   config.DefaultChunkSize,
 	}
 
@@ -87,5 +87,5 @@ func (d *Decryptor) DecryptFile(srcPath, destPath, password string) error {
 	}
 
 	// Process the file (remaining data after header)
-	return processor.Process(srcFile, destFile, int64(originalSize))
+	return processor.Process(context.Background(), srcFile, destFile, int64(originalSize))
 }
