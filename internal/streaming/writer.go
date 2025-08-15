@@ -8,19 +8,19 @@ import (
 	"math"
 
 	"github.com/hambosto/sweetbyte/internal/config"
-	"github.com/hambosto/sweetbyte/internal/types"
+	"github.com/hambosto/sweetbyte/internal/options"
 	"github.com/hambosto/sweetbyte/internal/ui"
 )
 
 // chunkWriter handles writing processed chunks to output
 type chunkWriter struct {
-	processing types.Processing
+	processing options.Processing
 	buffer     OrderBuffer
 	bar        *ui.ProgressBar
 }
 
 // NewChunkWriter creates a new chunk writer
-func NewChunkWriter(processing types.Processing, bar *ui.ProgressBar) ChunkWriter {
+func NewChunkWriter(processing options.Processing, bar *ui.ProgressBar) ChunkWriter {
 	return &chunkWriter{
 		processing: processing,
 		buffer:     NewOrderBuffer(),
@@ -29,7 +29,7 @@ func NewChunkWriter(processing types.Processing, bar *ui.ProgressBar) ChunkWrite
 }
 
 // WriteChunks writes processed chunks to output in order
-func (w *chunkWriter) WriteChunks(ctx context.Context, output io.Writer, results <-chan types.TaskResult) error {
+func (w *chunkWriter) WriteChunks(ctx context.Context, output io.Writer, results <-chan TaskResult) error {
 	for {
 		select {
 		case result, ok := <-results:
@@ -60,7 +60,7 @@ func (w *chunkWriter) flushRemaining(output io.Writer) error {
 }
 
 // writeResults writes a slice of ready results
-func (w *chunkWriter) writeResults(output io.Writer, results []types.TaskResult) error {
+func (w *chunkWriter) writeResults(output io.Writer, results []TaskResult) error {
 	for _, result := range results {
 		if err := w.writeResult(output, result); err != nil {
 			return err
@@ -70,9 +70,9 @@ func (w *chunkWriter) writeResults(output io.Writer, results []types.TaskResult)
 }
 
 // writeResult writes a single result to the output
-func (w *chunkWriter) writeResult(output io.Writer, result types.TaskResult) error {
+func (w *chunkWriter) writeResult(output io.Writer, result TaskResult) error {
 	// Write chunk size header for encryption
-	if w.processing == types.Encryption {
+	if w.processing == options.Encryption {
 		if err := w.writeChunkSize(output, len(result.Data)); err != nil {
 			return fmt.Errorf("writing chunk size: %w", err)
 		}

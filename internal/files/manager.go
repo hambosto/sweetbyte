@@ -8,7 +8,7 @@ import (
 
 	"github.com/hambosto/sweetbyte/internal/config"
 	"github.com/hambosto/sweetbyte/internal/errors"
-	"github.com/hambosto/sweetbyte/internal/types"
+	"github.com/hambosto/sweetbyte/internal/options"
 )
 
 // Manager handles file creation, deletion (standard and secure), and validation
@@ -20,11 +20,11 @@ func NewManager() *Manager {
 }
 
 // Remove deletes the file at the given path using the provided deletion option
-func (m *Manager) Remove(path string, option types.DeleteOption) error {
+func (m *Manager) Remove(path string, option options.DeleteOption) error {
 	switch option {
-	case types.DeleteStandard:
+	case options.DeleteStandard:
 		return os.Remove(path)
-	case types.DeleteSecure:
+	case options.DeleteSecure:
 		return m.secureDelete(path)
 	default:
 		return fmt.Errorf("unsupported delete option: %s", option)

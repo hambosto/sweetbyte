@@ -10,8 +10,8 @@ import (
 	"github.com/hambosto/sweetbyte/internal/files"
 	"github.com/hambosto/sweetbyte/internal/header"
 	"github.com/hambosto/sweetbyte/internal/keys"
+	"github.com/hambosto/sweetbyte/internal/options"
 	"github.com/hambosto/sweetbyte/internal/streaming"
-	"github.com/hambosto/sweetbyte/internal/types"
 )
 
 // Decryptor handles file decryption operations
@@ -76,7 +76,7 @@ func (d *Decryptor) DecryptFile(srcPath, destPath, password string) error {
 	// Create stream processor for decryption
 	config := streaming.Config{
 		Key:         key,
-		Processing:  types.Decryption,
+		Processing:  options.Decryption,
 		Concurrency: config.MaxConcurrency,
 		ChunkSize:   config.DefaultChunkSize,
 	}

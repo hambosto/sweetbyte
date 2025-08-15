@@ -1,4 +1,4 @@
-package types
+package options
 
 // ProcessorMode represents the operation type for file processing.
 type ProcessorMode string

@@ -3,8 +3,6 @@ package streaming
 import (
 	"context"
 	"sync"
-
-	"github.com/hambosto/sweetbyte/internal/types"
 )
 
 // workerPool manages concurrent task processing
@@ -22,8 +20,8 @@ func NewWorkerPool(processor TaskProcessor, concurrency int) *workerPool {
 }
 
 // Process starts workers to process tasks concurrently
-func (p *workerPool) Process(ctx context.Context, tasks <-chan types.Task) <-chan types.TaskResult {
-	results := make(chan types.TaskResult)
+func (p *workerPool) Process(ctx context.Context, tasks <-chan Task) <-chan TaskResult {
+	results := make(chan TaskResult)
 
 	go func() {
 		defer close(results)
@@ -44,7 +42,7 @@ func (p *workerPool) Process(ctx context.Context, tasks <-chan types.Task) <-cha
 }
 
 // worker processes tasks from the input channel
-func (p *workerPool) worker(ctx context.Context, wg *sync.WaitGroup, tasks <-chan types.Task, results chan<- types.TaskResult) {
+func (p *workerPool) worker(ctx context.Context, wg *sync.WaitGroup, tasks <-chan Task, results chan<- TaskResult) {
 	defer wg.Done()
 
 	for {

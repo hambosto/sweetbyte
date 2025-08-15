@@ -5,7 +5,8 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/hambosto/sweetbyte/internal/errors"
-	"github.com/hambosto/sweetbyte/internal/types"
+	"github.com/hambosto/sweetbyte/internal/files"
+	"github.com/hambosto/sweetbyte/internal/options"
 	"github.com/hambosto/sweetbyte/internal/utils"
 )
 
@@ -70,7 +71,7 @@ func (p *Prompt) getPassword(message string) (string, error) {
 }
 
 // ConfirmFileRemoval prompts for confirmation and deletion method for file removal
-func (p *Prompt) ConfirmFileRemoval(path, message string) (bool, types.DeleteOption, error) {
+func (p *Prompt) ConfirmFileRemoval(path, message string) (bool, options.DeleteOption, error) {
 	confirmed, err := p.confirmAction(fmt.Sprintf("%s %s", message, path))
 	if err != nil {
 		return false, "", fmt.Errorf("failed to confirm file removal: %w", err)
@@ -103,39 +104,39 @@ func (p *Prompt) confirmAction(message string) (bool, error) {
 }
 
 // selectDeleteOption prompts the user to select a deletion method
-func (p *Prompt) selectDeleteOption() (types.DeleteOption, error) {
-	options := []string{
-		string(types.DeleteStandard),
-		string(types.DeleteSecure),
+func (p *Prompt) selectDeleteOption() (options.DeleteOption, error) {
+	opt := []string{
+		string(options.DeleteStandard),
+		string(options.DeleteSecure),
 	}
 
-	selected, err := p.selectFromOptions("Select delete type:", options)
+	selected, err := p.selectFromOptions("Select delete type:", opt)
 	if err != nil {
 		return "", err
 	}
 
-	return types.DeleteOption(selected), nil
+	return options.DeleteOption(selected), nil
 }
 
 // GetProcessingMode prompts the user to select a processing operation
-func (p *Prompt) GetProcessingMode() (types.ProcessorMode, error) {
-	options := []string{
-		string(types.ModeEncrypt),
-		string(types.ModeDecrypt),
+func (p *Prompt) GetProcessingMode() (options.ProcessorMode, error) {
+	opt := []string{
+		string(options.ModeEncrypt),
+		string(options.ModeDecrypt),
 	}
 
-	selected, err := p.selectFromOptions("Select Operation:", options)
+	selected, err := p.selectFromOptions("Select Operation:", opt)
 	if err != nil {
 		return "", fmt.Errorf("operation selection failed: %w", err)
 	}
 
-	return types.ProcessorMode(selected), nil
+	return options.ProcessorMode(selected), nil
 }
 
 // ChooseFile prompts the user to select a file from the provided list
 func (p *Prompt) ChooseFile(files []string) (string, error) {
 	if len(files) == 0 {
-		return "", errors.ErrNoFilesAvailable
+		return "", fmt.Errorf("no files available for selection")
 	}
 
 	selected, err := p.selectFromOptions("Select file:", files)
@@ -162,7 +163,7 @@ func (p *Prompt) selectFromOptions(message string, options []string) (string, er
 }
 
 // ShowFileInfo displays information about files to be processed
-func (p *Prompt) ShowFileInfo(files []types.FileInfo) {
+func (p *Prompt) ShowFileInfo(files []files.FileInfo) {
 	if len(files) == 0 {
 		fmt.Println("No files found.")
 		return
@@ -186,9 +187,9 @@ func (p *Prompt) ShowFileInfo(files []types.FileInfo) {
 }
 
 // ShowProcessingInfo displays information about the processing pipeline
-func (p *Prompt) ShowProcessingInfo(mode types.ProcessorMode, file string) {
+func (p *Prompt) ShowProcessingInfo(mode options.ProcessorMode, file string) {
 	operation := "Encrypting"
-	if mode == types.ModeDecrypt {
+	if mode == options.ModeDecrypt {
 		operation = "Decrypting"
 	}
 

@@ -7,7 +7,7 @@ import (
 	"github.com/hambosto/sweetbyte/internal/errors"
 	"github.com/hambosto/sweetbyte/internal/files"
 	"github.com/hambosto/sweetbyte/internal/operations"
-	"github.com/hambosto/sweetbyte/internal/types"
+	"github.com/hambosto/sweetbyte/internal/options"
 	"github.com/hambosto/sweetbyte/internal/ui"
 )
 
@@ -96,7 +96,7 @@ func (a *InteractiveApp) runInteractiveLoop() error {
 }
 
 // getEligibleFiles retrieves files that can be processed based on the operation mode
-func (a *InteractiveApp) getEligibleFiles(operation types.ProcessorMode) ([]string, error) {
+func (a *InteractiveApp) getEligibleFiles(operation options.ProcessorMode) ([]string, error) {
 	eligibleFiles, err := a.fileFinder.FindEligibleFiles(operation)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find eligible files: %w", err)
@@ -110,7 +110,7 @@ func (a *InteractiveApp) getEligibleFiles(operation types.ProcessorMode) ([]stri
 }
 
 // processFile handles the file processing workflow
-func (a *InteractiveApp) processFile(inputPath string, mode types.ProcessorMode) error {
+func (a *InteractiveApp) processFile(inputPath string, mode options.ProcessorMode) error {
 	outputPath := a.fileFinder.GetOutputPath(inputPath, mode)
 
 	// Validate paths
@@ -127,9 +127,9 @@ func (a *InteractiveApp) processFile(inputPath string, mode types.ProcessorMode)
 	// Process based on mode
 	var err error
 	switch mode {
-	case types.ModeEncrypt:
+	case options.ModeEncrypt:
 		err = a.encryptFile(inputPath, outputPath)
-	case types.ModeDecrypt:
+	case options.ModeDecrypt:
 		err = a.decryptFile(inputPath, outputPath)
 	default:
 		return fmt.Errorf("unknown processing mode: %v", mode)
@@ -141,7 +141,7 @@ func (a *InteractiveApp) processFile(inputPath string, mode types.ProcessorMode)
 
 	// Ask to delete source file
 	fileType := "original"
-	if mode == types.ModeDecrypt {
+	if mode == options.ModeDecrypt {
 		fileType = "encrypted"
 	}
 

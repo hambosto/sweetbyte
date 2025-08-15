@@ -8,8 +8,8 @@ import (
 	"github.com/hambosto/sweetbyte/internal/files"
 	"github.com/hambosto/sweetbyte/internal/header"
 	"github.com/hambosto/sweetbyte/internal/keys"
+	"github.com/hambosto/sweetbyte/internal/options"
 	"github.com/hambosto/sweetbyte/internal/streaming"
-	"github.com/hambosto/sweetbyte/internal/types"
 )
 
 // Encryptor handles file encryption operations
@@ -73,7 +73,7 @@ func (e *Encryptor) EncryptFile(srcPath, destPath, password string) error {
 	// Create stream processor for encryption
 	config := streaming.Config{
 		Key:         key,
-		Processing:  types.Encryption,
+		Processing:  options.Encryption,
 		Concurrency: config.MaxConcurrency,
 		ChunkSize:   config.DefaultChunkSize,
 	}

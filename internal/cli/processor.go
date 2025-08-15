@@ -5,7 +5,7 @@ import (
 
 	"github.com/hambosto/sweetbyte/internal/files"
 	"github.com/hambosto/sweetbyte/internal/operations"
-	"github.com/hambosto/sweetbyte/internal/types"
+	"github.com/hambosto/sweetbyte/internal/options"
 	"github.com/hambosto/sweetbyte/internal/ui"
 )
 
@@ -47,9 +47,9 @@ func (p *CLIProcessor) Encrypt(inputFile, outputFile, password string, deleteSou
 
 	// Handle source file deletion if requested
 	if deleteSource {
-		deleteOption := types.DeleteStandard
+		deleteOption := options.DeleteStandard
 		if secureDelete {
-			deleteOption = types.DeleteSecure
+			deleteOption = options.DeleteSecure
 		}
 
 		fmt.Printf("Deleting source file: %s\n", inputFile)
@@ -83,9 +83,9 @@ func (p *CLIProcessor) Decrypt(inputFile, outputFile, password string, deleteSou
 
 	// Handle source file deletion if requested
 	if deleteSource {
-		deleteOption := types.DeleteStandard
+		deleteOption := options.DeleteStandard
 		if secureDelete {
-			deleteOption = types.DeleteSecure
+			deleteOption = options.DeleteSecure
 		}
 
 		fmt.Printf("Deleting source file: %s\n", inputFile)

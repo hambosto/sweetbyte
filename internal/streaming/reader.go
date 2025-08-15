@@ -9,17 +9,17 @@ import (
 
 	"github.com/hambosto/sweetbyte/internal/config"
 	"github.com/hambosto/sweetbyte/internal/errors"
-	"github.com/hambosto/sweetbyte/internal/types"
+	"github.com/hambosto/sweetbyte/internal/options"
 )
 
 // chunkReader handles reading data and converting it to tasks
 type chunkReader struct {
-	processing types.Processing
+	processing options.Processing
 	chunkSize  int
 }
 
 // NewChunkReader creates a new chunk reader
-func NewChunkReader(processing types.Processing, chunkSize int) ChunkReader {
+func NewChunkReader(processing options.Processing, chunkSize int) ChunkReader {
 	return &chunkReader{
 		processing: processing,
 		chunkSize:  chunkSize,
@@ -27,8 +27,8 @@ func NewChunkReader(processing types.Processing, chunkSize int) ChunkReader {
 }
 
 // ReadChunks reads data from input and returns a channel of tasks
-func (r *chunkReader) ReadChunks(ctx context.Context, input io.Reader) (<-chan types.Task, <-chan error) {
-	taskChan := make(chan types.Task)
+func (r *chunkReader) ReadChunks(ctx context.Context, input io.Reader) (<-chan Task, <-chan error) {
+	taskChan := make(chan Task)
 	errChan := make(chan error, 1)
 
 	go func() {
@@ -37,9 +37,9 @@ func (r *chunkReader) ReadChunks(ctx context.Context, input io.Reader) (<-chan t
 
 		var err error
 		switch r.processing {
-		case types.Encryption:
+		case options.Encryption:
 			err = r.readForEncryption(ctx, input, taskChan)
-		case types.Decryption:
+		case options.Decryption:
 			err = r.readForDecryption(ctx, input, taskChan)
 		default:
 			err = fmt.Errorf("unknown processing type: %d", r.processing)
@@ -57,7 +57,7 @@ func (r *chunkReader) ReadChunks(ctx context.Context, input io.Reader) (<-chan t
 }
 
 // readForEncryption reads raw data in fixed-size chunks
-func (r *chunkReader) readForEncryption(ctx context.Context, reader io.Reader, tasks chan<- types.Task) error {
+func (r *chunkReader) readForEncryption(ctx context.Context, reader io.Reader, tasks chan<- Task) error {
 	buffer := make([]byte, r.chunkSize)
 	var index uint64
 
@@ -76,7 +76,7 @@ func (r *chunkReader) readForEncryption(ctx context.Context, reader io.Reader, t
 			return fmt.Errorf("read failed: %w", err)
 		}
 
-		task := types.Task{
+		task := Task{
 			Data:  make([]byte, n),
 			Index: index,
 		}
@@ -92,7 +92,7 @@ func (r *chunkReader) readForEncryption(ctx context.Context, reader io.Reader, t
 }
 
 // readForDecryption reads data with length prefixes
-func (r *chunkReader) readForDecryption(ctx context.Context, reader io.Reader, tasks chan<- types.Task) error {
+func (r *chunkReader) readForDecryption(ctx context.Context, reader io.Reader, tasks chan<- Task) error {
 	var index uint64
 
 	for {
@@ -119,7 +119,7 @@ func (r *chunkReader) readForDecryption(ctx context.Context, reader io.Reader, t
 			return err
 		}
 
-		task := types.Task{
+		task := Task{
 			Data:  data,
 			Index: index,
 		}

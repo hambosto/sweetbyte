@@ -3,33 +3,31 @@ package streaming
 import (
 	"slices"
 	"sync"
-
-	"github.com/hambosto/sweetbyte/internal/types"
 )
 
 // orderBuffer maintains chunk ordering for concurrent processing
 type orderBuffer struct {
 	mu      sync.Mutex
-	results map[uint64]types.TaskResult
+	results map[uint64]TaskResult
 	next    uint64
 }
 
 // NewOrderBuffer creates a new thread-safe order buffer
 func NewOrderBuffer() OrderBuffer {
 	return &orderBuffer{
-		results: make(map[uint64]types.TaskResult),
+		results: make(map[uint64]TaskResult),
 		next:    0,
 	}
 }
 
 // Add inserts a result and returns any ready results in order
-func (b *orderBuffer) Add(result types.TaskResult) []types.TaskResult {
+func (b *orderBuffer) Add(result TaskResult) []TaskResult {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
 	b.results[result.Index] = result
 
-	var ready []types.TaskResult
+	var ready []TaskResult
 	for {
 		if result, exists := b.results[b.next]; exists {
 			ready = append(ready, result)
@@ -44,7 +42,7 @@ func (b *orderBuffer) Add(result types.TaskResult) []types.TaskResult {
 }
 
 // Flush returns all remaining buffered results sorted by index
-func (b *orderBuffer) Flush() []types.TaskResult {
+func (b *orderBuffer) Flush() []TaskResult {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
@@ -58,7 +56,7 @@ func (b *orderBuffer) Flush() []types.TaskResult {
 	}
 	slices.Sort(indices)
 
-	results := make([]types.TaskResult, len(indices))
+	results := make([]TaskResult, len(indices))
 	for i, idx := range indices {
 		results[i] = b.results[idx]
 	}

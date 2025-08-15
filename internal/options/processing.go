@@ -1,4 +1,4 @@
-package types
+package options
 
 // Processing represents the stream processing operation type.
 type Processing int

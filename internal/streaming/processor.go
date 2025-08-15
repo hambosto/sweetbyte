@@ -9,14 +9,14 @@ import (
 
 	"github.com/hambosto/sweetbyte/internal/config"
 	"github.com/hambosto/sweetbyte/internal/errors"
-	"github.com/hambosto/sweetbyte/internal/types"
+	"github.com/hambosto/sweetbyte/internal/options"
 	"github.com/hambosto/sweetbyte/internal/ui"
 )
 
 // Config holds stream processing configuration
 type Config struct {
 	Key         []byte
-	Processing  types.Processing
+	Processing  options.Processing
 	Concurrency int
 	ChunkSize   int
 }
@@ -37,6 +37,20 @@ func (c *Config) ApplyDefaults() {
 	if c.ChunkSize <= 0 {
 		c.ChunkSize = config.DefaultChunkSize
 	}
+}
+
+// Task represents a processing task for concurrent operations.
+type Task struct {
+	Data  []byte
+	Index uint64
+}
+
+// TaskResult represents the result of a processed task.
+type TaskResult struct {
+	Index uint64
+	Data  []byte
+	Size  int
+	Err   error
 }
 
 // streamProcessor is the main streaming processor implementation

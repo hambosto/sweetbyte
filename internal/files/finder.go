@@ -6,8 +6,16 @@ import (
 	"strings"
 
 	"github.com/hambosto/sweetbyte/internal/config"
-	"github.com/hambosto/sweetbyte/internal/types"
+	"github.com/hambosto/sweetbyte/internal/options"
 )
+
+// FileInfo represents file information for processing.
+type FileInfo struct {
+	Path        string
+	Size        int64
+	IsEncrypted bool
+	IsEligible  bool
+}
 
 // Finder is responsible for finding files eligible for processing
 type Finder struct{}
@@ -19,7 +27,7 @@ func NewFinder() *Finder {
 
 // FindEligibleFiles walks the current directory tree and returns a list of files
 // eligible for encryption or decryption, based on the specified mode
-func (f *Finder) FindEligibleFiles(mode types.ProcessorMode) ([]string, error) {
+func (f *Finder) FindEligibleFiles(mode options.ProcessorMode) ([]string, error) {
 	var files []string
 
 	// Walk through all files and directories starting from current directory
@@ -38,7 +46,7 @@ func (f *Finder) FindEligibleFiles(mode types.ProcessorMode) ([]string, error) {
 
 // isFileEligible checks if a given file should be processed based on its extension,
 // whether it's hidden, or excluded via config, and depending on the selected mode
-func (f *Finder) isFileEligible(path string, info os.FileInfo, mode types.ProcessorMode) bool {
+func (f *Finder) isFileEligible(path string, info os.FileInfo, mode options.ProcessorMode) bool {
 	// Skip directories, hidden files, or excluded paths
 	if info.IsDir() || f.isHiddenFile(info.Name()) || f.shouldSkipPath(path) {
 		return false
@@ -48,7 +56,7 @@ func (f *Finder) isFileEligible(path string, info os.FileInfo, mode types.Proces
 	isEncrypted := strings.HasSuffix(path, config.FileExtension)
 
 	// Include unencrypted files in encrypt mode, and encrypted files in decrypt mode
-	return (mode == types.ModeEncrypt && !isEncrypted) || (mode == types.ModeDecrypt && isEncrypted)
+	return (mode == options.ModeEncrypt && !isEncrypted) || (mode == options.ModeDecrypt && isEncrypted)
 }
 
 // isHiddenFile checks if a file is hidden (starts with dot)
@@ -81,16 +89,16 @@ func (f *Finder) IsEncryptedFile(path string) bool {
 }
 
 // GetOutputPath determines the output path based on the operation mode
-func (f *Finder) GetOutputPath(inputPath string, mode types.ProcessorMode) string {
-	if mode == types.ModeEncrypt {
+func (f *Finder) GetOutputPath(inputPath string, mode options.ProcessorMode) string {
+	if mode == options.ModeEncrypt {
 		return inputPath + config.FileExtension
 	}
 	return strings.TrimSuffix(inputPath, config.FileExtension)
 }
 
 // GetFileInfo returns detailed information about files
-func (f *Finder) GetFileInfo(files []string) ([]types.FileInfo, error) {
-	var fileInfos []types.FileInfo
+func (f *Finder) GetFileInfo(files []string) ([]FileInfo, error) {
+	var fileInfos []FileInfo
 
 	for _, file := range files {
 		info, err := os.Stat(file)
@@ -98,7 +106,7 @@ func (f *Finder) GetFileInfo(files []string) ([]types.FileInfo, error) {
 			continue // Skip files that can't be accessed
 		}
 
-		fileInfo := types.FileInfo{
+		fileInfo := FileInfo{
 			Path:        file,
 			Size:        info.Size(),
 			IsEncrypted: f.IsEncryptedFile(file),
