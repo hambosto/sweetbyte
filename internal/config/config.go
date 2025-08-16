@@ -35,24 +35,6 @@ var (
 	}
 )
 
-// Argon2id Parameters
-const (
-	ArgonTime    uint32 = 4          // Time cost
-	ArgonMemory  uint32 = 128 * 1024 // Memory cost (128MB)
-	ArgonThreads uint8  = 4          // Parallelism
-)
-
-// Header Format Constants
-const (
-	MagicBytes        = "SWX3" // File type identifier
-	SaltSizeBytes     = 32     // Salt for KDF
-	OriginalSizeBytes = 8      // Size of original plaintext
-	IntegritySize     = 32     // SHA-256 hash size
-	AuthSize          = 32     // HMAC-SHA256 tag size
-	ChecksumSize      = 4      // CRC32 checksum size
-	TotalHeaderSize   = 112    // Fixed header size
-)
-
 // Stream Processing Constants
 const (
 	ChunkHeaderSize = 4 // Size of chunk length header in bytes

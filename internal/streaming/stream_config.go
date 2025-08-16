@@ -1,10 +1,10 @@
 package streaming
 
 import (
+	"fmt"
 	"runtime"
 
 	"github.com/hambosto/sweetbyte/internal/config"
-	"github.com/hambosto/sweetbyte/internal/errors"
 	"github.com/hambosto/sweetbyte/internal/options"
 )
 
@@ -19,7 +19,7 @@ type StreamConfig struct {
 // Validate validates the stream configuration
 func (s *StreamConfig) Validate() error {
 	if len(s.Key) != config.MasterKeySize {
-		return errors.ErrInvalidKey
+		return fmt.Errorf("key must be 64 bytes long")
 	}
 	return nil
 }

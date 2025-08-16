@@ -6,7 +6,6 @@ import (
 	"io"
 	"sync"
 
-	"github.com/hambosto/sweetbyte/internal/errors"
 	"github.com/hambosto/sweetbyte/internal/ui"
 )
 
@@ -57,7 +56,7 @@ func NewStreamProcessor(config StreamConfig) (Processor, error) {
 // Process processes data from input to output
 func (s *streamProcessor) Process(ctx context.Context, input io.Reader, output io.Writer, totalSize int64) error {
 	if input == nil || output == nil {
-		return errors.ErrNilStream
+		return fmt.Errorf("input and output streams must not be nil")
 	}
 
 	// Create progress bar
@@ -110,7 +109,7 @@ func (s *streamProcessor) runPipeline(ctx context.Context, input io.Reader, outp
 
 	// Check context cancellation
 	if pipelineCtx.Err() != nil {
-		return errors.ErrCanceled
+		return fmt.Errorf("operation was canceled")
 	}
 
 	return nil

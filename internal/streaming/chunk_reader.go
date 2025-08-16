@@ -8,7 +8,6 @@ import (
 	"math"
 
 	"github.com/hambosto/sweetbyte/internal/config"
-	"github.com/hambosto/sweetbyte/internal/errors"
 	"github.com/hambosto/sweetbyte/internal/options"
 )
 
@@ -146,7 +145,7 @@ func (r *chunkReader) readChunkSize(reader io.Reader) (uint32, error) {
 // readChunkData reads the chunk data of specified length
 func (r *chunkReader) readChunkData(reader io.Reader, length uint32) ([]byte, error) {
 	if length > math.MaxInt32 {
-		return nil, errors.ErrChunkTooLarge
+		return nil, fmt.Errorf("chunk size exceeds maximum allowed")
 	}
 
 	data := make([]byte, length)

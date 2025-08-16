@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 
 	"github.com/hambosto/sweetbyte/internal/config"
-	"github.com/hambosto/sweetbyte/internal/errors"
 	"github.com/hambosto/sweetbyte/internal/options"
 )
 
@@ -27,7 +26,7 @@ func (m *Manager) Remove(path string, option options.DeleteOption) error {
 	case options.DeleteSecure:
 		return m.secureDelete(path)
 	default:
-		return fmt.Errorf("unsupported delete option: %s", option)
+		return fmt.Errorf("unsupported delete option %s", option)
 	}
 }
 
@@ -35,7 +34,7 @@ func (m *Manager) Remove(path string, option options.DeleteOption) error {
 func (m *Manager) CreateFile(path string) (*os.File, error) {
 	output, err := os.Create(filepath.Clean(path))
 	if err != nil {
-		return nil, fmt.Errorf("%w: %v", errors.ErrFileCreateFailed, err)
+		return nil, fmt.Errorf("failed to create file: %w", err)
 	}
 	return output, nil
 }
@@ -46,17 +45,17 @@ func (m *Manager) ValidatePath(path string, mustExist bool) error {
 
 	if mustExist {
 		if os.IsNotExist(err) {
-			return fmt.Errorf("%w: %s", errors.ErrFileNotFound, path)
+			return fmt.Errorf("file not found %s", path)
 		}
 		if err != nil {
-			return fmt.Errorf("%w: %v", errors.ErrFileOpenFailed, err)
+			return fmt.Errorf("failed to access file: %w", err)
 		}
 		if fileInfo.Size() == 0 {
-			return fmt.Errorf("%w: %s", errors.ErrFileEmpty, path)
+			return fmt.Errorf("file is empty %s", path)
 		}
 	} else {
 		if err == nil {
-			return fmt.Errorf("%w: %s", errors.ErrFileExists, path)
+			return fmt.Errorf("file already exists %s", path)
 		}
 		if !os.IsNotExist(err) {
 			return fmt.Errorf("error accessing file: %w", err)
@@ -69,7 +68,7 @@ func (m *Manager) ValidatePath(path string, mustExist bool) error {
 func (m *Manager) OpenFile(path string) (*os.File, os.FileInfo, error) {
 	file, err := os.Open(filepath.Clean(path))
 	if err != nil {
-		return nil, nil, fmt.Errorf("%w: %v", errors.ErrFileOpenFailed, err)
+		return nil, nil, fmt.Errorf("failed to open file: %w", err)
 	}
 
 	info, err := file.Stat()
@@ -84,7 +83,7 @@ func (m *Manager) GetFileInfo(path string) (os.FileInfo, error) {
 	info, err := os.Stat(filepath.Clean(path))
 	if err != nil {
 		if os.IsNotExist(err) {
-			return nil, fmt.Errorf("%w: %s", errors.ErrFileNotFound, path)
+			return nil, fmt.Errorf("file not found %s", path)
 		}
 		return nil, fmt.Errorf("failed to get file info: %w", err)
 	}
@@ -101,29 +100,29 @@ func (m *Manager) FileExists(path string) bool {
 func (m *Manager) secureDelete(path string) error {
 	file, err := os.OpenFile(filepath.Clean(path), os.O_WRONLY, 0)
 	if err != nil {
-		return fmt.Errorf("%w: failed to open file for secure deletion: %v", errors.ErrSecureDeleteFailed, err)
+		return fmt.Errorf("failed to open file for secure deletion: %w", err)
 	}
 
 	info, err := file.Stat()
 	if err != nil {
-		return fmt.Errorf("%w: failed to get file info: %v", errors.ErrSecureDeleteFailed, err)
+		return fmt.Errorf("failed to get file info for secure deletion: %w", err)
 	}
 
 	// Perform multiple overwrite passes
 	for pass := range config.OverwritePasses {
 		if err := m.randomOverwrite(file, info.Size()); err != nil {
-			return fmt.Errorf("%w: secure overwrite pass %d failed: %v", errors.ErrSecureDeleteFailed, pass+1, err)
+			return fmt.Errorf("secure overwrite pass %d failed: %w", pass+1, err)
 		}
 	}
 
 	// Close the file before removing it
 	if err := file.Close(); err != nil {
-		return fmt.Errorf("%w: failed to close file before removal: %v", errors.ErrSecureDeleteFailed, err)
+		return fmt.Errorf("failed to close file before removal: %w", err)
 	}
 
 	// Finally remove the file
 	if err := os.Remove(path); err != nil {
-		return fmt.Errorf("%w: failed to remove file: %v", errors.ErrSecureDeleteFailed, err)
+		return fmt.Errorf("failed to remove file after secure overwrite: %w", err)
 	}
 
 	return nil

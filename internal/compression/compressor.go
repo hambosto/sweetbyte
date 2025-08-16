@@ -49,25 +49,25 @@ func NewCompressor(level CompressionLevel) (*Compressor, error) {
 // Compress compresses the input data using zlib
 func (c *Compressor) Compress(data []byte) ([]byte, error) {
 	if len(data) == 0 {
-		return nil, fmt.Errorf("compression failed: empty data")
+		return nil, fmt.Errorf("data cannot be empty")
 	}
 
 	var buf bytes.Buffer
 	// Create zlib writer with specified compression level
 	writer, err := zlib.NewWriterLevel(&buf, c.level)
 	if err != nil {
-		return nil, fmt.Errorf("compression failed: %w", err)
+		return nil, fmt.Errorf("failed to create compressor: %w", err)
 	}
 	defer writer.Close() //nolint:errcheck
 
 	// Write data to compressor
 	if _, err := writer.Write(data); err != nil {
-		return nil, fmt.Errorf("compression failed: %w", err)
+		return nil, fmt.Errorf("failed to compress data: %w", err)
 	}
 
 	// Close writer to flush remaining data
 	if err := writer.Close(); err != nil {
-		return nil, fmt.Errorf("compression failed: %w", err)
+		return nil, fmt.Errorf("failed to finalize compression: %w", err)
 	}
 
 	return buf.Bytes(), nil
@@ -76,20 +76,20 @@ func (c *Compressor) Compress(data []byte) ([]byte, error) {
 // Decompress decompresses the input data using zlib
 func (c *Compressor) Decompress(data []byte) ([]byte, error) {
 	if len(data) == 0 {
-		return nil, fmt.Errorf("decompression failed: empty data")
+		return nil, fmt.Errorf("data cannot be empty")
 	}
 
 	// Create reader from compressed data
 	reader, err := zlib.NewReader(bytes.NewReader(data))
 	if err != nil {
-		return nil, fmt.Errorf("decompression failed: %w", err)
+		return nil, fmt.Errorf("failed to create decompressor: %w", err)
 	}
 	defer reader.Close() //nolint:errcheck
 
 	// Read decompressed data
 	var buf bytes.Buffer
 	if _, err := io.Copy(&buf, reader); err != nil {
-		return nil, fmt.Errorf("decompression failed: %w", err)
+		return nil, fmt.Errorf("failed to decompress data: %w", err)
 	}
 
 	return buf.Bytes(), nil

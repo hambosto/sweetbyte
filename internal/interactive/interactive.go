@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/hambosto/sweetbyte/internal/errors"
 	"github.com/hambosto/sweetbyte/internal/files"
 	"github.com/hambosto/sweetbyte/internal/operations"
 	"github.com/hambosto/sweetbyte/internal/options"

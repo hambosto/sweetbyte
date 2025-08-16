@@ -147,7 +147,7 @@ This is ideal for users who prefer a more intuitive and user-friendly interface.
 func (c *CLI) runEncrypt(inputFile, outputFile, password string, deleteSource, secureDelete bool) error {
 	// Validate input file
 	if _, err := os.Stat(inputFile); os.IsNotExist(err) {
-		return fmt.Errorf("input file does not exist: %s", inputFile)
+		return fmt.Errorf("input file does not exist %s", inputFile)
 	}
 
 	// Set default output file if not provided
@@ -157,7 +157,7 @@ func (c *CLI) runEncrypt(inputFile, outputFile, password string, deleteSource, s
 
 	// Check if output file already exists
 	if _, err := os.Stat(outputFile); err == nil {
-		return fmt.Errorf("output file already exists: %s", outputFile)
+		return fmt.Errorf("output file already exists %s", outputFile)
 	}
 
 	// Create CLI processor
@@ -171,7 +171,7 @@ func (c *CLI) runEncrypt(inputFile, outputFile, password string, deleteSource, s
 func (c *CLI) runDecrypt(inputFile, outputFile, password string, deleteSource, secureDelete bool) error {
 	// Validate input file
 	if _, err := os.Stat(inputFile); os.IsNotExist(err) {
-		return fmt.Errorf("input file does not exist: %s", inputFile)
+		return fmt.Errorf("input file does not exist %s", inputFile)
 	}
 
 	// Set default output file if not provided
@@ -186,7 +186,7 @@ func (c *CLI) runDecrypt(inputFile, outputFile, password string, deleteSource, s
 
 	// Check if output file already exists
 	if _, err := os.Stat(outputFile); err == nil {
-		return fmt.Errorf("output file already exists: %s", outputFile)
+		return fmt.Errorf("output file already exists %s", outputFile)
 	}
 
 	// Create CLI processor

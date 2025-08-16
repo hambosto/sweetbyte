@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/hambosto/sweetbyte/internal/errors"
 	"github.com/hambosto/sweetbyte/internal/files"
 	"github.com/hambosto/sweetbyte/internal/options"
 	"github.com/hambosto/sweetbyte/internal/utils"
@@ -26,7 +25,7 @@ func (p *Prompt) ConfirmFileOverwrite(path string) (bool, error) {
 	}
 
 	if err := survey.AskOne(prompt, &result); err != nil {
-		return false, fmt.Errorf("%w: %v", errors.ErrPromptFailed, err)
+		return false, fmt.Errorf("prompt failed: %w", err)
 	}
 
 	return result, nil
@@ -45,7 +44,7 @@ func (p *Prompt) GetEncryptionPassword() (string, error) {
 	}
 
 	if password != confirm {
-		return "", errors.ErrPasswordMismatch
+		return "", fmt.Errorf("password mismatch")
 	}
 
 	return password, nil
@@ -64,7 +63,7 @@ func (p *Prompt) getPassword(message string) (string, error) {
 	}
 
 	if err := survey.AskOne(prompt, &password); err != nil {
-		return "", fmt.Errorf("%w: %v", errors.ErrPromptFailed, err)
+		return "", fmt.Errorf("prompt failed: %w", err)
 	}
 
 	return password, nil
@@ -97,7 +96,7 @@ func (p *Prompt) confirmAction(message string) (bool, error) {
 	}
 
 	if err := survey.AskOne(prompt, &result); err != nil {
-		return false, fmt.Errorf("%w: %v", errors.ErrPromptFailed, err)
+		return false, fmt.Errorf("prompt failed: %w")
 	}
 
 	return result, nil
@@ -156,7 +155,7 @@ func (p *Prompt) selectFromOptions(message string, options []string) (string, er
 	}
 
 	if err := survey.AskOne(prompt, &selected); err != nil {
-		return "", fmt.Errorf("%w: %v", errors.ErrPromptFailed, err)
+		return "", fmt.Errorf("prompt failed: %w", err)
 	}
 
 	return selected, nil
