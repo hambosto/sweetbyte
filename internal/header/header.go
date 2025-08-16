@@ -1,137 +1,168 @@
 package header
 
 import (
+	"crypto/rand"
+	"crypto/subtle"
 	"encoding/binary"
 	"fmt"
 	"io"
-
-	"github.com/hambosto/sweetbyte/internal/config"
-	"github.com/hambosto/sweetbyte/internal/errors"
 )
 
-// Header represents the metadata prepended to encrypted files.
-// It provides tamper detection through multiple verification layers:
-// - CRC32 checksum for corruption detection
-// - SHA-256 integrity hash for structural verification
-// - HMAC authentication tag for tampering detection
+// Constants
+const (
+	MagicBytes        = "SWX4"
+	MagicSize         = 4
+	VersionSize       = 2
+	FlagsSize         = 4
+	SaltSize          = 32
+	OriginalSizeSize  = 8
+	IntegrityHashSize = 32
+	AuthTagSize       = 32
+	ChecksumSize      = 4
+	PaddingSize       = 16
+	TotalHeaderSize   = 134
+)
+
+const (
+	CurrentVersion  uint16 = 0x0001
+	FlagCompressed  uint32 = 1 << 0
+	FlagEncrypted   uint32 = 1 << 1
+	FlagIntegrityV2 uint32 = 1 << 2
+	FlagAntiTamper  uint32 = 1 << 3
+
+	// Default flags - strongest security by default
+	DefaultFlags = FlagEncrypted | FlagIntegrityV2 | FlagAntiTamper
+)
+
+// Header represents the file header with all security features
 type Header struct {
-	metadata   *Metadata
-	protection *Protection
+	magic         [MagicSize]byte
+	version       uint16
+	flags         uint32
+	salt          [SaltSize]byte
+	originalSize  uint64
+	integrityHash [IntegrityHashSize]byte
+	authTag       [AuthTagSize]byte
+	checksum      uint32
+	padding       [PaddingSize]byte
 }
 
-// Metadata contains the core header information
-type Metadata struct {
-	salt         []byte
-	originalSize uint64
-}
-
-// Protection contains cryptographic verification data
-type Protection struct {
-	integrityHash []byte
-	authTag       []byte
-}
-
-// New creates a new header with the specified parameters
-func New(salt []byte, size uint64, key []byte) (*Header, error) {
-	if err := validateInputs(salt, key); err != nil {
-		return nil, err
-	}
-
-	metadata := &Metadata{
-		salt:         CloneBytes(salt),
-		originalSize: size,
-	}
-
-	header := &Header{
-		metadata:   metadata,
-		protection: &Protection{},
-	}
-
-	if err := header.computeProtection(key); err != nil {
-		return nil, err
-	}
-
-	return header, nil
-}
-
-// validateInputs checks salt and key parameters
-func validateInputs(salt, key []byte) error {
-	if len(salt) != config.SaltSizeBytes {
-		return fmt.Errorf("%w: expected %d bytes, got %d", errors.ErrInvalidSalt, config.SaltSizeBytes, len(salt))
+// NewHeader creates a new header with maximum security
+func NewHeader(originalSize uint64, salt []byte, key []byte) (*Header, error) {
+	if len(salt) != SaltSize {
+		return nil, fmt.Errorf("salt must be exactly %d bytes", SaltSize)
 	}
 	if len(key) == 0 {
-		return errors.ErrEmptyKey
+		return nil, fmt.Errorf("key cannot be empty")
+	}
+	if originalSize == 0 {
+		return nil, fmt.Errorf("original size cannot be zero")
 	}
 
-	return nil
-}
-
-// Salt returns a copy of the header's salt
-func (h *Header) Salt() []byte {
-	return CloneBytes(h.metadata.salt)
-}
-
-// OriginalSize returns the stored original plaintext size
-func (h *Header) OriginalSize() uint64 {
-	return h.metadata.originalSize
-}
-
-// Verify authenticates the header using the provided key
-func (h *Header) Verify(key []byte) error {
-	if len(key) == 0 {
-		return errors.ErrEmptyPassword
+	h := &Header{
+		version:      CurrentVersion,
+		flags:        DefaultFlags,
+		originalSize: originalSize,
 	}
 
-	verifier := NewVerifier(h, key)
-	return verifier.Verify()
+	// Set magic bytes
+	copy(h.magic[:], []byte(MagicBytes))
+
+	// Set salt
+	copy(h.salt[:], salt)
+
+	// Generate cryptographically secure padding
+	if _, err := rand.Read(h.padding[:]); err != nil {
+		return nil, fmt.Errorf("failed to generate padding: %w", err)
+	}
+
+	// Compute all protection mechanisms
+	protector := NewProtector(key)
+	if err := protector.ComputeAllProtection(h); err != nil {
+		return nil, fmt.Errorf("failed to compute protection: %w", err)
+	}
+
+	return h, nil
 }
 
-// WriteTo serializes the header to the writer
-func (h *Header) WriteTo(w io.Writer) (int64, error) {
-	serializer := NewSerializer(h)
-	return serializer.WriteTo(w)
-}
-
-// Write is a convenience method that discards the byte count
-func (h *Header) Write(w io.Writer) error {
-	_, err := h.WriteTo(w)
-	return err
-}
-
-// ReadFrom deserializes a header from the reader
-func ReadFrom(r io.Reader) (*Header, error) {
+// Read reads and parses a header from the reader
+func Read(r io.Reader) (*Header, error) {
 	deserializer := NewDeserializer()
-	return deserializer.ReadHeaderFrom(r)
+	return deserializer.Read(r)
 }
 
-// computeProtection calculates and sets the protection fields
-func (h *Header) computeProtection(key []byte) error {
-	verifier := NewVerifier(h, key)
-	h.protection.integrityHash = verifier.computeIntegrityHash()
-	h.protection.authTag = verifier.computeAuthTag()
-	return nil
+// Write writes the header to the writer
+func (h *Header) Write(w io.Writer) error {
+	serializer := NewSerializer()
+	return serializer.Write(w, h)
 }
 
-// Uint64ToBytes converts a uint64 to big-endian bytes
-func Uint64ToBytes(v uint64) []byte {
+// Verify performs comprehensive verification with maximum security
+func (h *Header) Verify(key []byte) error {
+	verifier := NewVerifier(key)
+	return verifier.VerifyAll(h)
+}
+
+// Accessor methods
+func (h *Header) Magic() []byte {
+	result := make([]byte, MagicSize)
+	copy(result, h.magic[:])
+	return result
+}
+
+func (h *Header) Version() uint16 {
+	return h.version
+}
+
+func (h *Header) Flags() uint32 {
+	return h.flags
+}
+
+func (h *Header) Salt() []byte {
+	result := make([]byte, SaltSize)
+	copy(result, h.salt[:])
+	return result
+}
+
+func (h *Header) OriginalSize() uint64 {
+	return h.originalSize
+}
+
+func (h *Header) HasFlag(flag uint32) bool {
+	return h.flags&flag != 0
+}
+
+// Utility functions
+func secureCompare(a, b []byte) bool {
+	return subtle.ConstantTimeCompare(a, b) == 1
+}
+
+func uint64ToBytes(v uint64) []byte {
 	buf := make([]byte, 8)
 	binary.BigEndian.PutUint64(buf, v)
 	return buf
 }
 
-// Uint32ToBytes converts a uint32 to big-endian bytes
-func Uint32ToBytes(v uint32) []byte {
+func uint32ToBytes(v uint32) []byte {
 	buf := make([]byte, 4)
 	binary.BigEndian.PutUint32(buf, v)
 	return buf
 }
 
-// CloneBytes creates a deep copy of a byte slice
-func CloneBytes(b []byte) []byte {
-	if b == nil {
-		return nil
-	}
-	clone := make([]byte, len(b))
-	copy(clone, b)
-	return clone
+func uint16ToBytes(v uint16) []byte {
+	buf := make([]byte, 2)
+	binary.BigEndian.PutUint16(buf, v)
+	return buf
+}
+
+func bytesToUint64(b []byte) uint64 {
+	return binary.BigEndian.Uint64(b)
+}
+
+func bytesToUint32(b []byte) uint32 {
+	return binary.BigEndian.Uint32(b)
+}
+
+func bytesToUint16(b []byte) uint16 {
+	return binary.BigEndian.Uint16(b)
 }

@@ -6,7 +6,6 @@ import (
 	"math"
 
 	"github.com/hambosto/sweetbyte/internal/config"
-	"github.com/hambosto/sweetbyte/internal/errors"
 	"github.com/hambosto/sweetbyte/internal/files"
 	"github.com/hambosto/sweetbyte/internal/header"
 	"github.com/hambosto/sweetbyte/internal/keys"
@@ -38,7 +37,7 @@ func (d *Decryptor) DecryptFile(srcPath, destPath, password string) error {
 	defer srcFile.Close() //nolint:errcheck
 
 	// Read and parse header
-	header, err := header.ReadFrom(srcFile)
+	header, err := header.Read(srcFile)
 	if err != nil {
 		return fmt.Errorf("failed to read header: %w", err)
 	}
@@ -50,15 +49,13 @@ func (d *Decryptor) DecryptFile(srcPath, destPath, password string) error {
 	}
 
 	if err := header.Verify(key); err != nil {
-		switch err {
-		case errors.ErrAuthFailure:
-			return fmt.Errorf("%w: wrong key or tampered auth tag", err)
-		case errors.ErrIntegrityFailure:
-			return fmt.Errorf("%w: header structure corrupted", err)
-		case errors.ErrChecksumMismatch:
-			return fmt.Errorf("%w: data corruption detected", err)
-		}
+		return fmt.Errorf("header verification failed: %w", err)
 	}
+
+	fmt.Printf("Header verified successfully!\n")
+	fmt.Printf("Original size: %d bytes\n", header.OriginalSize())
+	fmt.Printf("Version: %d\n", header.Version())
+	fmt.Printf("Security flags: %v\n", header.Flags())
 
 	// Validate original size
 	originalSize := header.OriginalSize()

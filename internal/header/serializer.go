@@ -2,89 +2,88 @@ package header
 
 import (
 	"fmt"
-	"hash/crc32"
 	"io"
-
-	"github.com/hambosto/sweetbyte/internal/config"
-	"github.com/hambosto/sweetbyte/internal/errors"
 )
 
-// Serializer handles header serialization
-type Serializer struct {
-	header *Header
+// Serializer handles header serialization to binary format
+type Serializer struct{}
+
+// NewSerializer creates a new serializer instance
+func NewSerializer() *Serializer {
+	return &Serializer{}
 }
 
-// NewSerializer creates a new header serializer
-func NewSerializer(header *Header) *Serializer {
-	return &Serializer{header: header}
-}
-
-// WriteTo writes the serialized header to the writer
-func (s *Serializer) WriteTo(w io.Writer) (int64, error) {
-	if err := s.validate(); err != nil {
-		return 0, err
+// Write serializes and writes the header to the writer
+func (s *Serializer) Write(w io.Writer, header *Header) error {
+	if err := s.Validate(header); err != nil {
+		return fmt.Errorf("serialization validation failed: %w", err)
 	}
 
-	data := s.marshal()
+	data := s.Marshal(header)
 	n, err := w.Write(data)
 	if err != nil {
-		return int64(n), fmt.Errorf("failed to write header: %w", err)
+		return fmt.Errorf("failed to write header data: %w", err)
 	}
 
 	if n != len(data) {
-		return int64(n), fmt.Errorf("%w: wrote %d of %d bytes", errors.ErrIncompleteWrite, n, len(data))
+		return fmt.Errorf("incomplete write: expected %d bytes, wrote %d", len(data), n)
 	}
 
-	return int64(n), nil
-}
-
-// validate checks if the header is ready for serialization
-func (s *Serializer) validate() error {
-	h := s.header
-	validators := []struct {
-		condition bool
-		err       error
-		got       int
-		expected  int
-	}{
-		{
-			len(h.metadata.salt) != config.SaltSizeBytes, errors.ErrInvalidSalt,
-			len(h.metadata.salt), config.SaltSizeBytes,
-		},
-		{
-			len(h.protection.integrityHash) != config.IntegritySize, errors.ErrInvalidIntegrity,
-			len(h.protection.integrityHash), config.IntegritySize,
-		},
-		{
-			len(h.protection.authTag) != config.AuthSize, errors.ErrInvalidAuth,
-			len(h.protection.authTag), config.AuthSize,
-		},
-	}
-
-	for _, v := range validators {
-		if v.condition {
-			return fmt.Errorf("%w: expected %d bytes, got %d", v.err, v.expected, v.got)
-		}
-	}
 	return nil
 }
 
-// marshal serializes the header to bytes
-func (s *Serializer) marshal() []byte {
-	h := s.header
-	var buf []byte
+// Validate ensures the header is ready for serialization
+func (s *Serializer) Validate(h *Header) error {
+	// Validate magic bytes
+	if !secureCompare(h.magic[:], []byte(MagicBytes)) {
+		return fmt.Errorf("invalid magic bytes")
+	}
 
-	// Write header fields in order
-	buf = append(buf, []byte(config.MagicBytes)...)
-	buf = append(buf, h.metadata.salt...)
-	buf = append(buf, Uint64ToBytes(h.metadata.originalSize)...)
-	buf = append(buf, h.protection.integrityHash...)
-	buf = append(buf, h.protection.authTag...)
+	// Validate version
+	if h.version == 0 {
+		return fmt.Errorf("invalid version: %d", h.version)
+	}
 
-	// Calculate and append checksum (excluding magic bytes)
-	checksumData := buf[len(config.MagicBytes):]
-	checksum := crc32.ChecksumIEEE(checksumData)
-	buf = append(buf, Uint32ToBytes(checksum)...)
+	// Validate original size
+	if h.originalSize == 0 {
+		return fmt.Errorf("original size cannot be zero")
+	}
 
-	return buf
+	// Validate salt is not all zeros
+	zeroSalt := make([]byte, SaltSize)
+	if secureCompare(h.salt[:], zeroSalt) {
+		return fmt.Errorf("salt cannot be all zeros")
+	}
+
+	// Validate integrity hash is not all zeros
+	zeroHash := make([]byte, IntegrityHashSize)
+	if secureCompare(h.integrityHash[:], zeroHash) {
+		return fmt.Errorf("integrity hash cannot be all zeros")
+	}
+
+	// Validate auth tag is not all zeros
+	zeroAuth := make([]byte, AuthTagSize)
+	if secureCompare(h.authTag[:], zeroAuth) {
+		return fmt.Errorf("auth tag cannot be all zeros")
+	}
+
+	return nil
+}
+
+// Marshal converts the header to binary format
+func (s *Serializer) Marshal(h *Header) []byte {
+	data := make([]byte, 0, TotalHeaderSize)
+
+	// Serialize fields in exact order
+	data = append(data, h.magic[:]...)                    // 4 bytes
+	data = append(data, uint16ToBytes(h.version)...)      // 2 bytes
+	data = append(data, uint32ToBytes(h.flags)...)        // 4 bytes
+	data = append(data, h.salt[:]...)                     // 32 bytes
+	data = append(data, uint64ToBytes(h.originalSize)...) // 8 bytes
+	data = append(data, h.integrityHash[:]...)            // 32 bytes
+	data = append(data, h.authTag[:]...)                  // 32 bytes
+	data = append(data, uint32ToBytes(h.checksum)...)     // 4 bytes
+	data = append(data, h.padding[:]...)                  // 16 bytes
+
+	return data // Total: 134 bytes
 }
