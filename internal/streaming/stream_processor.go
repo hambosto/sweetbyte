@@ -9,16 +9,17 @@ import (
 	"github.com/hambosto/sweetbyte/internal/ui"
 )
 
-// Task represents a unit of work for the concurrent processing pool.
-// Each task contains a chunk of data and its sequential index.
+// Task represents a chunk of data to be processed by a worker.
+// It includes the data itself and its original sequence index to ensure
+// the output is correctly ordered.
 type Task struct {
 	Data  []byte
 	Index uint64
 }
 
-// TaskResult is the outcome of processing a `Task`.
-// Size is used for progress tracking (input size for encryption, output size
-// for decryption). Err contains the first error encountered during processing.
+// TaskResult holds the outcome of a processed task.
+// It contains the resulting data, the original index for reordering,
+// the size for progress tracking, and any error that occurred.
 type TaskResult struct {
 	Index uint64
 	Data  []byte
@@ -26,13 +27,9 @@ type TaskResult struct {
 	Err   error
 }
 
-// streamProcessor orchestrates the end-to-end streaming pipeline composed of:
-//   1. Reader: converts the input stream to chunked `Task`s
-//   2. Worker pool: processes chunks concurrently (encrypt/decrypt)
-//   3. Writer: emits results in order, preserving boundaries
-//
-// It manages context cancellation across stages and aggregates errors from
-// reader/writer, returning the first error with context.
+// streamProcessor manages the entire concurrent streaming pipeline.
+// It coordinates the reader, worker pool, and writer to process a stream
+// of data in chunks, handling context cancellation and error propagation.
 type streamProcessor struct {
 	streamConfig  StreamConfig
 	taskProcessor TaskProcessor
@@ -41,11 +38,8 @@ type streamProcessor struct {
 	pool          *workerPool
 }
 
-// NewStreamProcessor creates a streaming processor from `StreamConfig`.
-//
-// It validates the config, applies defaults, constructs the chunk reader,
-// task processor, and worker pool. The writer is created in `Process` when a
-// progress bar can be initialized using the known total size.
+// NewStreamProcessor creates a new stream processor with the given configuration.
+// It initializes the task processor, chunk reader, and worker pool.
 func NewStreamProcessor(config StreamConfig) (Processor, error) {
 	if err := config.Validate(); err != nil {
 		return nil, err
@@ -66,11 +60,9 @@ func NewStreamProcessor(config StreamConfig) (Processor, error) {
 	}, nil
 }
 
-// Process runs the pipeline from `input` to `output`.
-//
-// It creates a progress bar (via `ui.ProgressBar`), then calls `runPipeline`.
-// The method validates streams are non-nil and returns on the first error from
-// reader or writer, preserving error context. Cancellation is observed via ctx.
+// Process executes the streaming operation from an input reader to an output writer.
+// It sets up a progress bar and then runs the pipeline, ensuring that the
+// input and output streams are handled correctly.
 func (s *streamProcessor) Process(ctx context.Context, input io.Reader, output io.Writer, totalSize int64) error {
 	if input == nil || output == nil {
 		return fmt.Errorf("input and output streams must not be nil")
@@ -83,13 +75,9 @@ func (s *streamProcessor) Process(ctx context.Context, input io.Reader, output i
 	return s.runPipeline(ctx, input, output)
 }
 
-// runPipeline orchestrates the three stages (reader, pool, writer):
-// - Read chunks with cancellation support
-// - Process chunks concurrently via worker pool
-// - Write results in original order
-//
-// It cancels the pipeline on error and surfaces reader/writer errors with
-// layered context. Caller must have initialized the writer (progress bar).
+// runPipeline is the core of the stream processor. It connects the reader,
+// worker pool, and writer, and manages the data flow between them.
+// It also handles error propagation and context cancellation.
 func (s *streamProcessor) runPipeline(ctx context.Context, input io.Reader, output io.Writer) error {
 	// Create cancellable context for pipeline coordination
 	pipelineCtx, cancel := context.WithCancel(ctx)

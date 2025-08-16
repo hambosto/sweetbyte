@@ -9,24 +9,25 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// CLI represents the command-line interface
+// CLI represents the command-line interface of the application.
+// It is responsible for parsing commands and flags.
 type CLI struct {
 	rootCmd *cobra.Command
 }
 
-// NewCLI creates a new CLI instance
+// NewCLI creates and initializes a new CLI application.
 func NewCLI() *CLI {
 	cli := &CLI{}
 	cli.setupCommands()
 	return cli
 }
 
-// Execute runs the CLI
+// Execute starts the CLI application.
 func (c *CLI) Execute() error {
 	return c.rootCmd.Execute()
 }
 
-// setupCommands initializes all CLI commands
+// setupCommands configures the root command and adds subcommands.
 func (c *CLI) setupCommands() {
 	c.rootCmd = &cobra.Command{
 		Use:   "sweetbyte",
@@ -50,7 +51,8 @@ SweetByte can be run in a user-friendly interactive mode or via the command line
 	c.rootCmd.AddCommand(c.createInteractiveCommand())
 }
 
-// createEncryptCommand creates the encrypt subcommand
+// createEncryptCommand sets up the 'encrypt' subcommand.
+// It defines the command's purpose, flags, and links it to the encryption logic.
 func (c *CLI) createEncryptCommand() *cobra.Command {
 	var (
 		inputFile    string
@@ -89,7 +91,8 @@ corruption. A strong encryption key is derived from your password using Argon2id
 	return cmd
 }
 
-// createDecryptCommand creates the decrypt subcommand
+// createDecryptCommand sets up the 'decrypt' subcommand.
+// It defines the command's purpose, flags, and links it to the decryption logic.
 func (c *CLI) createDecryptCommand() *cobra.Command {
 	var (
 		inputFile    string
@@ -128,7 +131,8 @@ file. The correct password is required to derive the necessary decryption key.`,
 	return cmd
 }
 
-// createInteractiveCommand creates the interactive subcommand
+// createInteractiveCommand sets up the 'interactive' subcommand.
+// This command provides an alternative, guided user experience.
 func (c *CLI) createInteractiveCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "interactive",
@@ -143,7 +147,9 @@ This is ideal for users who prefer a more intuitive and user-friendly interface.
 	}
 }
 
-// runEncrypt handles the encrypt command
+// runEncrypt handles the encryption command logic.
+// It validates the input and output files, sets default values,
+// and then calls the CLI processor to perform the encryption.
 func (c *CLI) runEncrypt(inputFile, outputFile, password string, deleteSource, secureDelete bool) error {
 	// Validate input file
 	if _, err := os.Stat(inputFile); err != nil {
@@ -172,7 +178,9 @@ func (c *CLI) runEncrypt(inputFile, outputFile, password string, deleteSource, s
 	return processor.Encrypt(inputFile, outputFile, password, deleteSource, secureDelete)
 }
 
-// runDecrypt handles the decrypt command
+// runDecrypt handles the decryption command logic.
+// It validates the input and output files, sets default values,
+// and then calls the CLI processor to perform the decryption.
 func (c *CLI) runDecrypt(inputFile, outputFile, password string, deleteSource, secureDelete bool) error {
 	// Validate input file
 	if _, err := os.Stat(inputFile); err != nil {

@@ -10,7 +10,7 @@ import (
 	"github.com/hambosto/sweetbyte/internal/options"
 )
 
-// FileInfo represents file information for processing.
+// FileInfo holds metadata about a file, including its eligibility for processing.
 type FileInfo struct {
 	Path        string
 	Size        int64
@@ -18,7 +18,8 @@ type FileInfo struct {
 	IsEligible  bool
 }
 
-// Finder is responsible for finding files eligible for processing
+// Finder provides utilities for discovering and filtering files based on
+// the application's processing rules.
 type Finder struct{}
 
 // NewFinder creates a new file finder instance

@@ -10,7 +10,9 @@ const (
 	MaxDataLen = 1 << 30 // Maximum data length (1GB)
 )
 
-// Encoder handles Reed-Solomon encoding and decoding operations
+// Encoder provides Reed-Solomon error correction coding.
+// It splits data into a set of data shards, computes additional parity shards,
+// and can reconstruct the original data even if some shards are lost or corrupted.
 type Encoder struct {
 	dataShards   int
 	parityShards int
@@ -18,7 +20,9 @@ type Encoder struct {
 	shards       *Shards
 }
 
-// NewEncoder creates a new Reed-Solomon encoder with the specified number of data and parity shards
+// NewEncoder creates a new Reed-Solomon encoder.
+// It takes the number of data and parity shards as parameters, which determine
+// the level of redundancy and error correction capability.
 func NewEncoder(dataShards, parityShards int) (*Encoder, error) {
 	if dataShards <= 0 {
 		return nil, fmt.Errorf("data shards must be positive")
@@ -43,7 +47,8 @@ func NewEncoder(dataShards, parityShards int) (*Encoder, error) {
 	}, nil
 }
 
-// Encode encodes the input data using Reed-Solomon encoding
+// Encode applies Reed-Solomon encoding to a byte slice.
+// It splits the data into shards and generates parity shards for error correction.
 func (e *Encoder) Encode(data []byte) ([]byte, error) {
 	if len(data) == 0 {
 		return nil, fmt.Errorf("input data cannot be empty")
@@ -60,7 +65,9 @@ func (e *Encoder) Encode(data []byte) ([]byte, error) {
 	return e.shards.Combine(shards), nil
 }
 
-// Decode decodes the Reed-Solomon encoded data
+// Decode attempts to reconstruct the original data from the encoded shards.
+// It can recover the data even if some of the shards are corrupted,
+// up to the number of parity shards.
 func (e *Encoder) Decode(encoded []byte) ([]byte, error) {
 	totalShards := e.dataShards + e.parityShards
 

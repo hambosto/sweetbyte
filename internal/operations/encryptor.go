@@ -12,13 +12,14 @@ import (
 	"github.com/hambosto/sweetbyte/internal/streaming"
 )
 
-// Encryptor handles file encryption operations
+// Encryptor orchestrates the file encryption process.
+// It manages file I/O, key derivation, header creation, and stream processing.
 type Encryptor struct {
 	fileManager *files.Manager
 	fileFinder  *files.Finder
 }
 
-// NewEncryptor creates a new encryptor instance
+// NewEncryptor creates and initializes a new Encryptor instance.
 func NewEncryptor() *Encryptor {
 	return &Encryptor{
 		fileManager: files.NewManager(),
@@ -26,7 +27,10 @@ func NewEncryptor() *Encryptor {
 	}
 }
 
-// EncryptFile encrypts a file from source to destination
+// EncryptFile performs the end-to-end encryption of a single file.
+// It handles everything from opening the source and destination files
+// to deriving the encryption key, writing the secure header, and processing
+// the file content in concurrent streams.
 func (e *Encryptor) EncryptFile(srcPath, destPath, password string) error {
 	// Open source file
 	srcFile, srcInfo, err := e.fileManager.OpenFile(srcPath)

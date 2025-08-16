@@ -7,26 +7,26 @@ import (
 	"io"
 )
 
-// CompressionLevel represents compression levels.
+// CompressionLevel defines the trade-off between compression speed and ratio.
 type CompressionLevel int
 
 const (
-	// LevelNoCompression disables compression.
+	// LevelNoCompression disables compression entirely.
 	LevelNoCompression CompressionLevel = iota
-	// LevelBestSpeed provides fastest compression.
+	// LevelBestSpeed prioritizes speed over compression ratio.
 	LevelBestSpeed
-	// LevelDefaultCompression provides balanced compression.
+	// LevelDefaultCompression offers a balanced approach to speed and compression.
 	LevelDefaultCompression
-	// LevelBestCompression provides maximum compression.
+	// LevelBestCompression prioritizes the smallest possible output size.
 	LevelBestCompression
 )
 
-// Compressor handles data compression and decompression using zlib
+// Compressor provides zlib-based data compression and decompression.
 type Compressor struct {
 	level int
 }
 
-// NewCompressor creates a new compressor with the specified compression level
+// NewCompressor creates a new Compressor with a specified compression level.
 func NewCompressor(level CompressionLevel) (*Compressor, error) {
 	var zlibLevel int
 
@@ -46,7 +46,7 @@ func NewCompressor(level CompressionLevel) (*Compressor, error) {
 	return &Compressor{level: zlibLevel}, nil
 }
 
-// Compress compresses the input data using zlib
+// Compress compresses a byte slice using the configured zlib compression level.
 func (c *Compressor) Compress(data []byte) ([]byte, error) {
 	if len(data) == 0 {
 		return nil, fmt.Errorf("data cannot be empty")
@@ -72,7 +72,7 @@ func (c *Compressor) Compress(data []byte) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-// Decompress decompresses the input data using zlib
+// Decompress decompresses a zlib-compressed byte slice.
 func (c *Compressor) Decompress(data []byte) ([]byte, error) {
 	if len(data) == 0 {
 		return nil, fmt.Errorf("data cannot be empty")

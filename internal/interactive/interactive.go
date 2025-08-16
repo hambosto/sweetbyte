@@ -10,7 +10,8 @@ import (
 	"github.com/hambosto/sweetbyte/internal/ui"
 )
 
-// InteractiveApp encapsulates the main interactive application
+// InteractiveApp orchestrates the user-guided encryption and decryption workflow.
+// It manages the terminal UI, user prompts, and file operations.
 type InteractiveApp struct {
 	terminal    *ui.Terminal
 	prompt      *ui.Prompt
@@ -20,7 +21,7 @@ type InteractiveApp struct {
 	decryptor   *operations.Decryptor
 }
 
-// NewInteractiveApp creates a new interactive application instance
+// NewInteractiveApp creates and initializes a new InteractiveApp instance.
 func NewInteractiveApp() *InteractiveApp {
 	return &InteractiveApp{
 		terminal:    ui.NewTerminal(),
@@ -32,7 +33,9 @@ func NewInteractiveApp() *InteractiveApp {
 	}
 }
 
-// Run executes the main interactive application workflow
+// Run starts and manages the entire interactive session.
+// It initializes the terminal, runs the main application loop,
+// and handles graceful shutdown and error reporting.
 func (a *InteractiveApp) Run() {
 	// Set up terminal
 	a.initializeTerminal()
@@ -50,13 +53,15 @@ func (a *InteractiveApp) Run() {
 	a.terminal.Cleanup()
 }
 
-// initializeTerminal sets up the terminal for the application
+// initializeTerminal prepares the terminal for the application by clearing it
+// and positioning the cursor at the top-left.
 func (a *InteractiveApp) initializeTerminal() {
 	a.terminal.Clear()
 	a.terminal.MoveTopLeft()
 }
 
-// runInteractiveLoop executes the main interactive workflow
+// runInteractiveLoop contains the main logic for the interactive session.
+// It guides the user from selecting an operation to processing the file.
 func (a *InteractiveApp) runInteractiveLoop() error {
 	// Get processing mode from user
 	operation, err := a.prompt.GetProcessingMode()
@@ -94,13 +99,15 @@ func (a *InteractiveApp) runInteractiveLoop() error {
 	return nil
 }
 
-// handleError handles application errors and displays a concise user-facing message
+// handleError displays a user-friendly error message in the terminal.
+// It ensures that the user is informed of failures without being overwhelmed by technical details.
 func (a *InteractiveApp) handleError(err error) {
     // Print a formatted error message. Detailed context is preserved in the error chain.
     a.terminal.PrintError(fmt.Sprintf("Application error: %v", err))
 }
 
-// getEligibleFiles retrieves files that can be processed based on the operation mode
+// getEligibleFiles finds files in the current directory that are suitable
+// for the selected operation (e.g., .swb files for decryption).
 func (a *InteractiveApp) getEligibleFiles(operation options.ProcessorMode) ([]string, error) {
 	eligibleFiles, err := a.fileFinder.FindEligibleFiles(operation)
 	if err != nil {
@@ -114,7 +121,9 @@ func (a *InteractiveApp) getEligibleFiles(operation options.ProcessorMode) ([]st
 	return eligibleFiles, nil
 }
 
-// processFile handles the file processing workflow
+// processFile orchestrates the core logic for a single file operation.
+// It validates paths, performs the encryption or decryption, and handles the
+// optional deletion of the source file upon completion.
 func (a *InteractiveApp) processFile(inputPath string, mode options.ProcessorMode) error {
 	outputPath := a.fileFinder.GetOutputPath(inputPath, mode)
 
@@ -164,7 +173,8 @@ func (a *InteractiveApp) processFile(inputPath string, mode options.ProcessorMod
 	return nil
 }
 
-// encryptFile handles file encryption
+// encryptFile manages the encryption of a single file.
+// It prompts the user for a password and then calls the core encryption logic.
 func (a *InteractiveApp) encryptFile(srcPath, destPath string) error {
 	// Get password
 	password, err := a.prompt.GetEncryptionPassword()
@@ -180,7 +190,8 @@ func (a *InteractiveApp) encryptFile(srcPath, destPath string) error {
 	return nil
 }
 
-// decryptFile handles file decryption
+// decryptFile manages the decryption of a single file.
+// It prompts the user for a password and then calls the core decryption logic.
 func (a *InteractiveApp) decryptFile(srcPath, destPath string) error {
 	// Get password
 	password, err := a.prompt.GetDecryptionPassword()

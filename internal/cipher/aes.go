@@ -10,13 +10,14 @@ import (
 	"github.com/hambosto/sweetbyte/internal/config"
 )
 
-// AESCipher provides AES-GCM encryption and decryption
+// AESCipher provides AES-256-GCM encryption and decryption capabilities.
+// It encapsulates the AEAD cipher and handles nonce generation and prepending.
 type AESCipher struct {
 	aead cipher.AEAD
 }
 
-// NewAESCipher creates a new AES cipher with the given key
-// The key must be 16, 24, or 32 bytes for AES-128, AES-192, or AES-256
+// NewAESCipher creates a new AESCipher instance.
+// It initializes an AES-256-GCM cipher with the provided 32-byte key.
 func NewAESCipher(key []byte) (*AESCipher, error) {
 	if len(key) != config.EncryptionKeySize {
 		return nil, fmt.Errorf("key must be %d bytes, got %d", config.EncryptionKeySize, len(key))
@@ -37,7 +38,9 @@ func NewAESCipher(key []byte) (*AESCipher, error) {
 	}, nil
 }
 
-// Encrypt encrypts the plaintext and returns the ciphertext with nonce prepended
+// Encrypt encrypts the given plaintext.
+// It generates a random nonce, performs AES-GCM encryption,
+// and prepends the nonce to the resulting ciphertext.
 func (c *AESCipher) Encrypt(plaintext []byte) ([]byte, error) {
 	if len(plaintext) == 0 {
 		return nil, fmt.Errorf("plaintext cannot be empty")
@@ -52,7 +55,9 @@ func (c *AESCipher) Encrypt(plaintext []byte) ([]byte, error) {
 	return ciphertext, nil
 }
 
-// Decrypt decrypts the ciphertext (which should have nonce prepended) and returns the plaintext
+// Decrypt decrypts the given ciphertext.
+// It assumes the nonce is prepended to the ciphertext, extracts it,
+// and then performs AES-GCM decryption and authentication.
 func (c *AESCipher) Decrypt(ciphertext []byte) ([]byte, error) {
 	if len(ciphertext) == 0 {
 		return nil, fmt.Errorf("ciphertext cannot be empty")

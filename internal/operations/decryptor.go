@@ -13,13 +13,14 @@ import (
 	"github.com/hambosto/sweetbyte/internal/streaming"
 )
 
-// Decryptor handles file decryption operations
+// Decryptor orchestrates the file decryption process.
+// It manages file I/O, key derivation, header verification, and stream processing.
 type Decryptor struct {
 	fileManager *files.Manager
 	fileFinder  *files.Finder
 }
 
-// NewDecryptor creates a new decryptor instance
+// NewDecryptor creates and initializes a new Decryptor instance.
 func NewDecryptor() *Decryptor {
 	return &Decryptor{
 		fileManager: files.NewManager(),
@@ -27,7 +28,10 @@ func NewDecryptor() *Decryptor {
 	}
 }
 
-// DecryptFile decrypts a file from source to destination
+// DecryptFile performs the end-to-end decryption of a single file.
+// It reads the secure header, derives the decryption key, verifies the header's
+// integrity and authenticity, and then processes the encrypted content in
+// concurrent streams to restore the original file.
 func (d *Decryptor) DecryptFile(srcPath, destPath, password string) error {
 	// Open source file
 	srcFile, _, err := d.fileManager.OpenFile(srcPath)
