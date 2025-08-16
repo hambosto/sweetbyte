@@ -58,7 +58,6 @@ func (c *Compressor) Compress(data []byte) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create compressor: %w", err)
 	}
-	defer writer.Close() //nolint:errcheck
 
 	// Write data to compressor
 	if _, err := writer.Write(data); err != nil {
@@ -84,12 +83,16 @@ func (c *Compressor) Decompress(data []byte) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create decompressor: %w", err)
 	}
-	defer reader.Close() //nolint:errcheck
 
 	// Read decompressed data
 	var buf bytes.Buffer
 	if _, err := io.Copy(&buf, reader); err != nil {
 		return nil, fmt.Errorf("failed to decompress data: %w", err)
+	}
+
+	// Close reader to check for integrity errors
+	if err := reader.Close(); err != nil {
+		return nil, fmt.Errorf("failed to finalize decompression: %w", err)
 	}
 
 	return buf.Bytes(), nil

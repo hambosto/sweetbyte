@@ -96,7 +96,7 @@ func (p *Prompt) confirmAction(message string) (bool, error) {
 	}
 
 	if err := survey.AskOne(prompt, &result); err != nil {
-		return false, fmt.Errorf("prompt failed: %w")
+		return false, fmt.Errorf("prompt failed: %w", err)
 	}
 
 	return result, nil

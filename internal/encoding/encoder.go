@@ -76,5 +76,10 @@ func (e *Encoder) Decode(encoded []byte) ([]byte, error) {
 		return nil, fmt.Errorf("reconstruction failed: %w", err)
 	}
 
-	return e.shards.Extract(shards)
+	data, err := e.shards.Extract(shards)
+	if err != nil {
+		return nil, fmt.Errorf("failed to extract data from shards: %w", err)
+	}
+
+	return data, nil
 }

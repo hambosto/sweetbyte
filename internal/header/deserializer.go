@@ -22,8 +22,7 @@ func (d *Deserializer) Read(r io.Reader) (*Header, error) {
 	data := make([]byte, TotalHeaderSize)
 	n, err := io.ReadFull(r, data)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read header data: read %d of %d bytes: %w",
-			n, TotalHeaderSize, err)
+		return nil, fmt.Errorf("failed to read header data: read %d of %d bytes: %w", n, TotalHeaderSize, err)
 	}
 
 	return d.Unmarshal(data)
@@ -32,8 +31,7 @@ func (d *Deserializer) Read(r io.Reader) (*Header, error) {
 // Unmarshal deserializes header from bytes
 func (d *Deserializer) Unmarshal(data []byte) (*Header, error) {
 	if len(data) != TotalHeaderSize {
-		return nil, fmt.Errorf("invalid header size: expected %d bytes, got %d",
-			TotalHeaderSize, len(data))
+		return nil, fmt.Errorf("invalid header size: expected %d bytes, got %d", TotalHeaderSize, len(data))
 	}
 
 	d.data = data
@@ -90,12 +88,15 @@ func (d *Deserializer) parseHeader(h *Header) error {
 func (d *Deserializer) validateParsedHeader(h *Header) error {
 	// Check magic bytes
 	if !secureCompare(h.magic[:], []byte(MagicBytes)) {
-		return fmt.Errorf("invalid magic bytes: expected %s", MagicBytes)
+		return fmt.Errorf("invalid magic bytes: expected %s, got %s", MagicBytes, string(h.magic[:]))
 	}
 
 	// Check version
-	if h.version == 0 || h.version > CurrentVersion {
-		return fmt.Errorf("unsupported version: %d (current: %d)",
+	if h.version == 0 {
+		return fmt.Errorf("invalid version: cannot be zero")
+	}
+	if h.version > CurrentVersion {
+		return fmt.Errorf("unsupported version: %d (maximum supported: %d)",
 			h.version, CurrentVersion)
 	}
 
@@ -107,7 +108,7 @@ func (d *Deserializer) validateParsedHeader(h *Header) error {
 	// Check for suspicious all-zero patterns
 	zeroSalt := make([]byte, SaltSize)
 	if secureCompare(h.salt[:], zeroSalt) {
-		return fmt.Errorf("invalid salt: all zeros")
+		return fmt.Errorf("invalid salt: all zeros detected")
 	}
 
 	return nil

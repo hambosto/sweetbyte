@@ -12,7 +12,15 @@ import (
 	"github.com/hambosto/sweetbyte/internal/ui"
 )
 
-// chunkWriter handles writing processed chunks to output
+// chunkWriter writes processed `TaskResult`s to the output in order.
+//
+// Behavior by mode:
+//   - Encryption: emits a 4-byte big-endian size header before each chunk.
+//   - Decryption: writes raw plaintext data without a size header.
+//
+// Ordering is ensured via `OrderBuffer`, which buffers out-of-order results
+// until their predecessors arrive. An optional progress bar is advanced by the
+// logical size of each result (see `taskProcessor.calculateProgressSize`).
 type chunkWriter struct {
 	processing options.Processing
 	buffer     OrderBuffer
@@ -28,7 +36,8 @@ func NewChunkWriter(processing options.Processing, bar *ui.ProgressBar) ChunkWri
 	}
 }
 
-// WriteChunks writes processed chunks to output in order
+// WriteChunks consumes results from `results` and writes them to `output` in
+// order. It honors context cancellation and returns the first error encountered.
 func (w *chunkWriter) WriteChunks(ctx context.Context, output io.Writer, results <-chan TaskResult) error {
 	for {
 		select {
@@ -53,13 +62,13 @@ func (w *chunkWriter) WriteChunks(ctx context.Context, output io.Writer, results
 	}
 }
 
-// flushRemaining writes any remaining buffered results
+// flushRemaining drains the order buffer and writes any remaining results.
 func (w *chunkWriter) flushRemaining(output io.Writer) error {
 	remaining := w.buffer.Flush()
 	return w.writeResults(output, remaining)
 }
 
-// writeResults writes a slice of ready results
+// writeResults writes a batch of ready results to `output`.
 func (w *chunkWriter) writeResults(output io.Writer, results []TaskResult) error {
 	for _, result := range results {
 		if err := w.writeResult(output, result); err != nil {
@@ -69,7 +78,9 @@ func (w *chunkWriter) writeResults(output io.Writer, results []TaskResult) error
 	return nil
 }
 
-// writeResult writes a single result to the output
+// writeResult writes a single result to `output`.
+// For encryption mode, a 4-byte big-endian chunk length header is written
+// prior to the data payload.
 func (w *chunkWriter) writeResult(output io.Writer, result TaskResult) error {
 	// Write chunk size header for encryption
 	if w.processing == options.Encryption {
@@ -93,7 +104,9 @@ func (w *chunkWriter) writeResult(output io.Writer, result TaskResult) error {
 	return nil
 }
 
-// writeChunkSize writes the chunk size as a 4-byte big-endian integer
+// writeChunkSize encodes `size` as a 4-byte big-endian unsigned integer and
+// writes it to `output`. Guards against negative sizes and values exceeding
+// uint32 to prevent overflow downstream.
 func (w *chunkWriter) writeChunkSize(output io.Writer, size int) error {
 	if size < 0 || size > math.MaxUint32 {
 		return fmt.Errorf("chunk size out of range: %d", size)

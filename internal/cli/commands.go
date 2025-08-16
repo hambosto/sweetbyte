@@ -146,8 +146,11 @@ This is ideal for users who prefer a more intuitive and user-friendly interface.
 // runEncrypt handles the encrypt command
 func (c *CLI) runEncrypt(inputFile, outputFile, password string, deleteSource, secureDelete bool) error {
 	// Validate input file
-	if _, err := os.Stat(inputFile); os.IsNotExist(err) {
-		return fmt.Errorf("input file does not exist %s", inputFile)
+	if _, err := os.Stat(inputFile); err != nil {
+		if os.IsNotExist(err) {
+			return fmt.Errorf("input file not found: %s", inputFile)
+		}
+		return fmt.Errorf("failed to access input file %s: %w", inputFile, err)
 	}
 
 	// Set default output file if not provided
@@ -155,9 +158,11 @@ func (c *CLI) runEncrypt(inputFile, outputFile, password string, deleteSource, s
 		outputFile = inputFile + config.FileExtension
 	}
 
-	// Check if output file already exists
+	// Check if output file already exists or inaccessible
 	if _, err := os.Stat(outputFile); err == nil {
-		return fmt.Errorf("output file already exists %s", outputFile)
+		return fmt.Errorf("output file already exists: %s", outputFile)
+	} else if !os.IsNotExist(err) {
+		return fmt.Errorf("failed to access output file %s: %w", outputFile, err)
 	}
 
 	// Create CLI processor
@@ -170,8 +175,11 @@ func (c *CLI) runEncrypt(inputFile, outputFile, password string, deleteSource, s
 // runDecrypt handles the decrypt command
 func (c *CLI) runDecrypt(inputFile, outputFile, password string, deleteSource, secureDelete bool) error {
 	// Validate input file
-	if _, err := os.Stat(inputFile); os.IsNotExist(err) {
-		return fmt.Errorf("input file does not exist %s", inputFile)
+	if _, err := os.Stat(inputFile); err != nil {
+		if os.IsNotExist(err) {
+			return fmt.Errorf("input file not found: %s", inputFile)
+		}
+		return fmt.Errorf("failed to access input file %s: %w", inputFile, err)
 	}
 
 	// Set default output file if not provided
@@ -184,9 +192,11 @@ func (c *CLI) runDecrypt(inputFile, outputFile, password string, deleteSource, s
 		}
 	}
 
-	// Check if output file already exists
+	// Check if output file already exists or inaccessible
 	if _, err := os.Stat(outputFile); err == nil {
-		return fmt.Errorf("output file already exists %s", outputFile)
+		return fmt.Errorf("output file already exists: %s", outputFile)
+	} else if !os.IsNotExist(err) {
+		return fmt.Errorf("failed to access output file %s: %w", outputFile, err)
 	}
 
 	// Create CLI processor

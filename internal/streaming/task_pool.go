@@ -8,13 +8,17 @@ import (
 	"github.com/hambosto/sweetbyte/internal/processor"
 )
 
-// taskProcessor handles the actual encryption/decryption of individual chunks
+// taskProcessor adapts the in-memory `processor.Processor` to operate on
+// chunked tasks. It does not manage ordering or I/O; it only transforms bytes
+// according to the selected `options.Processing` mode.
 type taskProcessor struct {
 	processor  *processor.Processor
 	processing options.Processing
 }
 
-// NewTaskProcessor creates a new task processor
+// NewTaskProcessor creates a new task processor with the given master `key`
+// and processing mode (encryption/decryption). The underlying `processor`
+// performs the actual pipeline (compress/pad/cipher/encode).
 func NewTaskProcessor(key []byte, processing options.Processing) (TaskProcessor, error) {
 	proc, err := processor.NewProcessor(key)
 	if err != nil {
@@ -27,7 +31,9 @@ func NewTaskProcessor(key []byte, processing options.Processing) (TaskProcessor,
 	}, nil
 }
 
-// Process processes a single chunk based on the operation type
+// Process transforms one chunk based on the configured mode.
+// Cancellation via `ctx` aborts processing and returns the context error.
+// The Size field in the returned `TaskResult` is used by the progress bar.
 func (tp *taskProcessor) Process(ctx context.Context, task Task) TaskResult {
 	select {
 	case <-ctx.Done():
@@ -60,7 +66,9 @@ func (tp *taskProcessor) Process(ctx context.Context, task Task) TaskResult {
 	}
 }
 
-// calculateProgressSize determines the size to use for progress tracking
+// calculateProgressSize determines the amount to add to the progress bar for
+// a single processed chunk. For encryption, we report input bytes; for
+// decryption, we report output bytes since ciphertext sizes include framing.
 func (tp *taskProcessor) calculateProgressSize(input, output []byte) int {
 	if tp.processing == options.Encryption {
 		return len(input) // Track input size for encryption

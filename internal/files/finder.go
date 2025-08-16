@@ -1,6 +1,7 @@
 package files
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -41,7 +42,10 @@ func (f *Finder) FindEligibleFiles(mode options.ProcessorMode) ([]string, error)
 		return nil
 	})
 
-	return files, err
+	if err != nil {
+		return nil, fmt.Errorf("failed to scan for eligible files: %w", err)
+	}
+	return files, nil
 }
 
 // isFileEligible checks if a given file should be processed based on its extension,
@@ -103,7 +107,7 @@ func (f *Finder) GetFileInfo(files []string) ([]FileInfo, error) {
 	for _, file := range files {
 		info, err := os.Stat(file)
 		if err != nil {
-			continue // Skip files that can't be accessed
+			return nil, fmt.Errorf("failed to get file info for '%s': %w", file, err)
 		}
 
 		fileInfo := FileInfo{

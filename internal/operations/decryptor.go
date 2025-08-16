@@ -49,13 +49,8 @@ func (d *Decryptor) DecryptFile(srcPath, destPath, password string) error {
 	}
 
 	if err := header.Verify(key); err != nil {
-		return fmt.Errorf("header verification failed: %w", err)
+		return fmt.Errorf("decryption failed: incorrect password or corrupt file: %w", err)
 	}
-
-	fmt.Printf("Header verified successfully!\n")
-	fmt.Printf("Original size: %d bytes\n", header.OriginalSize())
-	fmt.Printf("Version: %d\n", header.Version())
-	fmt.Printf("Security flags: %v\n", header.Flags())
 
 	// Validate original size
 	originalSize := header.OriginalSize()
@@ -84,5 +79,9 @@ func (d *Decryptor) DecryptFile(srcPath, destPath, password string) error {
 	}
 
 	// Process the file (remaining data after header)
-	return processor.Process(context.Background(), srcFile, destFile, int64(originalSize))
+	if err := processor.Process(context.Background(), srcFile, destFile, int64(originalSize)); err != nil {
+		return fmt.Errorf("failed to process file: %w", err)
+	}
+
+	return nil
 }

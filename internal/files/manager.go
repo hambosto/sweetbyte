@@ -22,7 +22,10 @@ func NewManager() *Manager {
 func (m *Manager) Remove(path string, option options.DeleteOption) error {
 	switch option {
 	case options.DeleteStandard:
-		return os.Remove(path)
+		if err := os.Remove(path); err != nil {
+			return fmt.Errorf("failed to remove file %s: %w", path, err)
+		}
+		return nil
 	case options.DeleteSecure:
 		return m.secureDelete(path)
 	default:
@@ -34,7 +37,7 @@ func (m *Manager) Remove(path string, option options.DeleteOption) error {
 func (m *Manager) CreateFile(path string) (*os.File, error) {
 	output, err := os.Create(filepath.Clean(path))
 	if err != nil {
-		return nil, fmt.Errorf("failed to create file: %w", err)
+		return nil, fmt.Errorf("failed to create file %s: %w", path, err)
 	}
 	return output, nil
 }
@@ -45,20 +48,20 @@ func (m *Manager) ValidatePath(path string, mustExist bool) error {
 
 	if mustExist {
 		if os.IsNotExist(err) {
-			return fmt.Errorf("file not found %s", path)
+			return fmt.Errorf("file not found: %s", path)
 		}
 		if err != nil {
-			return fmt.Errorf("failed to access file: %w", err)
+			return fmt.Errorf("failed to access file %s: %w", path, err)
 		}
 		if fileInfo.Size() == 0 {
-			return fmt.Errorf("file is empty %s", path)
+			return fmt.Errorf("file is empty and cannot be processed: %s", path)
 		}
 	} else {
 		if err == nil {
-			return fmt.Errorf("file already exists %s", path)
+			return fmt.Errorf("output file already exists: %s", path)
 		}
 		if !os.IsNotExist(err) {
-			return fmt.Errorf("error accessing file: %w", err)
+			return fmt.Errorf("error accessing file %s: %w", path, err)
 		}
 	}
 	return nil
@@ -68,12 +71,12 @@ func (m *Manager) ValidatePath(path string, mustExist bool) error {
 func (m *Manager) OpenFile(path string) (*os.File, os.FileInfo, error) {
 	file, err := os.Open(filepath.Clean(path))
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to open file: %w", err)
+		return nil, nil, fmt.Errorf("failed to open file %s: %w", path, err)
 	}
 
 	info, err := file.Stat()
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to get file info: %w", err)
+		return nil, nil, fmt.Errorf("failed to get file info for %s: %w", path, err)
 	}
 	return file, info, nil
 }
@@ -83,9 +86,9 @@ func (m *Manager) GetFileInfo(path string) (os.FileInfo, error) {
 	info, err := os.Stat(filepath.Clean(path))
 	if err != nil {
 		if os.IsNotExist(err) {
-			return nil, fmt.Errorf("file not found %s", path)
+			return nil, fmt.Errorf("file not found: %s", path)
 		}
-		return nil, fmt.Errorf("failed to get file info: %w", err)
+		return nil, fmt.Errorf("failed to get file info for %s: %w", path, err)
 	}
 	return info, nil
 }
@@ -100,29 +103,29 @@ func (m *Manager) FileExists(path string) bool {
 func (m *Manager) secureDelete(path string) error {
 	file, err := os.OpenFile(filepath.Clean(path), os.O_WRONLY, 0)
 	if err != nil {
-		return fmt.Errorf("failed to open file for secure deletion: %w", err)
+		return fmt.Errorf("failed to open file %s for secure deletion: %w", path, err)
 	}
 
 	info, err := file.Stat()
 	if err != nil {
-		return fmt.Errorf("failed to get file info for secure deletion: %w", err)
+		return fmt.Errorf("failed to get file info for secure deletion %s: %w", path, err)
 	}
 
 	// Perform multiple overwrite passes
 	for pass := range config.OverwritePasses {
 		if err := m.randomOverwrite(file, info.Size()); err != nil {
-			return fmt.Errorf("secure overwrite pass %d failed: %w", pass+1, err)
+			return fmt.Errorf("secure overwrite pass %d failed for %s: %w", pass+1, path, err)
 		}
 	}
 
 	// Close the file before removing it
 	if err := file.Close(); err != nil {
-		return fmt.Errorf("failed to close file before removal: %w", err)
+		return fmt.Errorf("failed to close file %s before removal: %w", path, err)
 	}
 
 	// Finally remove the file
 	if err := os.Remove(path); err != nil {
-		return fmt.Errorf("failed to remove file after secure overwrite: %w", err)
+		return fmt.Errorf("failed to remove file %s after secure overwrite: %w", path, err)
 	}
 
 	return nil
@@ -151,5 +154,8 @@ func (m *Manager) randomOverwrite(file *os.File, size int64) error {
 		remaining -= writeSize
 	}
 
-	return file.Sync()
+	if err := file.Sync(); err != nil {
+		return fmt.Errorf("failed to sync file to storage: %w", err)
+	}
+	return nil
 }

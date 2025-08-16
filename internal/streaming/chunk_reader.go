@@ -11,7 +11,15 @@ import (
 	"github.com/hambosto/sweetbyte/internal/options"
 )
 
-// chunkReader handles reading data and converting it to tasks
+// chunkReader converts an input stream into chunked `Task`s for the
+// concurrent processing pipeline.
+//
+// Behavior by mode:
+//   - Encryption: reads fixed-size plaintext chunks directly from `io.Reader`.
+//   - Decryption: reads a 4-byte big-endian length prefix, then the chunk.
+//
+// The length-prefixed format is only used for the encrypted stream so that the
+// writer can preserve chunk boundaries and the reader can detect truncation.
 type chunkReader struct {
 	processing options.Processing
 	chunkSize  int
@@ -25,7 +33,9 @@ func NewChunkReader(processing options.Processing, chunkSize int) ChunkReader {
 	}
 }
 
-// ReadChunks reads data from input and returns a channel of tasks
+// ReadChunks reads data from `input` and emits `Task`s to a channel.
+// The error channel will receive a single error (if any) and then close.
+// Context cancellation is honored and propagated to callers.
 func (r *chunkReader) ReadChunks(ctx context.Context, input io.Reader) (<-chan Task, <-chan error) {
 	taskChan := make(chan Task)
 	errChan := make(chan error, 1)
@@ -55,7 +65,8 @@ func (r *chunkReader) ReadChunks(ctx context.Context, input io.Reader) (<-chan T
 	return taskChan, errChan
 }
 
-// readForEncryption reads raw data in fixed-size chunks
+// readForEncryption reads raw plaintext in fixed-size chunks of `r.chunkSize`.
+// It stops on EOF and returns any other read error.
 func (r *chunkReader) readForEncryption(ctx context.Context, reader io.Reader, tasks chan<- Task) error {
 	buffer := make([]byte, r.chunkSize)
 	var index uint64
@@ -72,7 +83,7 @@ func (r *chunkReader) readForEncryption(ctx context.Context, reader io.Reader, t
 			return nil
 		}
 		if err != nil {
-			return fmt.Errorf("read failed: %w", err)
+			return fmt.Errorf("failed to read input: %w", err)
 		}
 
 		task := Task{
@@ -90,7 +101,9 @@ func (r *chunkReader) readForEncryption(ctx context.Context, reader io.Reader, t
 	}
 }
 
-// readForDecryption reads data with length prefixes
+// readForDecryption reads a sequence of length-prefixed chunks.
+// Each chunk begins with a 4-byte big-endian size header followed by the data.
+// Empty chunks (size==0) are ignored.
 func (r *chunkReader) readForDecryption(ctx context.Context, reader io.Reader, tasks chan<- Task) error {
 	var index uint64
 
@@ -132,25 +145,27 @@ func (r *chunkReader) readForDecryption(ctx context.Context, reader io.Reader, t
 	}
 }
 
-// readChunkSize reads the 4-byte chunk size header
+// readChunkSize reads the 4-byte big-endian chunk size header.
+// Returns io.EOF if there is no more data to read.
 func (r *chunkReader) readChunkSize(reader io.Reader) (uint32, error) {
 	var sizeBuffer [config.ChunkHeaderSize]byte
 	_, err := io.ReadFull(reader, sizeBuffer[:])
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("failed to read chunk size: %w", err)
 	}
 	return binary.BigEndian.Uint32(sizeBuffer[:]), nil
 }
 
-// readChunkData reads the chunk data of specified length
+// readChunkData reads exactly `length` bytes of chunk data.
+// Guards against excessively large sizes to avoid integer overflow.
 func (r *chunkReader) readChunkData(reader io.Reader, length uint32) ([]byte, error) {
 	if length > math.MaxInt32 {
-		return nil, fmt.Errorf("chunk size exceeds maximum allowed")
+		return nil, fmt.Errorf("chunk size exceeds maximum allowed: %d (max: %d)", length, math.MaxInt32)
 	}
 
 	data := make([]byte, length)
 	if _, err := io.ReadFull(reader, data); err != nil {
-		return nil, fmt.Errorf("chunk data read failed: %w", err)
+		return nil, fmt.Errorf("failed to read chunk data: %w", err)
 	}
 	return data, nil
 }

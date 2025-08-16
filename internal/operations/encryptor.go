@@ -84,5 +84,9 @@ func (e *Encryptor) EncryptFile(srcPath, destPath, password string) error {
 	}
 
 	// Process the file
-	return processor.Process(context.Background(), srcFile, destFile, originalSize)
+	if err := processor.Process(context.Background(), srcFile, destFile, originalSize); err != nil {
+		return fmt.Errorf("failed to process file: %w", err)
+	}
+
+	return nil
 }

@@ -42,7 +42,7 @@ func Hash(password, salt []byte) ([]byte, error) {
 func GetRandomSalt(size int) ([]byte, error) {
 	salt := make([]byte, size)
 	if _, err := io.ReadFull(rand.Reader, salt); err != nil {
-		return nil, fmt.Errorf("failed to generate nonce: %w", err)
+		return nil, fmt.Errorf("failed to generate salt: %w", err)
 	}
 	return salt, nil
 }

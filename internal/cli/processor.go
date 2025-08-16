@@ -34,7 +34,7 @@ func (p *CLIProcessor) Encrypt(inputFile, outputFile, password string, deleteSou
 		var err error
 		password, err = p.prompt.GetEncryptionPassword()
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to get password: %w", err)
 		}
 	}
 
@@ -42,8 +42,10 @@ func (p *CLIProcessor) Encrypt(inputFile, outputFile, password string, deleteSou
 
 	// Perform encryption
 	if err := p.encryptor.EncryptFile(inputFile, outputFile, password); err != nil {
-		return fmt.Errorf("encryption failed: %w", err)
+		return fmt.Errorf("failed to encrypt '%s': %w", inputFile, err)
 	}
+
+	fmt.Printf("✓ File encrypted successfully: %s\n", outputFile)
 
 	// Handle source file deletion if requested
 	if deleteSource {
@@ -54,13 +56,11 @@ func (p *CLIProcessor) Encrypt(inputFile, outputFile, password string, deleteSou
 
 		fmt.Printf("Deleting source file: %s\n", inputFile)
 		if err := p.fileManager.Remove(inputFile, deleteOption); err != nil {
-			fmt.Printf("Warning: Failed to delete source file: %v\n", err)
-		} else {
-			fmt.Printf("Source file deleted successfully\n")
+			return fmt.Errorf("failed to delete source file: %w", err)
 		}
+		fmt.Printf("Source file deleted successfully\n")
 	}
 
-	fmt.Printf("✓ File encrypted successfully: %s\n", outputFile)
 	return nil
 }
 
@@ -78,8 +78,10 @@ func (p *CLIProcessor) Decrypt(inputFile, outputFile, password string, deleteSou
 	fmt.Printf("Decrypting: %s -> %s\n", inputFile, outputFile)
 
 	if err := p.decryptor.DecryptFile(inputFile, outputFile, password); err != nil {
-		return fmt.Errorf("decryption failed: %w", err)
+		return fmt.Errorf("failed to decrypt '%s': %w", inputFile, err)
 	}
+
+	fmt.Printf("✓ File decrypted successfully: %s\n", outputFile)
 
 	// Handle source file deletion if requested
 	if deleteSource {
@@ -90,12 +92,10 @@ func (p *CLIProcessor) Decrypt(inputFile, outputFile, password string, deleteSou
 
 		fmt.Printf("Deleting source file: %s\n", inputFile)
 		if err := p.fileManager.Remove(inputFile, deleteOption); err != nil {
-			fmt.Printf("Warning: Failed to delete source file: %v\n", err)
-		} else {
-			fmt.Printf("Source file deleted successfully\n")
+			return fmt.Errorf("failed to delete source file: %w", err)
 		}
+		fmt.Printf("Source file deleted successfully\n")
 	}
 
-	fmt.Printf("✓ File decrypted successfully: %s\n", outputFile)
 	return nil
 }

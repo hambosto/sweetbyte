@@ -94,6 +94,12 @@ func (a *InteractiveApp) runInteractiveLoop() error {
 	return nil
 }
 
+// handleError handles application errors and displays a concise user-facing message
+func (a *InteractiveApp) handleError(err error) {
+    // Print a formatted error message. Detailed context is preserved in the error chain.
+    a.terminal.PrintError(fmt.Sprintf("Application error: %v", err))
+}
+
 // getEligibleFiles retrieves files that can be processed based on the operation mode
 func (a *InteractiveApp) getEligibleFiles(operation options.ProcessorMode) ([]string, error) {
 	eligibleFiles, err := a.fileFinder.FindEligibleFiles(operation)
@@ -119,8 +125,8 @@ func (a *InteractiveApp) processFile(inputPath string, mode options.ProcessorMod
 
 	if err := a.fileManager.ValidatePath(outputPath, false); err != nil {
 		if confirm, confirmErr := a.prompt.ConfirmFileOverwrite(outputPath); confirmErr != nil || !confirm {
-			return fmt.Errorf("operation cancelled")
-		}
+            return fmt.Errorf("operation canceled by user")
+        }
 	}
 
 	// Process based on mode
@@ -138,21 +144,23 @@ func (a *InteractiveApp) processFile(inputPath string, mode options.ProcessorMod
 		return err
 	}
 
+	a.prompt.ShowSuccess(fmt.Sprintf("File processed successfully: %s", outputPath))
+
 	// Ask to delete source file
-	fileType := "original"
-	if mode == options.ModeDecrypt {
+	var fileType string
+	if mode == options.ModeEncrypt {
+		fileType = "original"
+	} else {
 		fileType = "encrypted"
 	}
 
 	if shouldDelete, deleteType, err := a.prompt.ConfirmFileRemoval(inputPath, fmt.Sprintf("Delete %s file", fileType)); err == nil && shouldDelete {
 		if err := a.fileManager.Remove(inputPath, deleteType); err != nil {
-			a.prompt.ShowWarning(fmt.Sprintf("Failed to delete source file: %v", err))
-		} else {
-			a.prompt.ShowSuccess(fmt.Sprintf("Source file deleted: %s", inputPath))
+			return fmt.Errorf("failed to delete source file: %w", err)
 		}
+		a.prompt.ShowSuccess(fmt.Sprintf("Source file deleted: %s", inputPath))
 	}
 
-	a.prompt.ShowSuccess(fmt.Sprintf("File processed successfully: %s", outputPath))
 	return nil
 }
 
@@ -166,7 +174,7 @@ func (a *InteractiveApp) encryptFile(srcPath, destPath string) error {
 
 	// Perform encryption
 	if err := a.encryptor.EncryptFile(srcPath, destPath, password); err != nil {
-		return fmt.Errorf("encryption failed: %w", err)
+		return fmt.Errorf("failed to encrypt '%s': %w", srcPath, err)
 	}
 
 	return nil
@@ -182,23 +190,8 @@ func (a *InteractiveApp) decryptFile(srcPath, destPath string) error {
 
 	// Perform decryption
 	if err := a.decryptor.DecryptFile(srcPath, destPath, password); err != nil {
-		return fmt.Errorf("decryption failed: %w", err)
+		return fmt.Errorf("failed to decrypt '%s': %w", srcPath, err)
 	}
 
 	return nil
-}
-
-// handleError handles application errors
-func (a *InteractiveApp) handleError(err error) {
-	a.terminal.PrintError(fmt.Sprintf("Application error: %v", err))
-
-	// Show additional help for common errors
-	switch err {
-	case errors.ErrPasswordMismatch:
-		a.prompt.ShowInfo("Passwords must match exactly. Please try again.")
-	case errors.ErrNoFilesAvailable:
-		a.prompt.ShowInfo("No files found for the selected operation. Make sure you're in the right directory.")
-	case errors.ErrUserCanceled:
-		a.prompt.ShowInfo("Operation cancelled by user.")
-	}
 }

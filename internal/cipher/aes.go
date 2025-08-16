@@ -45,7 +45,7 @@ func (c *AESCipher) Encrypt(plaintext []byte) ([]byte, error) {
 
 	nonce := make([]byte, c.aead.NonceSize())
 	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
-		return nil, fmt.Errorf("unable to generate nonce")
+		return nil, fmt.Errorf("failed to generate nonce: %w", err)
 	}
 
 	ciphertext := c.aead.Seal(nonce, nonce, plaintext, nil)

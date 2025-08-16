@@ -10,6 +10,15 @@ import (
 	"github.com/hambosto/sweetbyte/internal/padding"
 )
 
+// Processor orchestrates the core transformation pipeline for small payloads
+// (in-memory) used by the streaming layer. The pipeline performs, in order:
+//   - Encryption: Compress -> Pad -> AES-Encrypt -> XChaCha20-Encrypt -> Encode
+//   - Decryption: Decode -> XChaCha20-Decrypt -> AES-Decrypt -> Unpad -> Decompress
+//
+// The dual-cipher approach (AES then XChaCha20) provides defense-in-depth, while
+// Reed–Solomon encoding increases resilience to corruption. Padding randomizes
+// sizes to reduce information leakage. For large files, this processor is used
+// on fixed-size chunks by the `internal/streaming/` package.
 // Processor handles encryption/decryption operations with compression, padding, and encoding
 type Processor struct {
 	firstCipher  *cipher.AESCipher
@@ -19,7 +28,13 @@ type Processor struct {
 	padding      *padding.Padding
 }
 
-// NewProcessor creates a new processor with the provided encryption key
+// NewProcessor creates a new processor with the provided master key. The key is
+// expected to be at least `config.MasterKeySize` bytes. It is split as follows:
+//   - firstCipher  = key[0:32]  (AES)
+//   - secondCipher = key[32:64] (XChaCha20)
+//
+// Callers in the streaming layer must ensure the key length requirement is met
+// (see `internal/streaming/stream_config.go`).
 func NewProcessor(key []byte) (*Processor, error) {
 	if len(key) < config.MasterKeySize {
 		return nil, fmt.Errorf("encryption key must be at least %d bytes long", config.MasterKeySize)
@@ -32,7 +47,7 @@ func NewProcessor(key []byte) (*Processor, error) {
 
 	secondCipher, err := cipher.NewXChaCha20Cipher(key[32:64])
 	if err != nil {
-		return nil, fmt.Errorf("failed to create chacha20 cipher: %w %d", err, len(key))
+		return nil, fmt.Errorf("failed to create chacha20 cipher (key length %d): %w", len(key), err)
 	}
 
 	encoder, err := encoding.NewEncoder(config.DataShards, config.ParityShards)
@@ -47,7 +62,7 @@ func NewProcessor(key []byte) (*Processor, error) {
 
 	padder, err := padding.NewPadding(config.PaddingSize)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create pkcs7: %w", err)
+		return nil, fmt.Errorf("failed to create padding: %w", err)
 	}
 
 	return &Processor{
@@ -59,7 +74,8 @@ func NewProcessor(key []byte) (*Processor, error) {
 	}, nil
 }
 
-// Encrypt compresses, pads, encrypts, and encodes the input data
+// Encrypt compresses, pads, encrypts (AES then XChaCha20), and Reed–Solomon
+// encodes the input data. It returns a new byte slice on success.
 func (p *Processor) Encrypt(data []byte) ([]byte, error) {
 	// Step 1: Compress the Padded data
 	compressed, err := p.compressor.Compress(data)
@@ -94,7 +110,9 @@ func (p *Processor) Encrypt(data []byte) ([]byte, error) {
 	return encoded, nil
 }
 
-// Decrypt decodes, decrypts, unpads, and decompresses the input data
+// Decrypt decodes (Reed–Solomon), decrypts (XChaCha20 then AES), removes
+// padding, and finally decompresses the input data. It returns a new byte slice
+// on success.
 func (p *Processor) Decrypt(data []byte) ([]byte, error) {
 	// Step 1: Decode the Reed-Solomon encoded data
 	decoded, err := p.encoder.Decode(data)
