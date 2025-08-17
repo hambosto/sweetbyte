@@ -89,8 +89,8 @@ graph TD
 
     subgraph "Core Logic"
         C[Operations]
-        D[Processor]
         E[Streaming]
+        D[Processor]
     end
 
     subgraph "Cryptographic & Data Processing"
@@ -113,26 +113,26 @@ graph TD
     A --> C
     B --> C
 
-    C --> D
-    D --> E
+    C --> E
+    E --> D
 
-    E --> F
-    E --> G
-    E --> H
-    E --> I
-    E --> J
-    E --> K
+    D --> F
+    D --> G
+    D --> H
+    D --> I
+    D --> J
+    D --> K
 
     C --> L
     B --> M
-    D --> N
+    E --> N
     C --> O
     D --> P
 ```
 
-- **User Interfaces:** The `cli` and `interactive` packages provide two distinct ways for users to interact with the application. Both interfaces are built on top of the `operations` package, which contains the high-level logic for encrypting and decrypting files.
-- **Core Logic:** The `operations`, `processor`, and `streaming` packages form the core of the application. The `operations` package orchestrates the overall workflow, the `processor` package manages the processing pipeline, and the `streaming` package handles the concurrent, chunk-based file processing.
-- **Cryptographic & Data Processing:** This layer contains the packages that implement the cryptographic and data processing operations. These packages are responsible for encryption, key derivation, header serialization, compression, error correction, and padding.
+- **User Interfaces:** The `cli` and `interactive` packages provide two distinct ways for users to interact with the application. Both interfaces are built on top of the `operations` package.
+- **Core Logic:** The `operations`, `streaming`, and `processor` packages form the core of the application. The `operations` package orchestrates the high-level workflow, the `streaming` package handles concurrent, chunk-based file processing, and the `processor` package applies the full cryptographic pipeline to each individual data chunk.
+- **Cryptographic & Data Processing:** This layer contains the packages that implement the cryptographic and data processing primitives. These packages are responsible for encryption, key derivation, header serialization, compression, error correction, and padding. They are primarily consumed by the `processor` package.
 - **Utilities & Support:** This layer provides a set of utility and support packages that are used throughout the application. These packages handle file management, UI components, configuration, error handling, and other miscellaneous tasks.
 
 ## 📦 File Format
@@ -143,27 +143,31 @@ Encrypted files (`.swb`) have a custom binary structure designed for security an
 An encrypted file consists of a fixed-size header followed by a series of variable-length data chunks.
 
 ```
-[ Secure Header (128 bytes) ] [ Chunk 1 ] [ Chunk 2 ] ... [ Chunk N ]
+[ Secure Header (134 bytes) ] [ Chunk 1 ] [ Chunk 2 ] ... [ Chunk N ]
 ```
 
-#### Secure Header (128 bytes)
-The header contains all the metadata required to decrypt the file.
+#### Secure Header (134 bytes)
+The header contains all the metadata required to decrypt the file. It is heavily protected against tampering and corruption.
 
-| Field           | Size (bytes) | Description                                           |
-| --------------- | ------------ | ----------------------------------------------------- |
-| **Magic Bytes** | 4            | `SWX3` - Identifies the file as a SweetByte file.     |
-| **Salt**        | 32           | A unique, random salt for the Argon2id key derivation.|
-| **Original Size**| 8            | The size of the original, unencrypted file.           |
-| **Integrity Hash**| 32           | A SHA-256 hash to verify header structural integrity. |
-| **Auth Tag**    | 32           | An HMAC-SHA256 tag to authenticate the header.        |
-| **Checksum**    | 4            | A CRC32 checksum to detect accidental corruption.     |
+| Field            | Size (bytes) | Description                                                                    |
+| ---------------- | ------------ | ------------------------------------------------------------------------------ |
+| **Magic Bytes**  | 4            | `SWX4` - Identifies the file as a SweetByte file.                              |
+| **Version**      | 2            | The version of the file format.                                                |
+| **Flags**        | 4            | Bitfield indicating properties like encryption and compression.                |
+| **Salt**         | 32           | A unique, random salt for the Argon2id key derivation.                         |
+| **Original Size**| 8            | The size of the original, unencrypted file.                                    |
+| **Integrity Hash**| 32           | A SHA-256 hash of core header fields to verify structural integrity.           |
+| **Auth Tag**     | 32           | An HMAC-SHA256 tag to authenticate the entire header and prevent tampering.    |
+| **Checksum**     | 4            | A CRC32 checksum for fast detection of accidental corruption.                  |
+| **Padding**      | 16           | Random data to ensure the header has a fixed size.                             |
+| **Total**        | **134**      |                                                                                |
 
 #### Cryptographic Parameters
 SweetByte uses strong, modern cryptographic parameters for key derivation and encryption.
 
 - **Argon2id Parameters:**
-    - **Time Cost:** 3
-    - **Memory Cost:** 64 MB
+    - **Time Cost:** 4
+    - **Memory Cost:** 128 MB
     - **Parallelism:** 4 threads
 - **Reed-Solomon Parameters:**
     - **Data Shards:** 4
@@ -237,7 +241,7 @@ SweetByte is built with a modular architecture, with each package handling a spe
 | `compression`     | Handles Zlib compression and decompression.                              |
 | `config`          | Stores all application-wide constants and configuration parameters.      |
 | `encoding`        | Manages Reed-Solomon error correction encoding and decoding.             |
-| `errors`          | Defines custom, descriptive error types used throughout the application. |
+
 | `files`           | Provides utilities for finding, managing, and securely deleting files.   |
 | `header`          | Manages the serialization, deserialization, and verification of the secure file header. |
 | `interactive`     | Implements the user-friendly interactive mode workflow.                  |
@@ -245,7 +249,7 @@ SweetByte is built with a modular architecture, with each package handling a spe
 | `operations`      | Contains the high-level logic for the main encrypt/decrypt file operations. |
 | `options`         | Defines the different modes and processing options for the application. |
 | `padding`         | Implements PKCS7 padding.                                                |
-| `processor`       | Manages the processing pipeline and orchestrates the flow of data through the different stages of encryption and decryption. |
+| `processor`       | Applies the complete cryptographic pipeline (compress, pad, encrypt, encode) to individual data chunks. |
 | `streaming`       | Manages concurrent, chunk-based file processing with a worker pool.      |
 | `ui`              | Provides UI components like interactive prompts, progress bars, and banners. |
 | `utils`           | Contains miscellaneous helper functions.                                 |
