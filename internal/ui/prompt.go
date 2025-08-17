@@ -9,15 +9,12 @@ import (
 	"github.com/hambosto/sweetbyte/internal/utils"
 )
 
-// Prompt provides methods for interactive command-line prompts
 type Prompt struct{}
 
-// NewPrompt creates a new Prompt instance
 func NewPrompt() *Prompt {
 	return &Prompt{}
 }
 
-// ConfirmFileOverwrite prompts the user to confirm overwriting an existing file
 func (p *Prompt) ConfirmFileOverwrite(path string) (bool, error) {
 	var result bool
 	prompt := &survey.Confirm{
@@ -31,7 +28,6 @@ func (p *Prompt) ConfirmFileOverwrite(path string) (bool, error) {
 	return result, nil
 }
 
-// GetEncryptionPassword prompts for and confirms a password for encryption
 func (p *Prompt) GetEncryptionPassword() (string, error) {
 	password, err := p.getPassword("Enter password:")
 	if err != nil {
@@ -50,12 +46,10 @@ func (p *Prompt) GetEncryptionPassword() (string, error) {
 	return password, nil
 }
 
-// GetDecryptionPassword prompts for a password for decryption
 func (p *Prompt) GetDecryptionPassword() (string, error) {
 	return p.getPassword("Enter password:")
 }
 
-// getPassword is a helper method to prompt for a password
 func (p *Prompt) getPassword(message string) (string, error) {
 	var password string
 	prompt := &survey.Password{
@@ -69,7 +63,6 @@ func (p *Prompt) getPassword(message string) (string, error) {
 	return password, nil
 }
 
-// ConfirmFileRemoval prompts for confirmation and deletion method for file removal
 func (p *Prompt) ConfirmFileRemoval(path, message string) (bool, options.DeleteOption, error) {
 	confirmed, err := p.confirmAction(fmt.Sprintf("%s %s", message, path))
 	if err != nil {
@@ -88,7 +81,6 @@ func (p *Prompt) ConfirmFileRemoval(path, message string) (bool, options.DeleteO
 	return true, deleteType, nil
 }
 
-// confirmAction is a helper method for yes/no confirmation prompts
 func (p *Prompt) confirmAction(message string) (bool, error) {
 	var result bool
 	prompt := &survey.Confirm{
@@ -102,7 +94,6 @@ func (p *Prompt) confirmAction(message string) (bool, error) {
 	return result, nil
 }
 
-// selectDeleteOption prompts the user to select a deletion method
 func (p *Prompt) selectDeleteOption() (options.DeleteOption, error) {
 	opt := []string{
 		string(options.DeleteStandard),
@@ -117,7 +108,6 @@ func (p *Prompt) selectDeleteOption() (options.DeleteOption, error) {
 	return options.DeleteOption(selected), nil
 }
 
-// GetProcessingMode prompts the user to select a processing operation
 func (p *Prompt) GetProcessingMode() (options.ProcessorMode, error) {
 	opt := []string{
 		string(options.ModeEncrypt),
@@ -132,7 +122,6 @@ func (p *Prompt) GetProcessingMode() (options.ProcessorMode, error) {
 	return options.ProcessorMode(selected), nil
 }
 
-// ChooseFile prompts the user to select a file from the provided list
 func (p *Prompt) ChooseFile(files []string) (string, error) {
 	if len(files) == 0 {
 		return "", fmt.Errorf("no files available for selection")
@@ -146,7 +135,6 @@ func (p *Prompt) ChooseFile(files []string) (string, error) {
 	return selected, nil
 }
 
-// selectFromOptions is a helper method for selection prompts
 func (p *Prompt) selectFromOptions(message string, options []string) (string, error) {
 	var selected string
 	prompt := &survey.Select{
@@ -161,7 +149,6 @@ func (p *Prompt) selectFromOptions(message string, options []string) (string, er
 	return selected, nil
 }
 
-// ShowFileInfo displays information about files to be processed
 func (p *Prompt) ShowFileInfo(files []files.FileInfo) {
 	if len(files) == 0 {
 		fmt.Println("No files found.")
@@ -185,7 +172,6 @@ func (p *Prompt) ShowFileInfo(files []files.FileInfo) {
 	fmt.Println()
 }
 
-// ShowProcessingInfo displays information about the processing pipeline
 func (p *Prompt) ShowProcessingInfo(mode options.ProcessorMode, file string) {
 	operation := "Encrypting"
 	if mode == options.ModeDecrypt {
@@ -195,17 +181,14 @@ func (p *Prompt) ShowProcessingInfo(mode options.ProcessorMode, file string) {
 	fmt.Printf("\n%s file: %s\n", operation, file)
 }
 
-// ShowSuccess displays a success message to the user
 func (p *Prompt) ShowSuccess(message string) {
 	fmt.Printf("✓ %s\n", message)
 }
 
-// ShowWarning displays a warning message to the user
 func (p *Prompt) ShowWarning(message string) {
 	fmt.Printf("⚠ %s\n", message)
 }
 
-// ShowInfo displays an informational message to the user
 func (p *Prompt) ShowInfo(message string) {
 	fmt.Printf("ℹ %s\n", message)
 }

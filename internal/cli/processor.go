@@ -9,30 +9,23 @@ import (
 	"github.com/hambosto/sweetbyte/internal/ui"
 )
 
-// CLIProcessor orchestrates the encryption and decryption processes based on CLI input.
-// It interacts with the core operations, file management, and UI components.
 type CLIProcessor struct {
-	encryptor   *operations.Encryptor
-	decryptor   *operations.Decryptor
-	fileManager *files.Manager
-	prompt      *ui.Prompt
+	encryptor	*operations.Encryptor
+	decryptor	*operations.Decryptor
+	fileManager	*files.Manager
+	prompt		*ui.Prompt
 }
 
-// NewCLIProcessor creates a new CLIProcessor and initializes its dependencies.
 func NewCLIProcessor() *CLIProcessor {
 	return &CLIProcessor{
-		encryptor:   operations.NewEncryptor(),
-		decryptor:   operations.NewDecryptor(),
-		fileManager: files.NewManager(),
-		prompt:      ui.NewPrompt(),
+		encryptor:	operations.NewEncryptor(),
+		decryptor:	operations.NewDecryptor(),
+		fileManager:	files.NewManager(),
+		prompt:		ui.NewPrompt(),
 	}
 }
 
-// Encrypt handles the file encryption process based on the provided CLI flags.
-// It prompts for a password if one is not supplied, runs the encryption,
-// and handles the optional deletion of the source file.
 func (p *CLIProcessor) Encrypt(inputFile, outputFile, password string, deleteSource, secureDelete bool) error {
-	// Get password if not provided
 	if password == "" {
 		var err error
 		password, err = p.prompt.GetEncryptionPassword()
@@ -43,14 +36,12 @@ func (p *CLIProcessor) Encrypt(inputFile, outputFile, password string, deleteSou
 
 	fmt.Printf("Encrypting: %s -> %s\n", inputFile, outputFile)
 
-	// Perform encryption
 	if err := p.encryptor.EncryptFile(inputFile, outputFile, password); err != nil {
 		return fmt.Errorf("failed to encrypt '%s': %w", inputFile, err)
 	}
 
 	fmt.Printf("✓ File encrypted successfully: %s\n", outputFile)
 
-	// Handle source file deletion if requested
 	if deleteSource {
 		deleteOption := options.DeleteStandard
 		if secureDelete {
@@ -67,11 +58,7 @@ func (p *CLIProcessor) Encrypt(inputFile, outputFile, password string, deleteSou
 	return nil
 }
 
-// Decrypt handles the file decryption process based on the provided CLI flags.
-// It prompts for a password if one is not supplied, runs the decryption,
-// and handles the optional deletion of the source file.
 func (p *CLIProcessor) Decrypt(inputFile, outputFile, password string, deleteSource, secureDelete bool) error {
-	// Get password if not provided
 	if password == "" {
 		var err error
 		password, err = p.prompt.GetDecryptionPassword()
@@ -88,7 +75,6 @@ func (p *CLIProcessor) Decrypt(inputFile, outputFile, password string, deleteSou
 
 	fmt.Printf("✓ File decrypted successfully: %s\n", outputFile)
 
-	// Handle source file deletion if requested
 	if deleteSource {
 		deleteOption := options.DeleteStandard
 		if secureDelete {

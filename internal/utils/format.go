@@ -4,7 +4,6 @@ import (
 	"fmt"
 )
 
-// FormatBytes formats bytes into human-readable format (binary units)
 func FormatBytes(bytes int64) string {
 	if bytes == 0 {
 		return "0 B"

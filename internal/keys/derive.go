@@ -9,14 +9,12 @@ import (
 	"golang.org/x/crypto/argon2"
 )
 
-// Argon2id Parameters
 const (
-	ArgonTime    uint32 = 4          // Time cost
-	ArgonMemory  uint32 = 128 * 1024 // Memory cost (128MB)
-	ArgonThreads uint8  = 4          // Parallelism
+	ArgonTime	uint32	= 4
+	ArgonMemory	uint32	= 128 * 1024
+	ArgonThreads	uint8	= 4
 )
 
-// Hash returns the Argon2id hash for the given password and salt
 func Hash(password, salt []byte) ([]byte, error) {
 	if len(password) == 0 {
 		return nil, fmt.Errorf("password cannot be empty")
@@ -38,7 +36,6 @@ func Hash(password, salt []byte) ([]byte, error) {
 	return key, nil
 }
 
-// GetRandomSalt returns a new random salt
 func GetRandomSalt(size int) ([]byte, error) {
 	salt := make([]byte, size)
 	if _, err := io.ReadFull(rand.Reader, salt); err != nil {

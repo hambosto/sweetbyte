@@ -10,15 +10,12 @@ import (
 	"github.com/hambosto/sweetbyte/internal/options"
 )
 
-// Manager handles file creation, deletion (standard and secure), and validation
 type Manager struct{}
 
-// NewManager creates a new file manager instance
 func NewManager() *Manager {
 	return &Manager{}
 }
 
-// Remove deletes the file at the given path using the provided deletion option
 func (m *Manager) Remove(path string, option options.DeleteOption) error {
 	switch option {
 	case options.DeleteStandard:
@@ -33,7 +30,6 @@ func (m *Manager) Remove(path string, option options.DeleteOption) error {
 	}
 }
 
-// CreateFile creates and returns a new file at the given path
 func (m *Manager) CreateFile(path string) (*os.File, error) {
 	output, err := os.Create(filepath.Clean(path))
 	if err != nil {
@@ -42,7 +38,6 @@ func (m *Manager) CreateFile(path string) (*os.File, error) {
 	return output, nil
 }
 
-// ValidatePath checks whether a file at the given path should or should not exist
 func (m *Manager) ValidatePath(path string, mustExist bool) error {
 	fileInfo, err := os.Stat(path)
 
@@ -67,7 +62,6 @@ func (m *Manager) ValidatePath(path string, mustExist bool) error {
 	return nil
 }
 
-// OpenFile opens a file and returns both the file handle and its metadata
 func (m *Manager) OpenFile(path string) (*os.File, os.FileInfo, error) {
 	file, err := os.Open(filepath.Clean(path))
 	if err != nil {
@@ -81,7 +75,6 @@ func (m *Manager) OpenFile(path string) (*os.File, os.FileInfo, error) {
 	return file, info, nil
 }
 
-// GetFileInfo returns file information without opening the file
 func (m *Manager) GetFileInfo(path string) (os.FileInfo, error) {
 	info, err := os.Stat(filepath.Clean(path))
 	if err != nil {
@@ -93,13 +86,11 @@ func (m *Manager) GetFileInfo(path string) (os.FileInfo, error) {
 	return info, nil
 }
 
-// FileExists checks if a file exists at the given path
 func (m *Manager) FileExists(path string) bool {
 	_, err := os.Stat(filepath.Clean(path))
 	return err == nil
 }
 
-// secureDelete securely deletes a file by overwriting its contents with random data
 func (m *Manager) secureDelete(path string) error {
 	file, err := os.OpenFile(filepath.Clean(path), os.O_WRONLY, 0)
 	if err != nil {
@@ -111,19 +102,16 @@ func (m *Manager) secureDelete(path string) error {
 		return fmt.Errorf("failed to get file info for secure deletion %s: %w", path, err)
 	}
 
-	// Perform multiple overwrite passes
 	for pass := range config.OverwritePasses {
 		if err := m.randomOverwrite(file, info.Size()); err != nil {
 			return fmt.Errorf("secure overwrite pass %d failed for %s: %w", pass+1, path, err)
 		}
 	}
 
-	// Close the file before removing it
 	if err := file.Close(); err != nil {
 		return fmt.Errorf("failed to close file %s before removal: %w", path, err)
 	}
 
-	// Finally remove the file
 	if err := os.Remove(path); err != nil {
 		return fmt.Errorf("failed to remove file %s after secure overwrite: %w", path, err)
 	}
@@ -131,7 +119,6 @@ func (m *Manager) secureDelete(path string) error {
 	return nil
 }
 
-// randomOverwrite writes cryptographically secure random bytes over the file content
 func (m *Manager) randomOverwrite(file *os.File, size int64) error {
 	if _, err := file.Seek(0, 0); err != nil {
 		return fmt.Errorf("failed to seek to file start: %w", err)

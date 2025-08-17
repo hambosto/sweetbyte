@@ -10,14 +10,10 @@ import (
 	"golang.org/x/crypto/chacha20poly1305"
 )
 
-// XChaCha20Cipher provides XChaCha20-Poly1305 encryption and decryption.
-// It encapsulates the AEAD cipher and handles nonce generation and prepending.
 type XChaCha20Cipher struct {
 	aead cipher.AEAD
 }
 
-// NewXChaCha20Cipher creates a new XChaCha20Cipher instance.
-// It initializes an XChaCha20-Poly1305 cipher with the provided 32-byte key.
 func NewXChaCha20Cipher(key []byte) (*XChaCha20Cipher, error) {
 	if len(key) != config.EncryptionKeySize {
 		return nil, fmt.Errorf("key must be %d bytes, got %d", config.EncryptionKeySize, len(key))
@@ -33,9 +29,6 @@ func NewXChaCha20Cipher(key []byte) (*XChaCha20Cipher, error) {
 	}, nil
 }
 
-// Encrypt encrypts the given plaintext.
-// It generates a random nonce, performs XChaCha20-Poly1305 encryption,
-// and prepends the nonce to the resulting ciphertext.
 func (c *XChaCha20Cipher) Encrypt(plaintext []byte) ([]byte, error) {
 	if len(plaintext) == 0 {
 		return nil, fmt.Errorf("plaintext cannot be empty")
@@ -50,9 +43,6 @@ func (c *XChaCha20Cipher) Encrypt(plaintext []byte) ([]byte, error) {
 	return ciphertext, nil
 }
 
-// Decrypt decrypts the given ciphertext.
-// It assumes the nonce is prepended to the ciphertext, extracts it,
-// and then performs XChaCha20-Poly1305 decryption and authentication.
 func (c *XChaCha20Cipher) Decrypt(ciphertext []byte) ([]byte, error) {
 	if len(ciphertext) == 0 {
 		return nil, fmt.Errorf("ciphertext cannot be empty")
