@@ -147,14 +147,17 @@ func (r *chunkReader) readForDecryption(ctx context.Context, reader io.Reader, t
 // readChunkSize reads a 4-byte length prefix from the reader and converts it to a uint32.
 // This size indicates the length of the upcoming data chunk in the encrypted file format.
 func (r *chunkReader) readChunkSize(reader io.Reader) (uint32, error) {
-	var sizeBuffer [config.ChunkHeaderSize]byte // Buffer to hold the 4-byte chunk size.
+	var sizeBuffer [config.ChunkHeaderSize]byte // Allocate a buffer to hold the 4-byte chunk size header.
 
-	_, err := io.ReadFull(reader, sizeBuffer[:]) // Read exactly ChunkHeaderSize bytes into the buffer.
+	// Attempt to read exactly ChunkHeaderSize (4) bytes from the reader into the buffer.
+	_, err := io.ReadFull(reader, sizeBuffer[:])
 	if err != nil {
-		return 0, fmt.Errorf("failed to read chunk size: %w", err) // Propagate error if read fails.
+		// If reading fails (e.g., EOF or other error), return 0 and the error.
+		return 0, err
 	}
 
-	return binary.BigEndian.Uint32(sizeBuffer[:]), nil // Convert the byte slice to a uint32 using Big Endian byte order.
+	// Convert the 4-byte buffer from big-endian to uint32 to get the chunk size.
+	return binary.BigEndian.Uint32(sizeBuffer[:]), nil
 }
 
 // readChunkData reads a specified 'length' of bytes from the reader.
