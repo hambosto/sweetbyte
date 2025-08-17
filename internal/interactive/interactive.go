@@ -91,11 +91,6 @@ func (a *InteractiveApp) runInteractiveLoop() error {
 	return nil // Return nil if the interactive loop completes successfully.
 }
 
-// // handleError prints the given error message to the terminal.
-// func (a *InteractiveApp) handleError(err error) {
-// 	a.terminal.PrintError(fmt.Sprintf("Application error: %v", err)) // Print error message using terminal utility.
-// }
-
 // getEligibleFiles finds and returns a list of files suitable for the specified operation mode.
 // It handles cases where no eligible files are found.
 func (a *InteractiveApp) getEligibleFiles(operation options.ProcessorMode) ([]string, error) {
