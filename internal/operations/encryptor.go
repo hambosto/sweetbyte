@@ -13,14 +13,14 @@ import (
 )
 
 type Encryptor struct {
-	fileManager	*files.Manager
-	fileFinder	*files.Finder
+	fileManager *files.Manager
+	fileFinder  *files.Finder
 }
 
 func NewEncryptor() *Encryptor {
 	return &Encryptor{
-		fileManager:	files.NewManager(),
-		fileFinder:	files.NewFinder(),
+		fileManager: files.NewManager(),
+		fileFinder:  files.NewFinder(),
 	}
 }
 
@@ -63,10 +63,10 @@ func (e *Encryptor) EncryptFile(srcPath, destPath, password string) error {
 	}
 
 	config := streaming.StreamConfig{
-		Key:		key,
-		Processing:	options.Encryption,
-		Concurrency:	config.MaxConcurrency,
-		ChunkSize:	config.DefaultChunkSize,
+		Key:         key,
+		Processing:  options.Encryption,
+		Concurrency: config.MaxConcurrency,
+		ChunkSize:   config.DefaultChunkSize,
 	}
 
 	processor, err := streaming.NewStreamProcessor(config)

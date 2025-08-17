@@ -14,14 +14,14 @@ import (
 )
 
 type Decryptor struct {
-	fileManager	*files.Manager
-	fileFinder	*files.Finder
+	fileManager *files.Manager
+	fileFinder  *files.Finder
 }
 
 func NewDecryptor() *Decryptor {
 	return &Decryptor{
-		fileManager:	files.NewManager(),
-		fileFinder:	files.NewFinder(),
+		fileManager: files.NewManager(),
+		fileFinder:  files.NewFinder(),
 	}
 }
 
@@ -58,10 +58,10 @@ func (d *Decryptor) DecryptFile(srcPath, destPath, password string) error {
 	defer destFile.Close()
 
 	config := streaming.StreamConfig{
-		Key:		key,
-		Processing:	options.Decryption,
-		Concurrency:	config.MaxConcurrency,
-		ChunkSize:	config.DefaultChunkSize,
+		Key:         key,
+		Processing:  options.Decryption,
+		Concurrency: config.MaxConcurrency,
+		ChunkSize:   config.DefaultChunkSize,
 	}
 
 	processor, err := streaming.NewStreamProcessor(config)

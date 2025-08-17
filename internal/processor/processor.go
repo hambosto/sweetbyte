@@ -11,11 +11,11 @@ import (
 )
 
 type Processor struct {
-	firstCipher	*cipher.AESCipher
-	secondCipher	*cipher.XChaCha20Cipher
-	encoder		*encoding.Encoder
-	compressor	*compression.Compressor
-	padding		*padding.Padding
+	firstCipher  *cipher.AESCipher
+	secondCipher *cipher.XChaCha20Cipher
+	encoder      *encoding.Encoder
+	compressor   *compression.Compressor
+	padding      *padding.Padding
 }
 
 func NewProcessor(key []byte) (*Processor, error) {
@@ -49,11 +49,11 @@ func NewProcessor(key []byte) (*Processor, error) {
 	}
 
 	return &Processor{
-		firstCipher:	firstCipher,
-		secondCipher:	secondCipher,
-		encoder:	encoder,
-		compressor:	compressor,
-		padding:	padder,
+		firstCipher:  firstCipher,
+		secondCipher: secondCipher,
+		encoder:      encoder,
+		compressor:   compressor,
+		padding:      padder,
 	}, nil
 }
 

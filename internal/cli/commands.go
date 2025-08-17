@@ -25,14 +25,14 @@ func (c *CLI) Execute() error {
 
 func (c *CLI) setupCommands() {
 	c.rootCmd = &cobra.Command{
-		Use:	"sweetbyte",
-		Short:	"A tool for multi-layered file encryption and error correction.",
+		Use:   "sweetbyte",
+		Short: "A tool for multi-layered file encryption and error correction.",
 		Long: `SweetByte secures your files through a multi-layered process that includes compression,
 dual-layer encryption with AES-256-GCM and XChaCha20-Poly1305, and Reed-Solomon error
 correction codes. This ensures both confidentiality and resilience against data corruption.
 
 SweetByte can be run in a user-friendly interactive mode or via the command line for automation.`,
-		Version:	config.AppVersion,
+		Version: config.AppVersion,
 		Run: func(cmd *cobra.Command, args []string) {
 			interactiveApp := interactive.NewInteractiveApp()
 			interactiveApp.Run()
@@ -46,16 +46,16 @@ SweetByte can be run in a user-friendly interactive mode or via the command line
 
 func (c *CLI) createEncryptCommand() *cobra.Command {
 	var (
-		inputFile	string
-		outputFile	string
-		password	string
-		deleteSource	bool
-		secureDelete	bool
+		inputFile    string
+		outputFile   string
+		password     string
+		deleteSource bool
+		secureDelete bool
 	)
 
 	cmd := &cobra.Command{
-		Use:	"encrypt [flags]",
-		Short:	"Encrypts a file using a multi-layered approach.",
+		Use:   "encrypt [flags]",
+		Short: "Encrypts a file using a multi-layered approach.",
 		Long: `This command secures a file by first compressing it, then encrypting it with two independent
 layers of state-of-the-art ciphers: AES-256-GCM followed by XChaCha20-Poly1305. Finally,
 it applies Reed-Solomon error correction codes to the ciphertext, protecting it from
@@ -83,16 +83,16 @@ corruption. A strong encryption key is derived from your password using Argon2id
 
 func (c *CLI) createDecryptCommand() *cobra.Command {
 	var (
-		inputFile	string
-		outputFile	string
-		password	string
-		deleteSource	bool
-		secureDelete	bool
+		inputFile    string
+		outputFile   string
+		password     string
+		deleteSource bool
+		secureDelete bool
 	)
 
 	cmd := &cobra.Command{
-		Use:	"decrypt [flags]",
-		Short:	"Decrypts a file encrypted by SweetByte.",
+		Use:   "decrypt [flags]",
+		Short: "Decrypts a file encrypted by SweetByte.",
 		Long: `This command reverses the encryption process. It first uses the Reed-Solomon codes to
 verify and correct any data corruption, then decrypts the data through two layers
 (XChaCha20-Poly1305 and AES-256-GCM), and finally decompresses it to restore the original
@@ -120,8 +120,8 @@ file. The correct password is required to derive the necessary decryption key.`,
 
 func (c *CLI) createInteractiveCommand() *cobra.Command {
 	return &cobra.Command{
-		Use:	"interactive",
-		Short:	"Starts a guided session for multi-layered encryption and decryption.",
+		Use:   "interactive",
+		Short: "Starts a guided session for multi-layered encryption and decryption.",
 		Long: `This command launches SweetByte in interactive mode, providing a step-by-step guided
 experience for encrypting and decrypting files using the multi-layered security process.
 This is ideal for users who prefer a more intuitive and user-friendly interface.`,

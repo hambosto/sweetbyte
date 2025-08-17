@@ -5,16 +5,16 @@ import (
 )
 
 type Shards struct {
-	dataShards	int
-	parityShards	int
-	totalShards	int
+	dataShards   int
+	parityShards int
+	totalShards  int
 }
 
 func NewShards(dataShards, parityShards int) *Shards {
 	return &Shards{
-		dataShards:	dataShards,
-		parityShards:	parityShards,
-		totalShards:	dataShards + parityShards,
+		dataShards:   dataShards,
+		parityShards: parityShards,
+		totalShards:  dataShards + parityShards,
 	}
 }
 

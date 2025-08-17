@@ -10,18 +10,18 @@ import (
 )
 
 type CLIProcessor struct {
-	encryptor	*operations.Encryptor
-	decryptor	*operations.Decryptor
-	fileManager	*files.Manager
-	prompt		*ui.Prompt
+	encryptor   *operations.Encryptor
+	decryptor   *operations.Decryptor
+	fileManager *files.Manager
+	prompt      *ui.Prompt
 }
 
 func NewCLIProcessor() *CLIProcessor {
 	return &CLIProcessor{
-		encryptor:	operations.NewEncryptor(),
-		decryptor:	operations.NewDecryptor(),
-		fileManager:	files.NewManager(),
-		prompt:		ui.NewPrompt(),
+		encryptor:   operations.NewEncryptor(),
+		decryptor:   operations.NewDecryptor(),
+		fileManager: files.NewManager(),
+		prompt:      ui.NewPrompt(),
 	}
 }
 

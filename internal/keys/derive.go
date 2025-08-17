@@ -10,9 +10,9 @@ import (
 )
 
 const (
-	ArgonTime	uint32	= 4
-	ArgonMemory	uint32	= 128 * 1024
-	ArgonThreads	uint8	= 4
+	ArgonTime    uint32 = 4
+	ArgonMemory  uint32 = 128 * 1024
+	ArgonThreads uint8  = 4
 )
 
 func Hash(password, salt []byte) ([]byte, error) {

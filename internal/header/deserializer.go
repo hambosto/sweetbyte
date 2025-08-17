@@ -6,8 +6,8 @@ import (
 )
 
 type Deserializer struct {
-	data	[]byte
-	offset	int
+	data   []byte
+	offset int
 }
 
 func NewDeserializer() *Deserializer {

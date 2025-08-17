@@ -11,22 +11,22 @@ import (
 )
 
 type InteractiveApp struct {
-	terminal	*ui.Terminal
-	prompt		*ui.Prompt
-	fileManager	*files.Manager
-	fileFinder	*files.Finder
-	encryptor	*operations.Encryptor
-	decryptor	*operations.Decryptor
+	terminal    *ui.Terminal
+	prompt      *ui.Prompt
+	fileManager *files.Manager
+	fileFinder  *files.Finder
+	encryptor   *operations.Encryptor
+	decryptor   *operations.Decryptor
 }
 
 func NewInteractiveApp() *InteractiveApp {
 	return &InteractiveApp{
-		terminal:	ui.NewTerminal(),
-		prompt:		ui.NewPrompt(),
-		fileManager:	files.NewManager(),
-		fileFinder:	files.NewFinder(),
-		encryptor:	operations.NewEncryptor(),
-		decryptor:	operations.NewDecryptor(),
+		terminal:    ui.NewTerminal(),
+		prompt:      ui.NewPrompt(),
+		fileManager: files.NewManager(),
+		fileFinder:  files.NewFinder(),
+		encryptor:   operations.NewEncryptor(),
+		decryptor:   operations.NewDecryptor(),
 	}
 }
 

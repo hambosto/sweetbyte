@@ -11,10 +11,10 @@ import (
 )
 
 type FileInfo struct {
-	Path		string
-	Size		int64
-	IsEncrypted	bool
-	IsEligible	bool
+	Path        string
+	Size        int64
+	IsEncrypted bool
+	IsEligible  bool
 }
 
 type Finder struct{}
@@ -91,10 +91,10 @@ func (f *Finder) GetFileInfo(files []string) ([]FileInfo, error) {
 		}
 
 		fileInfo := FileInfo{
-			Path:		file,
-			Size:		info.Size(),
-			IsEncrypted:	f.IsEncryptedFile(file),
-			IsEligible:	true,
+			Path:        file,
+			Size:        info.Size(),
+			IsEncrypted: f.IsEncryptedFile(file),
+			IsEligible:  true,
 		}
 
 		fileInfos = append(fileInfos, fileInfo)

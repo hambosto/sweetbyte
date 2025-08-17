@@ -12,14 +12,14 @@ import (
 )
 
 type chunkReader struct {
-	processing	options.Processing
-	chunkSize	int
+	processing options.Processing
+	chunkSize  int
 }
 
 func NewChunkReader(processing options.Processing, chunkSize int) ChunkReader {
 	return &chunkReader{
-		processing:	processing,
-		chunkSize:	chunkSize,
+		processing: processing,
+		chunkSize:  chunkSize,
 	}
 }
 
@@ -73,8 +73,8 @@ func (r *chunkReader) readForEncryption(ctx context.Context, reader io.Reader, t
 		}
 
 		task := Task{
-			Data:	make([]byte, n),
-			Index:	index,
+			Data:  make([]byte, n),
+			Index: index,
 		}
 		copy(task.Data, buffer[:n])
 
@@ -115,8 +115,8 @@ func (r *chunkReader) readForDecryption(ctx context.Context, reader io.Reader, t
 		}
 
 		task := Task{
-			Data:	data,
-			Index:	index,
+			Data:  data,
+			Index: index,
 		}
 
 		select {

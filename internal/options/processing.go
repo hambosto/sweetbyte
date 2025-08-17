@@ -3,7 +3,7 @@ package options
 type Processing int
 
 const (
-	Encryption	Processing	= iota
+	Encryption Processing = iota
 	Decryption
 )
 

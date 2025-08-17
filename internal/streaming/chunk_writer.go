@@ -13,16 +13,16 @@ import (
 )
 
 type chunkWriter struct {
-	processing	options.Processing
-	buffer		OrderBuffer
-	bar		*ui.ProgressBar
+	processing options.Processing
+	buffer     OrderBuffer
+	bar        *ui.ProgressBar
 }
 
 func NewChunkWriter(processing options.Processing, bar *ui.ProgressBar) ChunkWriter {
 	return &chunkWriter{
-		processing:	processing,
-		buffer:		NewOrderBuffer(),
-		bar:		bar,
+		processing: processing,
+		buffer:     NewOrderBuffer(),
+		bar:        bar,
 	}
 }
 

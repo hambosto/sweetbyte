@@ -11,10 +11,10 @@ const (
 )
 
 type Encoder struct {
-	dataShards	int
-	parityShards	int
-	encoder		reedsolomon.Encoder
-	shards		*Shards
+	dataShards   int
+	parityShards int
+	encoder      reedsolomon.Encoder
+	shards       *Shards
 }
 
 func NewEncoder(dataShards, parityShards int) (*Encoder, error) {
@@ -34,10 +34,10 @@ func NewEncoder(dataShards, parityShards int) (*Encoder, error) {
 	}
 
 	return &Encoder{
-		dataShards:	dataShards,
-		parityShards:	parityShards,
-		encoder:	enc,
-		shards:		NewShards(dataShards, parityShards),
+		dataShards:   dataShards,
+		parityShards: parityShards,
+		encoder:      enc,
+		shards:       NewShards(dataShards, parityShards),
 	}, nil
 }
 

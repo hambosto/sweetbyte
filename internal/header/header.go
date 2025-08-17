@@ -9,38 +9,38 @@ import (
 )
 
 const (
-	MagicBytes		= "SWX4"
-	MagicSize		= 4
-	VersionSize		= 2
-	FlagsSize		= 4
-	SaltSize		= 32
-	OriginalSizeSize	= 8
-	IntegrityHashSize	= 32
-	AuthTagSize		= 32
-	ChecksumSize		= 4
-	PaddingSize		= 16
-	TotalHeaderSize		= 134
+	MagicBytes        = "SWX4"
+	MagicSize         = 4
+	VersionSize       = 2
+	FlagsSize         = 4
+	SaltSize          = 32
+	OriginalSizeSize  = 8
+	IntegrityHashSize = 32
+	AuthTagSize       = 32
+	ChecksumSize      = 4
+	PaddingSize       = 16
+	TotalHeaderSize   = 134
 )
 
 const (
-	CurrentVersion	uint16	= 0x0001
-	FlagCompressed	uint32	= 1 << 0
-	FlagEncrypted	uint32	= 1 << 1
-	FlagIntegrityV2	uint32	= 1 << 2
-	FlagAntiTamper	uint32	= 1 << 3
-	DefaultFlags		= FlagEncrypted | FlagIntegrityV2 | FlagAntiTamper
+	CurrentVersion  uint16 = 0x0001
+	FlagCompressed  uint32 = 1 << 0
+	FlagEncrypted   uint32 = 1 << 1
+	FlagIntegrityV2 uint32 = 1 << 2
+	FlagAntiTamper  uint32 = 1 << 3
+	DefaultFlags           = FlagEncrypted | FlagIntegrityV2 | FlagAntiTamper
 )
 
 type Header struct {
-	magic		[MagicSize]byte
-	version		uint16
-	flags		uint32
-	salt		[SaltSize]byte
-	originalSize	uint64
-	integrityHash	[IntegrityHashSize]byte
-	authTag		[AuthTagSize]byte
-	checksum	uint32
-	padding		[PaddingSize]byte
+	magic         [MagicSize]byte
+	version       uint16
+	flags         uint32
+	salt          [SaltSize]byte
+	originalSize  uint64
+	integrityHash [IntegrityHashSize]byte
+	authTag       [AuthTagSize]byte
+	checksum      uint32
+	padding       [PaddingSize]byte
 }
 
 func NewHeader(originalSize uint64, salt []byte, key []byte) (*Header, error) {
@@ -55,9 +55,9 @@ func NewHeader(originalSize uint64, salt []byte, key []byte) (*Header, error) {
 	}
 
 	h := &Header{
-		version:	CurrentVersion,
-		flags:		DefaultFlags,
-		originalSize:	originalSize,
+		version:      CurrentVersion,
+		flags:        DefaultFlags,
+		originalSize: originalSize,
 	}
 
 	copy(h.magic[:], []byte(MagicBytes))
