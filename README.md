@@ -106,7 +106,6 @@ graph TD
         L[Files]
         M[UI]
         N[Config]
-        O[Errors]
         P[Utils]
     end
 
@@ -126,14 +125,13 @@ graph TD
     C --> L
     B --> M
     E --> N
-    C --> O
     D --> P
 ```
 
 - **User Interfaces:** The `cli` and `interactive` packages provide two distinct ways for users to interact with the application. Both interfaces are built on top of the `operations` package.
 - **Core Logic:** The `operations`, `streaming`, and `processor` packages form the core of the application. The `operations` package orchestrates the high-level workflow, the `streaming` package handles concurrent, chunk-based file processing, and the `processor` package applies the full cryptographic pipeline to each individual data chunk.
 - **Cryptographic & Data Processing:** This layer contains the packages that implement the cryptographic and data processing primitives. These packages are responsible for encryption, key derivation, header serialization, compression, error correction, and padding. They are primarily consumed by the `processor` package.
-- **Utilities & Support:** This layer provides a set of utility and support packages that are used throughout the application. These packages handle file management, UI components, configuration, error handling, and other miscellaneous tasks.
+- **Utilities & Support:** This layer provides a set of utility and support packages that are used throughout the application. These packages handle file management, UI components, configuration, and other miscellaneous tasks.
 
 ## 📦 File Format
 
@@ -241,7 +239,6 @@ SweetByte is built with a modular architecture, with each package handling a spe
 | `compression`     | Handles Zlib compression and decompression.                              |
 | `config`          | Stores all application-wide constants and configuration parameters.      |
 | `encoding`        | Manages Reed-Solomon error correction encoding and decoding.             |
-
 | `files`           | Provides utilities for finding, managing, and securely deleting files.   |
 | `header`          | Manages the serialization, deserialization, and verification of the secure file header. |
 | `interactive`     | Implements the user-friendly interactive mode workflow.                  |
