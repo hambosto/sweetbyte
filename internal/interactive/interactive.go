@@ -45,8 +45,8 @@ func (a *InteractiveApp) Run() {
 	a.terminal.PrintBanner() // Display the application banner.
 
 	if err := a.runInteractiveLoop(); err != nil { // Execute the main interactive workflow.
-		a.handleError(err) // If an error occurs, log and display it.
-		os.Exit(1)         // Exit the application with an error status.
+		a.terminal.PrintError(fmt.Sprintf("Application error: %v", err)) // If an error occurs, log and display it.
+		os.Exit(1)                                                       // Exit the application with an error status.
 	}
 
 	a.terminal.Cleanup() // Restore terminal settings after the application finishes.
@@ -91,10 +91,10 @@ func (a *InteractiveApp) runInteractiveLoop() error {
 	return nil // Return nil if the interactive loop completes successfully.
 }
 
-// handleError prints the given error message to the terminal.
-func (a *InteractiveApp) handleError(err error) {
-	a.terminal.PrintError(fmt.Sprintf("Application error: %v", err)) // Print error message using terminal utility.
-}
+// // handleError prints the given error message to the terminal.
+// func (a *InteractiveApp) handleError(err error) {
+// 	a.terminal.PrintError(fmt.Sprintf("Application error: %v", err)) // Print error message using terminal utility.
+// }
 
 // getEligibleFiles finds and returns a list of files suitable for the specified operation mode.
 // It handles cases where no eligible files are found.
