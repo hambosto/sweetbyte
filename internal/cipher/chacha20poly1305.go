@@ -47,9 +47,15 @@ func (c *XChaCha20Cipher) Encrypt(plaintext []byte) ([]byte, error) {
 		return nil, fmt.Errorf("failed to generate nonce: %w", err)
 	}
 
-	// Encrypt the plaintext and prepend the nonce.
-	ciphertext := c.aead.Seal(nonce, nonce, plaintext, nil)
-	return ciphertext, nil
+	// Encrypt the plaintext.
+	ciphertext := c.aead.Seal(nil, nonce, plaintext, nil)
+
+	// Prepend nonce to ciphertext
+	result := make([]byte, 0, len(nonce)+len(ciphertext))
+	result = append(result, nonce...)
+	result = append(result, ciphertext...)
+
+	return result, nil
 }
 
 // Decrypt decrypts the given ciphertext.
