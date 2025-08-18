@@ -1,5 +1,3 @@
-permissions:
-  contents: read
 name: Code Quality Check
 
 on:
@@ -7,6 +5,9 @@ on:
     branches: [ "*" ]
   pull_request:
     branches: [ "*" ]
+
+permissions:
+  contents: read
 
 jobs:
   format:
