@@ -18,7 +18,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: stable
+          go-version: 1.24.5
 
       - name: Check gofmt
         run: |
@@ -39,7 +39,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: stable
+          go-version: 1.24.5
 
       - name: Run go vet
         run: go vet ./...
@@ -55,7 +55,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: stable
+          go-version: 1.24.5
 
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v6
@@ -70,11 +70,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: stable
 
       - name: Run Security Scanner
         uses: securego/gosec@master

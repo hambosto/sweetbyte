@@ -35,8 +35,7 @@ jobs:
       - name: Set up Go environment
         uses: actions/setup-go@v5
         with:
-          go-version: 'stable'
-          check-latest: true
+          go-version: stable
 
       - name: Extract version from tag
         id: get_version
