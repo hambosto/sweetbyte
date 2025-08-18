@@ -1,3 +1,4 @@
+// Package cli provides the command-line interface functionality for SweetByte.
 package cli
 
 import (
@@ -9,6 +10,7 @@ import (
 	"github.com/hambosto/sweetbyte/internal/ui"
 )
 
+// CLIProcessor handles the command-line interface operations.
 type CLIProcessor struct {
 	encryptor   *operations.Encryptor
 	decryptor   *operations.Decryptor
@@ -16,6 +18,7 @@ type CLIProcessor struct {
 	prompt      *ui.Prompt
 }
 
+// NewCLIProcessor creates a new CLIProcessor.
 func NewCLIProcessor() *CLIProcessor {
 	return &CLIProcessor{
 		encryptor:   operations.NewEncryptor(),
@@ -25,7 +28,9 @@ func NewCLIProcessor() *CLIProcessor {
 	}
 }
 
+// Encrypt encrypts a file using the command-line interface.
 func (p *CLIProcessor) Encrypt(inputFile, outputFile, password string, deleteSource, secureDelete bool) error {
+	// If no password is provided, prompt the user for one.
 	if password == "" {
 		var err error
 		password, err = p.prompt.GetEncryptionPassword()
@@ -34,6 +39,7 @@ func (p *CLIProcessor) Encrypt(inputFile, outputFile, password string, deleteSou
 		}
 	}
 
+	// Encrypt the file.
 	fmt.Printf("Encrypting: %s -> %s\n", inputFile, outputFile)
 	if err := p.encryptor.EncryptFile(inputFile, outputFile, password); err != nil {
 		return fmt.Errorf("failed to encrypt '%s': %w", inputFile, err)
@@ -41,6 +47,7 @@ func (p *CLIProcessor) Encrypt(inputFile, outputFile, password string, deleteSou
 
 	fmt.Printf("✓ File encrypted successfully: %s\n", outputFile)
 
+	// If requested, delete the source file.
 	if deleteSource {
 		deleteOption := options.DeleteStandard
 		if secureDelete {
@@ -57,7 +64,9 @@ func (p *CLIProcessor) Encrypt(inputFile, outputFile, password string, deleteSou
 	return nil
 }
 
+// Decrypt decrypts a file using the command-line interface.
 func (p *CLIProcessor) Decrypt(inputFile, outputFile, password string, deleteSource, secureDelete bool) error {
+	// If no password is provided, prompt the user for one.
 	if password == "" {
 		var err error
 		password, err = p.prompt.GetDecryptionPassword()
@@ -66,12 +75,14 @@ func (p *CLIProcessor) Decrypt(inputFile, outputFile, password string, deleteSou
 		}
 	}
 
+	// Decrypt the file.
 	fmt.Printf("Decrypting: %s -> %s\n", inputFile, outputFile)
 	if err := p.decryptor.DecryptFile(inputFile, outputFile, password); err != nil {
 		return fmt.Errorf("failed to decrypt '%s': %w", inputFile, err)
 	}
 
 	fmt.Printf("✓ File decrypted successfully: %s\n", outputFile)
+	// If requested, delete the source file.
 	if deleteSource {
 		deleteOption := options.DeleteStandard
 		if secureDelete {

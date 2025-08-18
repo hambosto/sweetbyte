@@ -1,3 +1,4 @@
+// Package header provides functionality for creating, reading, and writing file headers.
 package header
 
 import (
@@ -5,37 +6,46 @@ import (
 	"fmt"
 )
 
+// Verifier verifies the integrity and authenticity of a header.
 type Verifier struct {
 	key []byte
 }
 
+// NewVerifier creates a new Verifier.
 func NewVerifier(key []byte) *Verifier {
 	return &Verifier{
 		key: key,
 	}
 }
 
+// VerifyAll performs all verification checks on the header.
 func (v *Verifier) VerifyAll(header *Header) error {
+	// Verify the format of the header.
 	if err := v.VerifyFormat(header); err != nil {
 		return fmt.Errorf("format verification failed: %w", err)
 	}
 
+	// Verify the checksum of the header.
 	if err := v.VerifyChecksum(header); err != nil {
 		return fmt.Errorf("checksum verification failed: %w", err)
 	}
 
+	// Verify the integrity of the header.
 	if err := v.VerifyIntegrity(header); err != nil {
 		return fmt.Errorf("integrity verification failed: %w", err)
 	}
 
+	// Verify the authentication of the header.
 	if err := v.VerifyAuthentication(header); err != nil {
 		return fmt.Errorf("authentication verification failed: %w", err)
 	}
 
+	// Verify the anti-tampering measures of the header.
 	if err := v.VerifyAntiTampering(header); err != nil {
 		return fmt.Errorf("anti-tampering verification failed: %w", err)
 	}
 
+	// Verify the security patterns of the header.
 	if err := v.VerifySecurityPatterns(header); err != nil {
 		return fmt.Errorf("security pattern verification failed: %w", err)
 	}
@@ -43,12 +53,15 @@ func (v *Verifier) VerifyAll(header *Header) error {
 	return nil
 }
 
+// VerifyFormat verifies the format of the header.
 func (v *Verifier) VerifyFormat(h *Header) error {
+	// Verify the magic bytes.
 	if !secureCompare(h.magic[:], []byte(MagicBytes)) {
 		return fmt.Errorf("invalid magic bytes: expected %s, got %s",
 			MagicBytes, string(h.magic[:]))
 	}
 
+	// Verify the version.
 	if h.version == 0 {
 		return fmt.Errorf("invalid version: cannot be zero")
 	}
@@ -58,16 +71,19 @@ func (v *Verifier) VerifyFormat(h *Header) error {
 			h.version, CurrentVersion)
 	}
 
+	// Verify the original size.
 	if h.originalSize == 0 {
 		return fmt.Errorf("invalid original size: cannot be zero")
 	}
 
+	// Verify the file size is reasonable.
 	const maxFileSize = 1024 * 1024 * 1024 * 1024
 	if h.originalSize > maxFileSize {
 		return fmt.Errorf("unreasonable file size: %d bytes (max: %d)",
 			h.originalSize, maxFileSize)
 	}
 
+	// Verify the security flags.
 	if !h.HasFlag(FlagEncrypted) {
 		return fmt.Errorf("encryption flag not set - header created without maximum security")
 	}
@@ -83,6 +99,7 @@ func (v *Verifier) VerifyFormat(h *Header) error {
 	return nil
 }
 
+// VerifyChecksum verifies the checksum of the header.
 func (v *Verifier) VerifyChecksum(header *Header) error {
 	protector := NewProtector(v.key)
 	expected, err := protector.ComputeChecksum(header)
@@ -97,6 +114,7 @@ func (v *Verifier) VerifyChecksum(header *Header) error {
 	return nil
 }
 
+// VerifyIntegrity verifies the integrity of the header.
 func (v *Verifier) VerifyIntegrity(header *Header) error {
 	protector := NewProtector(v.key)
 	expected, err := protector.ComputeIntegrityHash(header)
@@ -111,6 +129,7 @@ func (v *Verifier) VerifyIntegrity(header *Header) error {
 	return nil
 }
 
+// VerifyAuthentication verifies the authentication of the header.
 func (v *Verifier) VerifyAuthentication(header *Header) error {
 	if len(v.key) == 0 {
 		return fmt.Errorf("key required for authentication verification")
@@ -129,7 +148,9 @@ func (v *Verifier) VerifyAuthentication(header *Header) error {
 	return nil
 }
 
+// VerifyAntiTampering verifies the anti-tampering measures of the header.
 func (v *Verifier) VerifyAntiTampering(h *Header) error {
+	// Check for all-zero fields.
 	zeroSalt := make([]byte, SaltSize)
 	if secureCompare(h.salt[:], zeroSalt) {
 		return fmt.Errorf("invalid salt: all zeros detected - possible tampering")
@@ -153,7 +174,9 @@ func (v *Verifier) VerifyAntiTampering(h *Header) error {
 	return nil
 }
 
+// VerifySecurityPatterns verifies the security patterns of the header.
 func (v *Verifier) VerifySecurityPatterns(h *Header) error {
+	// Check for repeating bytes in the salt and padding.
 	if err := v.checkForRepeatingBytes(h.salt[:], "salt"); err != nil {
 		return err
 	}
@@ -162,6 +185,7 @@ func (v *Verifier) VerifySecurityPatterns(h *Header) error {
 		return err
 	}
 
+	// Validate the entropy of the salt and padding.
 	if err := v.validateEntropy(h.salt[:], "salt", SaltSize/4); err != nil {
 		return err
 	}
@@ -173,11 +197,13 @@ func (v *Verifier) VerifySecurityPatterns(h *Header) error {
 	return nil
 }
 
+// checkForRepeatingBytes checks for repeating bytes in a byte slice.
 func (v *Verifier) checkForRepeatingBytes(data []byte, fieldName string) error {
 	if len(data) < 4 {
 		return nil
 	}
 
+	// Check if all bytes are the same.
 	first := data[0]
 	allSame := true
 	for _, b := range data {
@@ -191,6 +217,7 @@ func (v *Verifier) checkForRepeatingBytes(data []byte, fieldName string) error {
 		return fmt.Errorf("suspicious %s: all bytes identical (0x%02x) - possible tampering", fieldName, first)
 	}
 
+	// Check for simple patterns.
 	if v.hasSimplePattern(data) {
 		return fmt.Errorf("suspicious %s: sequential pattern detected - possible tampering", fieldName)
 	}
@@ -198,11 +225,13 @@ func (v *Verifier) checkForRepeatingBytes(data []byte, fieldName string) error {
 	return nil
 }
 
+// hasSimplePattern checks for simple ascending or descending patterns in a byte slice.
 func (v *Verifier) hasSimplePattern(data []byte) bool {
 	if len(data) < 4 {
 		return false
 	}
 
+	// Check for ascending pattern.
 	ascending := true
 	for i := 1; i < len(data) && i < 8; i++ {
 		if data[i] != data[i-1]+1 {
@@ -211,6 +240,7 @@ func (v *Verifier) hasSimplePattern(data []byte) bool {
 		}
 	}
 
+	// Check for descending pattern.
 	descending := true
 	for i := 1; i < len(data) && i < 8; i++ {
 		if data[i] != data[i-1]-1 {
@@ -222,6 +252,7 @@ func (v *Verifier) hasSimplePattern(data []byte) bool {
 	return ascending || descending
 }
 
+// validateEntropy validates the entropy of a byte slice.
 func (v *Verifier) validateEntropy(data []byte, fieldName string, minUnique int) error {
 	uniqueBytes := make(map[byte]bool)
 	for _, b := range data {

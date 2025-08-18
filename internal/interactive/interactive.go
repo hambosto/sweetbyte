@@ -1,3 +1,4 @@
+// Package interactive provides the interactive mode for the SweetByte application.
 package interactive
 
 import (
@@ -10,6 +11,7 @@ import (
 	"github.com/hambosto/sweetbyte/internal/ui"
 )
 
+// InteractiveApp represents the interactive application.
 type InteractiveApp struct {
 	terminal    *ui.Terminal
 	prompt      *ui.Prompt
@@ -19,6 +21,7 @@ type InteractiveApp struct {
 	decryptor   *operations.Decryptor
 }
 
+// NewInteractiveApp creates a new InteractiveApp.
 func NewInteractiveApp() *InteractiveApp {
 	return &InteractiveApp{
 		terminal:    ui.NewTerminal(),
@@ -30,10 +33,12 @@ func NewInteractiveApp() *InteractiveApp {
 	}
 }
 
+// Run starts the interactive application.
 func (a *InteractiveApp) Run() {
 	a.initializeTerminal()
 	a.terminal.PrintBanner()
 
+	// Run the main interactive loop.
 	if err := a.runInteractiveLoop(); err != nil {
 		a.prompt.ShowWarning(fmt.Sprintf("Application error: %v", err))
 		os.Exit(1)
@@ -42,28 +47,34 @@ func (a *InteractiveApp) Run() {
 	a.terminal.Cleanup()
 }
 
+// initializeTerminal initializes the terminal.
 func (a *InteractiveApp) initializeTerminal() {
 	a.terminal.Clear()
 	a.terminal.MoveTopLeft()
 }
 
+// runInteractiveLoop runs the main interactive loop.
 func (a *InteractiveApp) runInteractiveLoop() error {
+	// Get the desired operation from the user.
 	operation, err := a.prompt.GetProcessingMode()
 	if err != nil {
 		return fmt.Errorf("failed to get processing mode: %w", err)
 	}
 
+	// Get the list of eligible files for the selected operation.
 	eligibleFiles, err := a.getEligibleFiles(operation)
 	if err != nil {
 		return err
 	}
 
+	// Get file information for the eligible files.
 	fileInfos, err := a.fileFinder.GetFileInfo(eligibleFiles)
 	if err != nil {
 		return fmt.Errorf("failed to get file information: %w", err)
 	}
 	a.prompt.ShowFileInfo(fileInfos)
 
+	// Let the user choose a file to process.
 	selectedFile, err := a.prompt.ChooseFile(eligibleFiles)
 	if err != nil {
 		return fmt.Errorf("failed to select file: %w", err)
@@ -71,6 +82,7 @@ func (a *InteractiveApp) runInteractiveLoop() error {
 
 	a.prompt.ShowProcessingInfo(operation, selectedFile)
 
+	// Process the selected file.
 	if err := a.processFile(selectedFile, operation); err != nil {
 		return fmt.Errorf("failed to process file '%s': %w", selectedFile, err)
 	}
@@ -78,6 +90,7 @@ func (a *InteractiveApp) runInteractiveLoop() error {
 	return nil
 }
 
+// getEligibleFiles gets the list of eligible files for the selected operation.
 func (a *InteractiveApp) getEligibleFiles(operation options.ProcessorMode) ([]string, error) {
 	eligibleFiles, err := a.fileFinder.FindEligibleFiles(operation)
 	if err != nil {
@@ -91,9 +104,12 @@ func (a *InteractiveApp) getEligibleFiles(operation options.ProcessorMode) ([]st
 	return eligibleFiles, nil
 }
 
+// processFile processes the selected file.
 func (a *InteractiveApp) processFile(inputPath string, mode options.ProcessorMode) error {
+	// Get the output path for the file.
 	outputPath := a.fileFinder.GetOutputPath(inputPath, mode)
 
+	// Validate the input and output paths.
 	if err := a.fileManager.ValidatePath(inputPath, true); err != nil {
 		return fmt.Errorf("source validation failed: %w", err)
 	}
@@ -104,6 +120,7 @@ func (a *InteractiveApp) processFile(inputPath string, mode options.ProcessorMod
 		}
 	}
 
+	// Process the file based on the selected mode.
 	var err error
 	switch mode {
 	case options.ModeEncrypt:
@@ -120,6 +137,7 @@ func (a *InteractiveApp) processFile(inputPath string, mode options.ProcessorMod
 
 	a.prompt.ShowSuccess(fmt.Sprintf("File processed successfully: %s", outputPath))
 
+	// Ask the user if they want to delete the source file.
 	var fileType string
 	if mode == options.ModeEncrypt {
 		fileType = "original"
@@ -137,12 +155,15 @@ func (a *InteractiveApp) processFile(inputPath string, mode options.ProcessorMod
 	return nil
 }
 
+// encryptFile encrypts the selected file.
 func (a *InteractiveApp) encryptFile(srcPath, destPath string) error {
+	// Get the encryption password from the user.
 	password, err := a.prompt.GetEncryptionPassword()
 	if err != nil {
 		return fmt.Errorf("password prompt failed: %w", err)
 	}
 
+	// Encrypt the file.
 	if err := a.encryptor.EncryptFile(srcPath, destPath, password); err != nil {
 		return fmt.Errorf("failed to encrypt '%s': %w", srcPath, err)
 	}
@@ -150,12 +171,15 @@ func (a *InteractiveApp) encryptFile(srcPath, destPath string) error {
 	return nil
 }
 
+// decryptFile decrypts the selected file.
 func (a *InteractiveApp) decryptFile(srcPath, destPath string) error {
+	// Get the decryption password from the user.
 	password, err := a.prompt.GetDecryptionPassword()
 	if err != nil {
 		return fmt.Errorf("password prompt failed: %w", err)
 	}
 
+	// Decrypt the file.
 	if err := a.decryptor.DecryptFile(srcPath, destPath, password); err != nil {
 		return fmt.Errorf("failed to decrypt '%s': %w", srcPath, err)
 	}
