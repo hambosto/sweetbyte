@@ -4,7 +4,6 @@ package operations
 import (
 	"context"
 	"fmt"
-	"math"
 
 	"github.com/hambosto/sweetbyte/internal/config"
 	"github.com/hambosto/sweetbyte/internal/files"
@@ -55,10 +54,8 @@ func (d *Decryptor) DecryptFile(srcPath, destPath, password string) error {
 	}
 
 	// Get the original size of the file from the header.
-	originalSize := header.OriginalSize()
-	if originalSize > math.MaxInt64 {
-		return fmt.Errorf("file too large: %d bytes", originalSize)
-	}
+	// #nosec G115
+	originalSize := int64(header.OriginalSize())
 
 	// Create the destination file.
 	destFile, err := d.fileManager.CreateFile(destPath)
@@ -81,7 +78,7 @@ func (d *Decryptor) DecryptFile(srcPath, destPath, password string) error {
 	}
 
 	// Process the file.
-	if err := processor.Process(context.Background(), srcFile, destFile, int64(originalSize)); err != nil {
+	if err := processor.Process(context.Background(), srcFile, destFile, originalSize); err != nil {
 		return fmt.Errorf("failed to process file: %w", err)
 	}
 

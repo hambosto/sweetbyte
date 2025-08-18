@@ -6,7 +6,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
-	"math"
 
 	"github.com/hambosto/sweetbyte/internal/config"
 	"github.com/hambosto/sweetbyte/internal/options"
@@ -160,10 +159,6 @@ func (r *chunkReader) readChunkSize(reader io.Reader) (uint32, error) {
 
 // readChunkData reads a chunk of a given length from the reader.
 func (r *chunkReader) readChunkData(reader io.Reader, length uint32) ([]byte, error) {
-	if length > math.MaxInt32 {
-		return nil, fmt.Errorf("chunk size exceeds maximum allowed: %d (max: %d)", length, math.MaxInt32)
-	}
-
 	data := make([]byte, length)
 	if _, err := io.ReadFull(reader, data); err != nil {
 		return nil, fmt.Errorf("failed to read chunk data (length: %d): %w", length, err)

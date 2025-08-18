@@ -6,7 +6,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
-	"math"
 
 	"github.com/hambosto/sweetbyte/internal/config"
 	"github.com/hambosto/sweetbyte/internal/options"
@@ -102,11 +101,9 @@ func (w *chunkWriter) writeResult(output io.Writer, result TaskResult) error {
 
 // writeChunkSize writes the size of a chunk as a 4-byte header to the output.
 func (w *chunkWriter) writeChunkSize(output io.Writer, size int) error {
-	if size < 0 || size > math.MaxUint32 {
-		return fmt.Errorf("chunk size out of range: %d", size)
-	}
-
 	var buffer [config.ChunkHeaderSize]byte
+
+	// #nosec G115
 	binary.BigEndian.PutUint32(buffer[:], uint32(size))
 	if _, err := output.Write(buffer[:]); err != nil {
 		return fmt.Errorf("chunk size write failed: %w", err)

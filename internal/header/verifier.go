@@ -76,13 +76,6 @@ func (v *Verifier) VerifyFormat(h *Header) error {
 		return fmt.Errorf("invalid original size: cannot be zero")
 	}
 
-	// Verify the file size is reasonable.
-	const maxFileSize = 1024 * 1024 * 1024 * 1024
-	if h.originalSize > maxFileSize {
-		return fmt.Errorf("unreasonable file size: %d bytes (max: %d)",
-			h.originalSize, maxFileSize)
-	}
-
 	// Verify the security flags.
 	if !h.HasFlag(FlagEncrypted) {
 		return fmt.Errorf("encryption flag not set - header created without maximum security")
