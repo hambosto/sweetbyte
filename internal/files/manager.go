@@ -103,12 +103,6 @@ func (m *Manager) GetFileInfo(path string) (os.FileInfo, error) {
 	return info, nil // Return file info and nil error.
 }
 
-// FileExists checks if a file exists at the specified path.
-func (m *Manager) FileExists(path string) bool {
-	_, err := os.Stat(filepath.Clean(path)) // Attempt to get file info; error indicates non-existence or permission issues.
-	return err == nil                       // Return true if no error (file exists and is accessible).
-}
-
 // secureDelete performs a secure deletion of a file by overwriting its content
 // with random data multiple times before finally removing it. This makes data recovery very difficult.
 func (m *Manager) secureDelete(path string) error {

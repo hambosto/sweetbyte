@@ -43,9 +43,9 @@ func (t *Terminal) PrintBanner() {
 }
 
 // PrintError displays an error message to the console with a prominent error symbol.
-func (t *Terminal) PrintError(message string) {
-	fmt.Printf("❌ %s\n", message) // Print formatted error message with a cross symbol.
-}
+// func (t *Terminal) PrintError(message string) {
+// 	fmt.Printf("❌ %s\n", message) // Print formatted error message with a cross symbol.
+// }
 
 // Cleanup performs any necessary terminal cleanup, such as adding a final newline.
 func (t *Terminal) Cleanup() {

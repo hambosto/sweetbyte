@@ -45,8 +45,8 @@ func (a *InteractiveApp) Run() {
 	a.terminal.PrintBanner() // Display the application banner.
 
 	if err := a.runInteractiveLoop(); err != nil { // Execute the main interactive workflow.
-		a.terminal.PrintError(fmt.Sprintf("Application error: %v", err)) // If an error occurs, log and display it.
-		os.Exit(1)                                                       // Exit the application with an error status.
+		a.prompt.ShowWarning(fmt.Sprintf("Application error: %v", err)) // If an error occurs, log and display it.
+		os.Exit(1)                                                      // Exit the application with an error status.
 	}
 
 	a.terminal.Cleanup() // Restore terminal settings after the application finishes.

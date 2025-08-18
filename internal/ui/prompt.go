@@ -214,8 +214,3 @@ func (p *Prompt) ShowSuccess(message string) {
 func (p *Prompt) ShowWarning(message string) {
 	fmt.Printf("⚠ %s\n", message) // Print formatted warning message.
 }
-
-// ShowInfo displays an informational message to the console with an info symbol.
-func (p *Prompt) ShowInfo(message string) {
-	fmt.Printf("ℹ %s\n", message) // Print formatted informational message.
-}
