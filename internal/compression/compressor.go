@@ -1,6 +1,3 @@
-// Package compression provides utilities for compressing and decompressing data
-// using the Zlib compression algorithm. It offers different compression levels
-// to balance between compression ratio and speed.
 package compression
 
 import (
@@ -10,32 +7,23 @@ import (
 	"io"
 )
 
-// CompressionLevel defines the strength of the Zlib compression.
 type CompressionLevel int
 
 const (
-	// LevelNoCompression specifies no compression.
 	LevelNoCompression CompressionLevel = iota
-	// LevelBestSpeed specifies the fastest compression level.
 	LevelBestSpeed
-	// LevelDefaultCompression specifies the default compression level.
 	LevelDefaultCompression
-	// LevelBestCompression specifies the best compression ratio, potentially slower.
 	LevelBestCompression
 )
 
-// Compressor handles compression and decompression operations using Zlib.
-// It stores the configured compression level.
 type Compressor struct {
-	level int // The Zlib compression level (e.g., zlib.BestCompression).
+	level int
 }
 
-// NewCompressor creates and returns a new Compressor instance.
-// It maps the custom CompressionLevel to a zlib package constant.
 func NewCompressor(level CompressionLevel) (*Compressor, error) {
-	var zlibLevel int // Variable to hold the corresponding zlib package level.
+	var zlibLevel int
 
-	switch level { // Map the custom compression level to the zlib package's constant.
+	switch level {
 	case LevelNoCompression:
 		zlibLevel = zlib.NoCompression
 	case LevelBestSpeed:
@@ -45,56 +33,52 @@ func NewCompressor(level CompressionLevel) (*Compressor, error) {
 	case LevelBestCompression:
 		zlibLevel = zlib.BestCompression
 	default:
-		zlibLevel = zlib.DefaultCompression // Default to DefaultCompression for unknown levels.
+		zlibLevel = zlib.DefaultCompression
 	}
 
-	return &Compressor{level: zlibLevel}, nil // Return a new Compressor with the determined level.
+	return &Compressor{level: zlibLevel}, nil
 }
 
-// Compress applies Zlib compression to the input byte slice.
-// It uses the configured compression level and returns the compressed data.
 func (c *Compressor) Compress(data []byte) ([]byte, error) {
-	if len(data) == 0 { // Check for empty input data.
-		return nil, fmt.Errorf("data cannot be empty") // Return error if data is empty.
+	if len(data) == 0 {
+		return nil, fmt.Errorf("data cannot be empty")
 	}
-	var buf bytes.Buffer // A buffer to write the compressed data to.
 
-	writer, err := zlib.NewWriterLevel(&buf, c.level) // Create a new zlib writer with the specified level.
+	var buf bytes.Buffer
+	writer, err := zlib.NewWriterLevel(&buf, c.level)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create compressor: %w", err) // Handle error during writer creation.
+		return nil, fmt.Errorf("failed to create compressor: %w", err)
 	}
 
-	if _, err := writer.Write(data); err != nil { // Write the input data to the zlib writer for compression.
-		return nil, fmt.Errorf("failed to compress data: %w", err) // Handle error during data writing.
+	if _, err := writer.Write(data); err != nil {
+		return nil, fmt.Errorf("failed to compress data: %w", err)
 	}
 
-	if err := writer.Close(); err != nil { // Close the writer to flush any buffered data and finalize compression.
-		return nil, fmt.Errorf("failed to finalize compression: %w", err) // Handle error during writer closing.
+	if err := writer.Close(); err != nil {
+		return nil, fmt.Errorf("failed to finalize compression: %w", err)
 	}
 
-	return buf.Bytes(), nil // Return the compressed data from the buffer.
+	return buf.Bytes(), nil
 }
 
-// Decompress decompresses a Zlib-compressed byte slice.
-// It reads the compressed data and returns the original uncompressed byte slice.
 func (c *Compressor) Decompress(data []byte) ([]byte, error) {
-	if len(data) == 0 { // Check for empty input data.
-		return nil, fmt.Errorf("data cannot be empty") // Return error if data is empty.
+	if len(data) == 0 {
+		return nil, fmt.Errorf("data cannot be empty")
 	}
 
-	reader, err := zlib.NewReader(bytes.NewReader(data)) // Create a new zlib reader from the input compressed data.
+	reader, err := zlib.NewReader(bytes.NewReader(data))
 	if err != nil {
-		return nil, fmt.Errorf("failed to create decompressor: %w", err) // Handle error during reader creation.
+		return nil, fmt.Errorf("failed to create decompressor: %w", err)
 	}
 
-	var buf bytes.Buffer                             // A buffer to write the decompressed data to.
-	if _, err := io.Copy(&buf, reader); err != nil { // Copy data from the decompressor to the buffer.
-		return nil, fmt.Errorf("failed to decompress data: %w", err) // Handle error during data copying.
+	var buf bytes.Buffer
+	if _, err := io.Copy(&buf, reader); err != nil {
+		return nil, fmt.Errorf("failed to decompress data: %w", err)
 	}
 
-	if err := reader.Close(); err != nil { // Close the reader to release resources.
-		return nil, fmt.Errorf("failed to finalize decompression: %w", err) // Handle error during reader closing.
+	if err := reader.Close(); err != nil {
+		return nil, fmt.Errorf("failed to finalize decompression: %w", err)
 	}
 
-	return buf.Bytes(), nil // Return the decompressed data from the buffer.
+	return buf.Bytes(), nil
 }

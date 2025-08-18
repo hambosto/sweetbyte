@@ -1,6 +1,3 @@
-// Package interactive provides the interactive command-line interface (TUI) for the SweetByte application.
-// It guides the user through the process of encrypting and decrypting files step-by-step,
-// handling user input, file selection, and operation execution.
 package interactive
 
 import (
@@ -13,176 +10,155 @@ import (
 	"github.com/hambosto/sweetbyte/internal/ui"
 )
 
-// InteractiveApp represents the main structure for the interactive mode of SweetByte.
-// It orchestrates various UI components, file management, and core encryption/decryption operations.
 type InteractiveApp struct {
-	terminal    *ui.Terminal          // Manages terminal interactions like clearing screen and printing messages.
-	prompt      *ui.Prompt            // Handles user prompts for input (e.g., passwords, file selection).
-	fileManager *files.Manager        // Manages file system operations (e.g., opening, deleting files).
-	fileFinder  *files.Finder         // Discovers eligible files for encryption/decryption.
-	encryptor   *operations.Encryptor // Performs the file encryption operations.
-	decryptor   *operations.Decryptor // Performs the file decryption operations.
+	terminal    *ui.Terminal
+	prompt      *ui.Prompt
+	fileManager *files.Manager
+	fileFinder  *files.Finder
+	encryptor   *operations.Encryptor
+	decryptor   *operations.Decryptor
 }
 
-// NewInteractiveApp creates and returns a new InteractiveApp instance.
-// It initializes all necessary components for running the interactive application.
 func NewInteractiveApp() *InteractiveApp {
 	return &InteractiveApp{
-		terminal:    ui.NewTerminal(),          // Initialize the terminal handler.
-		prompt:      ui.NewPrompt(),            // Initialize the prompt handler.
-		fileManager: files.NewManager(),        // Initialize the file manager.
-		fileFinder:  files.NewFinder(),         // Initialize the file finder.
-		encryptor:   operations.NewEncryptor(), // Initialize the encryption operations handler.
-		decryptor:   operations.NewDecryptor(), // Initialize the decryption operations handler.
+		terminal:    ui.NewTerminal(),
+		prompt:      ui.NewPrompt(),
+		fileManager: files.NewManager(),
+		fileFinder:  files.NewFinder(),
+		encryptor:   operations.NewEncryptor(),
+		decryptor:   operations.NewDecryptor(),
 	}
 }
 
-// Run starts the interactive SweetByte application.
-// It initializes the terminal, prints a banner, runs the main interactive loop,
-// and handles any errors that occur during the process before cleaning up the terminal.
 func (a *InteractiveApp) Run() {
-	a.initializeTerminal()   // Prepare the terminal for interactive display.
-	a.terminal.PrintBanner() // Display the application banner.
+	a.initializeTerminal()
+	a.terminal.PrintBanner()
 
-	if err := a.runInteractiveLoop(); err != nil { // Execute the main interactive workflow.
-		a.prompt.ShowWarning(fmt.Sprintf("Application error: %v", err)) // If an error occurs, log and display it.
-		os.Exit(1)                                                      // Exit the application with an error status.
+	if err := a.runInteractiveLoop(); err != nil {
+		a.prompt.ShowWarning(fmt.Sprintf("Application error: %v", err))
+		os.Exit(1)
 	}
 
-	a.terminal.Cleanup() // Restore terminal settings after the application finishes.
+	a.terminal.Cleanup()
 }
 
-// initializeTerminal clears the terminal screen and moves the cursor to the top-left corner.
 func (a *InteractiveApp) initializeTerminal() {
-	a.terminal.Clear()       // Clear the terminal screen.
-	a.terminal.MoveTopLeft() // Move cursor to the beginning.
+	a.terminal.Clear()
+	a.terminal.MoveTopLeft()
 }
 
-// runInteractiveLoop contains the core logic for the interactive session.
-// It guides the user through selecting an operation, choosing files, and processing them.
 func (a *InteractiveApp) runInteractiveLoop() error {
-	operation, err := a.prompt.GetProcessingMode() // Prompt user to choose between encrypt/decrypt.
+	operation, err := a.prompt.GetProcessingMode()
 	if err != nil {
-		return fmt.Errorf("failed to get processing mode: %w", err) // Handle error in getting mode.
+		return fmt.Errorf("failed to get processing mode: %w", err)
 	}
 
-	eligibleFiles, err := a.getEligibleFiles(operation) // Find files suitable for the selected operation.
+	eligibleFiles, err := a.getEligibleFiles(operation)
 	if err != nil {
-		return err // Propagate error if no eligible files are found or an issue occurs.
+		return err
 	}
 
-	fileInfos, err := a.fileFinder.GetFileInfo(eligibleFiles) // Get detailed information for eligible files.
+	fileInfos, err := a.fileFinder.GetFileInfo(eligibleFiles)
 	if err != nil {
-		return fmt.Errorf("failed to get file information: %w", err) // Handle error in getting file info.
+		return fmt.Errorf("failed to get file information: %w", err)
 	}
-	a.prompt.ShowFileInfo(fileInfos) // Display file information to the user.
+	a.prompt.ShowFileInfo(fileInfos)
 
-	selectedFile, err := a.prompt.ChooseFile(eligibleFiles) // Prompt user to select a file from the list.
+	selectedFile, err := a.prompt.ChooseFile(eligibleFiles)
 	if err != nil {
-		return fmt.Errorf("failed to select file: %w", err) // Handle error in file selection.
+		return fmt.Errorf("failed to select file: %w", err)
 	}
 
-	a.prompt.ShowProcessingInfo(operation, selectedFile) // Display information about the chosen operation and file.
+	a.prompt.ShowProcessingInfo(operation, selectedFile)
 
-	if err := a.processFile(selectedFile, operation); err != nil { // Execute the file processing (encrypt/decrypt).
-		return fmt.Errorf("failed to process file '%s': %w", selectedFile, err) // Handle error during file processing.
+	if err := a.processFile(selectedFile, operation); err != nil {
+		return fmt.Errorf("failed to process file '%s': %w", selectedFile, err)
 	}
 
-	return nil // Return nil if the interactive loop completes successfully.
+	return nil
 }
 
-// getEligibleFiles finds and returns a list of files suitable for the specified operation mode.
-// It handles cases where no eligible files are found.
 func (a *InteractiveApp) getEligibleFiles(operation options.ProcessorMode) ([]string, error) {
-	eligibleFiles, err := a.fileFinder.FindEligibleFiles(operation) // Discover files based on the operation (e.g., .swb for decrypt).
+	eligibleFiles, err := a.fileFinder.FindEligibleFiles(operation)
 	if err != nil {
-		return nil, fmt.Errorf("failed to find eligible files: %w", err) // Handle error during file search.
+		return nil, fmt.Errorf("failed to find eligible files: %w", err)
 	}
 
-	if len(eligibleFiles) == 0 { // If no files are found for the selected operation.
-		return nil, fmt.Errorf("no eligible files found for %s operation", operation) // Return a specific error.
+	if len(eligibleFiles) == 0 {
+		return nil, fmt.Errorf("no eligible files found for %s operation", operation)
 	}
 
-	return eligibleFiles, nil // Return the list of eligible file paths.
+	return eligibleFiles, nil
 }
 
-// processFile orchestrates the actual encryption or decryption of the selected file.
-// It determines the output path, validates paths, handles file overwrites, executes
-// the core operation, and offers to delete the source file.
 func (a *InteractiveApp) processFile(inputPath string, mode options.ProcessorMode) error {
-	outputPath := a.fileFinder.GetOutputPath(inputPath, mode) // Determine the appropriate output file path.
+	outputPath := a.fileFinder.GetOutputPath(inputPath, mode)
 
-	if err := a.fileManager.ValidatePath(inputPath, true); err != nil { // Validate the input file path exists and is readable.
-		return fmt.Errorf("source validation failed: %w", err) // Return error if source validation fails.
+	if err := a.fileManager.ValidatePath(inputPath, true); err != nil {
+		return fmt.Errorf("source validation failed: %w", err)
 	}
 
-	if err := a.fileManager.ValidatePath(outputPath, false); err != nil { // Validate if the output path exists (expected to not exist).
-		// If output file exists, confirm with the user whether to overwrite.
+	if err := a.fileManager.ValidatePath(outputPath, false); err != nil {
 		if confirm, confirmErr := a.prompt.ConfirmFileOverwrite(outputPath); confirmErr != nil || !confirm {
-			return fmt.Errorf("operation canceled by user") // Cancel operation if user declines overwrite or error occurs.
+			return fmt.Errorf("operation canceled by user")
 		}
 	}
 
 	var err error
-	switch mode { // Execute either encryption or decryption based on the selected mode.
+	switch mode {
 	case options.ModeEncrypt:
-		err = a.encryptFile(inputPath, outputPath) // Call the encryption routine.
+		err = a.encryptFile(inputPath, outputPath)
 	case options.ModeDecrypt:
-		err = a.decryptFile(inputPath, outputPath) // Call the decryption routine.
+		err = a.decryptFile(inputPath, outputPath)
 	default:
-		return fmt.Errorf("unknown processing mode: %v", mode) // Handle an unexpected processing mode.
+		return fmt.Errorf("unknown processing mode: %v", mode)
 	}
 
-	if err != nil { // If an error occurred during encryption/decryption.
-		return err // Propagate the error.
+	if err != nil {
+		return err
 	}
 
-	a.prompt.ShowSuccess(fmt.Sprintf("File processed successfully: %s", outputPath)) // Inform user of success.
+	a.prompt.ShowSuccess(fmt.Sprintf("File processed successfully: %s", outputPath))
 
 	var fileType string
-	if mode == options.ModeEncrypt { // Determine the type of source file to be potentially deleted.
+	if mode == options.ModeEncrypt {
 		fileType = "original"
 	} else {
 		fileType = "encrypted"
 	}
 
-	// Prompt user to confirm deletion of the source file.
 	if shouldDelete, deleteType, err := a.prompt.ConfirmFileRemoval(inputPath, fmt.Sprintf("Delete %s file", fileType)); err == nil && shouldDelete {
-		if err := a.fileManager.Remove(inputPath, deleteType); err != nil { // Perform deletion if confirmed.
-			return fmt.Errorf("failed to delete source file: %w", err) // Handle error during deletion.
+		if err := a.fileManager.Remove(inputPath, deleteType); err != nil {
+			return fmt.Errorf("failed to delete source file: %w", err)
 		}
-		a.prompt.ShowSuccess(fmt.Sprintf("Source file deleted: %s", inputPath)) // Confirm successful deletion.
+		a.prompt.ShowSuccess(fmt.Sprintf("Source file deleted: %s", inputPath))
 	}
 
-	return nil // Return nil on successful file processing.
+	return nil
 }
 
-// encryptFile handles the specific logic for encrypting a file in interactive mode.
-// It prompts for a password and calls the core encryptor.
 func (a *InteractiveApp) encryptFile(srcPath, destPath string) error {
-	password, err := a.prompt.GetEncryptionPassword() // Prompt the user to enter the encryption password.
+	password, err := a.prompt.GetEncryptionPassword()
 	if err != nil {
-		return fmt.Errorf("password prompt failed: %w", err) // Handle password prompt errors.
+		return fmt.Errorf("password prompt failed: %w", err)
 	}
 
-	if err := a.encryptor.EncryptFile(srcPath, destPath, password); err != nil { // Execute the encryption using the core encryptor.
-		return fmt.Errorf("failed to encrypt '%s': %w", srcPath, err) // Handle encryption errors.
+	if err := a.encryptor.EncryptFile(srcPath, destPath, password); err != nil {
+		return fmt.Errorf("failed to encrypt '%s': %w", srcPath, err)
 	}
 
-	return nil // Return nil on successful encryption.
+	return nil
 }
 
-// decryptFile handles the specific logic for decrypting a file in interactive mode.
-// It prompts for a password and calls the core decryptor.
 func (a *InteractiveApp) decryptFile(srcPath, destPath string) error {
-	password, err := a.prompt.GetDecryptionPassword() // Prompt the user to enter the decryption password.
+	password, err := a.prompt.GetDecryptionPassword()
 	if err != nil {
-		return fmt.Errorf("password prompt failed: %w", err) // Handle password prompt errors.
+		return fmt.Errorf("password prompt failed: %w", err)
 	}
 
-	if err := a.decryptor.DecryptFile(srcPath, destPath, password); err != nil { // Execute the decryption using the core decryptor.
-		return fmt.Errorf("failed to decrypt '%s': %w", srcPath, err) // Handle decryption errors.
+	if err := a.decryptor.DecryptFile(srcPath, destPath, password); err != nil {
+		return fmt.Errorf("failed to decrypt '%s': %w", srcPath, err)
 	}
 
-	return nil // Return nil on successful decryption.
+	return nil
 }
