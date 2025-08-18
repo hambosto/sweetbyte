@@ -206,13 +206,3 @@ func (p *Prompt) ShowProcessingInfo(mode options.ProcessorMode, file string) {
 
 	fmt.Printf("\n%s file: %s\n", operation, file)
 }
-
-// ShowSuccess displays a success message.
-func (p *Prompt) ShowSuccess(message string) {
-	fmt.Printf("✓ %s\n", message)
-}
-
-// ShowWarning displays a warning message.
-func (p *Prompt) ShowWarning(message string) {
-	fmt.Printf("⚠ %s\n", message)
-}

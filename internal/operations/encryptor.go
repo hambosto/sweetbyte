@@ -34,14 +34,14 @@ func (e *Encryptor) EncryptFile(srcPath, destPath, password string) error {
 	if err != nil {
 		return fmt.Errorf("failed to open source file: %w", err)
 	}
-	defer srcFile.Close()
+	defer srcFile.Close() //nolint:errcheck
 
 	// Create the destination file.
 	destFile, err := e.fileManager.CreateFile(destPath)
 	if err != nil {
 		return fmt.Errorf("failed to create destination file: %w", err)
 	}
-	defer destFile.Close()
+	defer destFile.Close() //nolint:errcheck
 
 	// Generate a random salt.
 	salt, err := keys.GetRandomSalt(config.SaltSize)

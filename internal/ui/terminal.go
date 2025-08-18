@@ -37,8 +37,3 @@ func (t *Terminal) PrintBanner() {
 `
 	fmt.Println(banner)
 }
-
-// Cleanup performs any necessary cleanup tasks for the terminal.
-func (t *Terminal) Cleanup() {
-	fmt.Println()
-}

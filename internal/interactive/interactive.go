@@ -40,11 +40,9 @@ func (a *InteractiveApp) Run() {
 
 	// Run the main interactive loop.
 	if err := a.runInteractiveLoop(); err != nil {
-		a.prompt.ShowWarning(fmt.Sprintf("Application error: %v", err))
+		fmt.Printf("Application error: %v\n", err)
 		os.Exit(1)
 	}
-
-	a.terminal.Cleanup()
 }
 
 // initializeTerminal initializes the terminal.
@@ -135,7 +133,7 @@ func (a *InteractiveApp) processFile(inputPath string, mode options.ProcessorMod
 		return err
 	}
 
-	a.prompt.ShowSuccess(fmt.Sprintf("File processed successfully: %s", outputPath))
+	fmt.Printf("\nFile processed successfully: %s\n", outputPath)
 
 	// Ask the user if they want to delete the source file.
 	var fileType string
@@ -149,7 +147,7 @@ func (a *InteractiveApp) processFile(inputPath string, mode options.ProcessorMod
 		if err := a.fileManager.Remove(inputPath, deleteType); err != nil {
 			return fmt.Errorf("failed to delete source file: %w", err)
 		}
-		a.prompt.ShowSuccess(fmt.Sprintf("Source file deleted: %s", inputPath))
+		fmt.Printf("Source file deleted: %s", inputPath)
 	}
 
 	return nil

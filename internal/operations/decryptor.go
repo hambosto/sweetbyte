@@ -35,7 +35,7 @@ func (d *Decryptor) DecryptFile(srcPath, destPath, password string) error {
 	if err != nil {
 		return fmt.Errorf("failed to open source file: %w", err)
 	}
-	defer srcFile.Close()
+	defer srcFile.Close() //nolint:errcheck
 
 	// Read the header from the source file.
 	header, err := header.Read(srcFile)
@@ -65,7 +65,7 @@ func (d *Decryptor) DecryptFile(srcPath, destPath, password string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create destination file: %w", err)
 	}
-	defer destFile.Close()
+	defer destFile.Close() //nolint:errcheck
 
 	// Create a new stream processor for decryption.
 	config := streaming.StreamConfig{
