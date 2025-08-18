@@ -90,7 +90,7 @@ func (c *Compressor) Decompress(data []byte) ([]byte, error) {
 
 	// Copy the decompressed data to a buffer.
 	var buf bytes.Buffer
-	if _, err := io.Copy(&buf, reader); err != nil {
+	if _, err := io.Copy(&buf, io.LimitReader(reader, 10<<20)); err != nil {
 		return nil, fmt.Errorf("failed to decompress data: %w", err)
 	}
 
