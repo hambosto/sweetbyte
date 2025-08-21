@@ -4,6 +4,8 @@ package header
 import (
 	"fmt"
 	"io"
+
+	"github.com/hambosto/sweetbyte/internal/utils"
 )
 
 // Deserializer handles deserializing a header from a byte stream.
@@ -57,15 +59,15 @@ func (d *Deserializer) Unmarshal(data []byte) (*Header, error) {
 func (d *Deserializer) parseHeader(h *Header) error {
 	copy(h.magic[:], d.readBytes(MagicSize))
 
-	h.version = bytesToUint16(d.readBytes(VersionSize))
-	h.flags = bytesToUint32(d.readBytes(FlagsSize))
+	h.version = utils.FromBytes[uint16](d.readBytes(VersionSize))
+	h.flags = utils.FromBytes[uint32](d.readBytes(FlagsSize))
 	copy(h.salt[:], d.readBytes(SaltSize))
 
-	h.originalSize = bytesToUint64(d.readBytes(OriginalSizeSize))
+	h.originalSize = utils.FromBytes[uint64](d.readBytes(OriginalSizeSize))
 	copy(h.integrityHash[:], d.readBytes(IntegrityHashSize))
 	copy(h.authTag[:], d.readBytes(AuthTagSize))
 
-	h.checksum = bytesToUint32(d.readBytes(ChecksumSize))
+	h.checksum = utils.FromBytes[uint32](d.readBytes(ChecksumSize))
 	copy(h.padding[:], d.readBytes(PaddingSize))
 
 	return nil
@@ -74,7 +76,7 @@ func (d *Deserializer) parseHeader(h *Header) error {
 // validateParsedHeader validates the parsed header fields.
 func (d *Deserializer) validateParsedHeader(h *Header) error {
 	// Validate the magic bytes.
-	if !secureCompare(h.magic[:], []byte(MagicBytes)) {
+	if !utils.SecureCompare(h.magic[:], []byte(MagicBytes)) {
 		return fmt.Errorf("invalid magic bytes: expected %s, got %s", MagicBytes, string(h.magic[:]))
 	}
 
@@ -94,7 +96,7 @@ func (d *Deserializer) validateParsedHeader(h *Header) error {
 
 	// Validate the salt.
 	zeroSalt := make([]byte, SaltSize)
-	if secureCompare(h.salt[:], zeroSalt) {
+	if utils.SecureCompare(h.salt[:], zeroSalt) {
 		return fmt.Errorf("invalid salt: all zeros detected")
 	}
 

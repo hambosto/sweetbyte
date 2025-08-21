@@ -29,9 +29,7 @@ func NewXChaCha20Cipher(key []byte) (*XChaCha20Cipher, error) {
 		return nil, fmt.Errorf("failed to create XChaCha20-Poly1305 cipher: %w", err)
 	}
 
-	return &XChaCha20Cipher{
-		aead: aead,
-	}, nil
+	return &XChaCha20Cipher{aead: aead}, nil
 }
 
 // Encrypt encrypts the given plaintext.

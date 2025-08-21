@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"hash/crc32"
 	"io"
+
+	"github.com/hambosto/sweetbyte/internal/utils"
 )
 
 // Protector computes the protection fields of a header.
@@ -97,10 +99,10 @@ func (p *Protector) ComputeChecksum(header *Header) (uint32, error) {
 func (p *Protector) writeStructuralData(w io.Writer, header *Header) error {
 	fields := [][]byte{
 		header.magic[:],
-		uint16ToBytes(header.version),
-		uint32ToBytes(header.flags),
+		utils.ToBytes(uint16(header.version)),
+		utils.ToBytes(uint32(header.flags)),
 		header.salt[:],
-		uint64ToBytes(header.originalSize),
+		utils.ToBytes(uint64(header.originalSize)),
 	}
 
 	for i, field := range fields {

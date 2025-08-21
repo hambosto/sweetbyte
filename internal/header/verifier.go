@@ -4,6 +4,8 @@ package header
 import (
 	"crypto/hmac"
 	"fmt"
+
+	"github.com/hambosto/sweetbyte/internal/utils"
 )
 
 // Verifier verifies the integrity and authenticity of a header.
@@ -56,7 +58,7 @@ func (v *Verifier) VerifyAll(header *Header) error {
 // VerifyFormat verifies the format of the header.
 func (v *Verifier) VerifyFormat(h *Header) error {
 	// Verify the magic bytes.
-	if !secureCompare(h.magic[:], []byte(MagicBytes)) {
+	if !utils.SecureCompare(h.magic[:], []byte(MagicBytes)) {
 		return fmt.Errorf("invalid magic bytes: expected %s, got %s",
 			MagicBytes, string(h.magic[:]))
 	}
@@ -115,7 +117,7 @@ func (v *Verifier) VerifyIntegrity(header *Header) error {
 		return fmt.Errorf("failed to compute expected integrity hash: %w", err)
 	}
 
-	if !secureCompare(header.integrityHash[:], expected) {
+	if !utils.SecureCompare(header.integrityHash[:], expected) {
 		return fmt.Errorf("integrity hash verification failed - tampering detected")
 	}
 
@@ -145,22 +147,22 @@ func (v *Verifier) VerifyAuthentication(header *Header) error {
 func (v *Verifier) VerifyAntiTampering(h *Header) error {
 	// Check for all-zero fields.
 	zeroSalt := make([]byte, SaltSize)
-	if secureCompare(h.salt[:], zeroSalt) {
+	if utils.SecureCompare(h.salt[:], zeroSalt) {
 		return fmt.Errorf("invalid salt: all zeros detected - possible tampering")
 	}
 
 	zeroPadding := make([]byte, PaddingSize)
-	if secureCompare(h.padding[:], zeroPadding) {
+	if utils.SecureCompare(h.padding[:], zeroPadding) {
 		return fmt.Errorf("invalid padding: all zeros detected - possible tampering")
 	}
 
 	zeroHash := make([]byte, IntegrityHashSize)
-	if secureCompare(h.integrityHash[:], zeroHash) {
+	if utils.SecureCompare(h.integrityHash[:], zeroHash) {
 		return fmt.Errorf("invalid integrity hash: all zeros detected")
 	}
 
 	zeroAuth := make([]byte, AuthTagSize)
-	if secureCompare(h.authTag[:], zeroAuth) {
+	if utils.SecureCompare(h.authTag[:], zeroAuth) {
 		return fmt.Errorf("invalid auth tag: all zeros detected")
 	}
 
@@ -253,8 +255,7 @@ func (v *Verifier) validateEntropy(data []byte, fieldName string, minUnique int)
 	}
 
 	if len(uniqueBytes) < minUnique {
-		return fmt.Errorf("insufficient entropy in %s: only %d unique bytes (minimum: %d) - possible weak generation",
-			fieldName, len(uniqueBytes), minUnique)
+		return fmt.Errorf("insufficient entropy in %s: only %d unique bytes (minimum: %d) - possible weak generation", fieldName, len(uniqueBytes), minUnique)
 	}
 
 	return nil

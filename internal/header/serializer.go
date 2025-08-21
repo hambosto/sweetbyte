@@ -4,6 +4,8 @@ package header
 import (
 	"fmt"
 	"io"
+
+	"github.com/hambosto/sweetbyte/internal/utils"
 )
 
 // Serializer handles serializing a header to a byte stream.
@@ -40,7 +42,7 @@ func (s *Serializer) Write(w io.Writer, header *Header) error {
 // Validate validates the header fields before serialization.
 func (s *Serializer) Validate(h *Header) error {
 	// Validate the magic bytes.
-	if !secureCompare(h.magic[:], []byte(MagicBytes)) {
+	if !utils.SecureCompare(h.magic[:], []byte(MagicBytes)) {
 		return fmt.Errorf("invalid magic bytes")
 	}
 
@@ -56,19 +58,19 @@ func (s *Serializer) Validate(h *Header) error {
 
 	// Validate the salt.
 	zeroSalt := make([]byte, SaltSize)
-	if secureCompare(h.salt[:], zeroSalt) {
+	if utils.SecureCompare(h.salt[:], zeroSalt) {
 		return fmt.Errorf("salt cannot be all zeros")
 	}
 
 	// Validate the integrity hash.
 	zeroHash := make([]byte, IntegrityHashSize)
-	if secureCompare(h.integrityHash[:], zeroHash) {
+	if utils.SecureCompare(h.integrityHash[:], zeroHash) {
 		return fmt.Errorf("integrity hash cannot be all zeros")
 	}
 
 	// Validate the auth tag.
 	zeroAuth := make([]byte, AuthTagSize)
-	if secureCompare(h.authTag[:], zeroAuth) {
+	if utils.SecureCompare(h.authTag[:], zeroAuth) {
 		return fmt.Errorf("auth tag cannot be all zeros")
 	}
 
@@ -81,13 +83,13 @@ func (s *Serializer) Marshal(h *Header) []byte {
 
 	// Append all header fields to the byte slice.
 	data = append(data, h.magic[:]...)
-	data = append(data, uint16ToBytes(h.version)...)
-	data = append(data, uint32ToBytes(h.flags)...)
+	data = append(data, utils.ToBytes(uint16(h.version))...)
+	data = append(data, utils.ToBytes(uint32(h.flags))...)
 	data = append(data, h.salt[:]...)
-	data = append(data, uint64ToBytes(h.originalSize)...)
+	data = append(data, utils.ToBytes(uint64(h.originalSize))...)
 	data = append(data, h.integrityHash[:]...)
 	data = append(data, h.authTag[:]...)
-	data = append(data, uint32ToBytes(h.checksum)...)
+	data = append(data, utils.ToBytes(uint32(h.checksum))...)
 	data = append(data, h.padding[:]...)
 
 	return data

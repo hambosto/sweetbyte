@@ -35,9 +35,7 @@ func NewAESCipher(key []byte) (*AESCipher, error) {
 		return nil, fmt.Errorf("failed to create AES-GCM cipher: %w", err)
 	}
 
-	return &AESCipher{
-		aead: aead,
-	}, nil
+	return &AESCipher{aead: aead}, nil
 }
 
 // Encrypt encrypts the given plaintext.

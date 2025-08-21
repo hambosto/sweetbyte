@@ -3,8 +3,6 @@ package header
 
 import (
 	"crypto/rand"
-	"crypto/subtle"
-	"encoding/binary"
 	"fmt"
 	"io"
 )
@@ -150,45 +148,4 @@ func (h *Header) OriginalSize() uint64 {
 // HasFlag checks if the header has a specific flag set.
 func (h *Header) HasFlag(flag uint32) bool {
 	return h.flags&flag != 0
-}
-
-// secureCompare performs a constant-time comparison of two byte slices.
-func secureCompare(a, b []byte) bool {
-	return subtle.ConstantTimeCompare(a, b) == 1
-}
-
-// uint64ToBytes converts a uint64 to a byte slice.
-func uint64ToBytes(v uint64) []byte {
-	buf := make([]byte, 8)
-	binary.BigEndian.PutUint64(buf, v)
-	return buf
-}
-
-// uint32ToBytes converts a uint32 to a byte slice.
-func uint32ToBytes(v uint32) []byte {
-	buf := make([]byte, 4)
-	binary.BigEndian.PutUint32(buf, v)
-	return buf
-}
-
-// uint16ToBytes converts a uint16 to a byte slice.
-func uint16ToBytes(v uint16) []byte {
-	buf := make([]byte, 2)
-	binary.BigEndian.PutUint16(buf, v)
-	return buf
-}
-
-// bytesToUint64 converts a byte slice to a uint64.
-func bytesToUint64(b []byte) uint64 {
-	return binary.BigEndian.Uint64(b)
-}
-
-// bytesToUint32 converts a byte slice to a uint32.
-func bytesToUint32(b []byte) uint32 {
-	return binary.BigEndian.Uint32(b)
-}
-
-// bytesToUint16 converts a byte slice to a uint16.
-func bytesToUint16(b []byte) uint16 {
-	return binary.BigEndian.Uint16(b)
 }
