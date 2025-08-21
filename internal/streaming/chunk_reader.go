@@ -1,4 +1,4 @@
-// Package streaming handles the reading and writing of data in chunks for processing.
+// Package streaming provides the core functionality for streaming encryption and decryption.
 package streaming
 
 import (

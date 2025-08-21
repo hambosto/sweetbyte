@@ -5,7 +5,7 @@ import (
 	"crypto/subtle"
 )
 
-// secureCompare performs a constant-time comparison of two byte slices.
+// SecureCompare performs a constant-time comparison of two byte slices.
 func SecureCompare(a, b []byte) bool {
 	return subtle.ConstantTimeCompare(a, b) == 1
 }
