@@ -69,8 +69,7 @@ func (v *Verifier) VerifyFormat(h *Header) error {
 	}
 
 	if h.version > CurrentVersion {
-		return fmt.Errorf("unsupported version: %d (maximum supported: %d)",
-			h.version, CurrentVersion)
+		return fmt.Errorf("unsupported version: %d (maximum supported: %d)", h.version, CurrentVersion)
 	}
 
 	// Verify the original size.
