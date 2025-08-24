@@ -70,36 +70,75 @@ func (d *Deserializer) Unmarshal(data []byte) (*Header, error) {
 // parseHeader extracts data from the byte slice and populates the fields of the Header struct.
 // It reads the header fields in the order they are defined in the specification.
 func (d *Deserializer) parseHeader(h *Header) error {
-	// Parse the magic number, which identifies the file type.
-	copy(h.magic[:], d.readBytes(MagicSize))
-	// Parse the version of the header format.
-	h.version = utils.FromBytes[uint16](d.readBytes(VersionSize))
-	// Parse the flags that control encryption and compression options.
-	h.flags = utils.FromBytes[uint32](d.readBytes(FlagsSize))
-	// Parse the salt used in the key derivation process.
-	copy(h.salt[:], d.readBytes(SaltSize))
-	// Parse the original size of the file before any processing.
-	h.originalSize = utils.FromBytes[uint64](d.readBytes(OriginalSizeSize))
-	// Parse the hash of the original file to ensure integrity.
-	copy(h.integrityHash[:], d.readBytes(IntegrityHashSize))
-	// Parse the authentication tag for encrypted data.
-	copy(h.authTag[:], d.readBytes(AuthTagSize))
-	// Parse the checksum of the header itself.
-	h.checksum = utils.FromBytes[uint32](d.readBytes(ChecksumSize))
-	// Parse any padding bytes used to align the header.
-	copy(h.padding[:], d.readBytes(PaddingSize))
+	var data []byte
+	var err error
+
+	// Read the magic bytes, which identify the file type.
+	if data, err = d.readBytes(MagicSize); err != nil {
+		return fmt.Errorf("failed to read magic bytes: %w", err)
+	}
+	copy(h.magic[:], data)
+
+	// Read the version of the header format.
+	if data, err = d.readBytes(VersionSize); err != nil {
+		return fmt.Errorf("failed to read version: %w", err)
+	}
+	h.version = utils.FromBytes[uint16](data)
+
+	// Read the flags that control encryption and compression options.
+	if data, err = d.readBytes(FlagsSize); err != nil {
+		return fmt.Errorf("failed to read flags: %w", err)
+	}
+	h.flags = utils.FromBytes[uint32](data)
+
+	// Read the salt used in the key derivation process.
+	if data, err = d.readBytes(SaltSize); err != nil {
+		return fmt.Errorf("failed to read salt: %w", err)
+	}
+	copy(h.salt[:], data)
+
+	// Read the original size of the file before any processing.
+	if data, err = d.readBytes(OriginalSizeSize); err != nil {
+		return fmt.Errorf("failed to read original size: %w", err)
+	}
+	h.originalSize = utils.FromBytes[uint64](data)
+
+	// Read the integrity hash of the header's structural components.
+	if data, err = d.readBytes(IntegrityHashSize); err != nil {
+		return fmt.Errorf("failed to read integrity hash: %w", err)
+	}
+	copy(h.integrityHash[:], data)
+
+	// Read the authentication tag to verify the header's authenticity.
+	if data, err = d.readBytes(AuthTagSize); err != nil {
+		return fmt.Errorf("failed to read auth tag: %w", err)
+	}
+	copy(h.authTag[:], data)
+
+	// Read the checksum of the entire header for a quick integrity check.
+	if data, err = d.readBytes(ChecksumSize); err != nil {
+		return fmt.Errorf("failed to read checksum: %w", err)
+	}
+	h.checksum = utils.FromBytes[uint32](data)
+
+	// Read the random padding to obscure the header size.
+	if data, err = d.readBytes(PaddingSize); err != nil {
+		return fmt.Errorf("failed to read padding: %w", err)
+	}
+	copy(h.padding[:], data)
+
 	return nil
 }
 
 // readBytes reads a specified number of bytes from the internal data slice and advances the offset.
-// It returns a new byte slice of the requested size, which will be zero-filled if the read goes out of bounds.
-func (d *Deserializer) readBytes(n int) []byte {
-	// Prevent panic on out-of-bounds read by returning a zeroed slice.
+// It returns an error if the read goes out of bounds, preventing silent failures.
+func (d *Deserializer) readBytes(n int) ([]byte, error) {
+	// Ensure the read is within the bounds of the data slice.
 	if d.offset+n > len(d.data) {
-		return make([]byte, n)
+		return nil, fmt.Errorf("cannot read %d bytes at offset %d: buffer length is %d", n, d.offset, len(d.data))
 	}
 	// Extract the slice and advance the internal offset.
 	result := d.data[d.offset : d.offset+n]
 	d.offset += n
-	return result
+	return result, nil
 }
