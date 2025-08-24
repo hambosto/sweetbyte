@@ -1,4 +1,3 @@
-// Package header provides functionality for creating, reading, and writing file headers.
 package header
 
 import (
@@ -8,30 +7,30 @@ import (
 	"github.com/hambosto/sweetbyte/internal/utils"
 )
 
-// Serializer handles serializing a header to a byte stream.
-type Serializer struct{}
-
-// NewSerializer creates a new Serializer.
-func NewSerializer() *Serializer {
-	return &Serializer{}
+// Serializer handles serializing headers to byte streams
+type Serializer struct {
+	validator *Validator
 }
 
-// Write writes a header to an io.Writer.
+// NewSerializer creates a new Serializer
+func NewSerializer() *Serializer {
+	return &Serializer{
+		validator: NewValidator(),
+	}
+}
+
+// Write writes a header to an io.Writer
 func (s *Serializer) Write(w io.Writer, header *Header) error {
-	// Validate the header before writing.
-	if err := s.Validate(header); err != nil {
+	if err := s.validator.ValidateForSerialization(header); err != nil {
 		return fmt.Errorf("serialization validation failed: %w", err)
 	}
 
-	// Marshal the header to a byte slice.
 	data := s.Marshal(header)
-	// Write the data to the writer.
 	n, err := w.Write(data)
 	if err != nil {
 		return fmt.Errorf("failed to write header data: %w", err)
 	}
 
-	// Check if the entire header was written.
 	if n != len(data) {
 		return fmt.Errorf("incomplete write: expected %d bytes, wrote %d", len(data), n)
 	}
@@ -39,57 +38,18 @@ func (s *Serializer) Write(w io.Writer, header *Header) error {
 	return nil
 }
 
-// Validate validates the header fields before serialization.
-func (s *Serializer) Validate(h *Header) error {
-	// Validate the magic bytes.
-	if !utils.SecureCompare(h.magic[:], []byte(MagicBytes)) {
-		return fmt.Errorf("invalid magic bytes")
-	}
-
-	// Validate the version.
-	if h.version == 0 {
-		return fmt.Errorf("invalid version: %d", h.version)
-	}
-
-	// Validate the original size.
-	if h.originalSize == 0 {
-		return fmt.Errorf("original size cannot be zero")
-	}
-
-	// Validate the salt.
-	zeroSalt := make([]byte, SaltSize)
-	if utils.SecureCompare(h.salt[:], zeroSalt) {
-		return fmt.Errorf("salt cannot be all zeros")
-	}
-
-	// Validate the integrity hash.
-	zeroHash := make([]byte, IntegrityHashSize)
-	if utils.SecureCompare(h.integrityHash[:], zeroHash) {
-		return fmt.Errorf("integrity hash cannot be all zeros")
-	}
-
-	// Validate the auth tag.
-	zeroAuth := make([]byte, AuthTagSize)
-	if utils.SecureCompare(h.authTag[:], zeroAuth) {
-		return fmt.Errorf("auth tag cannot be all zeros")
-	}
-
-	return nil
-}
-
-// Marshal marshals a header to a byte slice.
+// Marshal marshals a header to a byte slice
 func (s *Serializer) Marshal(h *Header) []byte {
 	data := make([]byte, 0, TotalHeaderSize)
 
-	// Append all header fields to the byte slice.
 	data = append(data, h.magic[:]...)
-	data = append(data, utils.ToBytes(uint16(h.version))...)
-	data = append(data, utils.ToBytes(uint32(h.flags))...)
+	data = append(data, utils.ToBytes(h.version)...)
+	data = append(data, utils.ToBytes(h.flags)...)
 	data = append(data, h.salt[:]...)
-	data = append(data, utils.ToBytes(uint64(h.originalSize))...)
+	data = append(data, utils.ToBytes(h.originalSize)...)
 	data = append(data, h.integrityHash[:]...)
 	data = append(data, h.authTag[:]...)
-	data = append(data, utils.ToBytes(uint32(h.checksum))...)
+	data = append(data, utils.ToBytes(h.checksum)...)
 	data = append(data, h.padding[:]...)
 
 	return data
