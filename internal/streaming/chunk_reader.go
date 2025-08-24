@@ -14,22 +14,24 @@ import (
 // chunkReader reads data from an io.Reader and splits it into chunks for processing.
 // The reading strategy depends on whether the operation is encryption or decryption.
 type chunkReader struct {
-	processing options.Processing
-	chunkSize  int
+	processing  options.Processing
+	chunkSize   int
+	concurrency int
 }
 
 // NewChunkReader creates a new ChunkReader with the specified processing mode and chunk size.
-func NewChunkReader(processing options.Processing, chunkSize int) ChunkReader {
+func NewChunkReader(processing options.Processing, chunkSize, concurrency int) ChunkReader {
 	return &chunkReader{
-		processing: processing,
-		chunkSize:  chunkSize,
+		processing:  processing,
+		chunkSize:   chunkSize,
+		concurrency: concurrency,
 	}
 }
 
 // ReadChunks reads data from the input reader and sends it as tasks to a channel.
 // It runs in a separate goroutine and returns a channel for tasks and a channel for errors.
 func (r *chunkReader) ReadChunks(ctx context.Context, input io.Reader) (<-chan Task, <-chan error) {
-	taskChan := make(chan Task)
+	taskChan := make(chan Task, r.concurrency)
 	errChan := make(chan error, 1)
 
 	go func() {

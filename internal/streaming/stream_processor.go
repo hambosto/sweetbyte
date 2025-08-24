@@ -51,7 +51,7 @@ func NewStreamProcessor(config StreamConfig) (Processor, error) {
 	return &streamProcessor{
 		streamConfig:  config,
 		taskProcessor: taskProcessor,
-		reader:        NewChunkReader(config.Processing, config.ChunkSize),
+		reader:        NewChunkReader(config.Processing, config.ChunkSize, config.Concurrency),
 		pool:          NewWorkerPool(taskProcessor, config.Concurrency),
 	}, nil
 }
