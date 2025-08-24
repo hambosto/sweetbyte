@@ -70,14 +70,23 @@ func (d *Deserializer) Unmarshal(data []byte) (*Header, error) {
 // parseHeader extracts data from the byte slice and populates the fields of the Header struct.
 // It reads the header fields in the order they are defined in the specification.
 func (d *Deserializer) parseHeader(h *Header) error {
+	// Parse the magic number, which identifies the file type.
 	copy(h.magic[:], d.readBytes(MagicSize))
+	// Parse the version of the header format.
 	h.version = utils.FromBytes[uint16](d.readBytes(VersionSize))
+	// Parse the flags that control encryption and compression options.
 	h.flags = utils.FromBytes[uint32](d.readBytes(FlagsSize))
+	// Parse the salt used in the key derivation process.
 	copy(h.salt[:], d.readBytes(SaltSize))
+	// Parse the original size of the file before any processing.
 	h.originalSize = utils.FromBytes[uint64](d.readBytes(OriginalSizeSize))
+	// Parse the hash of the original file to ensure integrity.
 	copy(h.integrityHash[:], d.readBytes(IntegrityHashSize))
+	// Parse the authentication tag for encrypted data.
 	copy(h.authTag[:], d.readBytes(AuthTagSize))
+	// Parse the checksum of the header itself.
 	h.checksum = utils.FromBytes[uint32](d.readBytes(ChecksumSize))
+	// Parse any padding bytes used to align the header.
 	copy(h.padding[:], d.readBytes(PaddingSize))
 	return nil
 }
