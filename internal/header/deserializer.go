@@ -8,107 +8,97 @@ import (
 	"github.com/hambosto/sweetbyte/internal/utils"
 )
 
-// Deserializer handles deserializing a header from a byte stream.
+// Deserializer handles the process of converting a byte stream into a structured Header.
+// It includes validation to ensure the header is well-formed and conforms to expected values.
 type Deserializer struct {
-	data   []byte
-	offset int
+	data      []byte     // The raw byte slice containing the header data.
+	offset    int        // The current reading offset within the data slice.
+	validator *Validator // A validator to check the header's integrity after parsing.
 }
 
-// NewDeserializer creates a new Deserializer.
+// NewDeserializer creates and returns a new Deserializer instance.
+// It initializes the necessary components, including the validator.
 func NewDeserializer() *Deserializer {
-	return &Deserializer{}
+	return &Deserializer{
+		validator: NewValidator(),
+	}
 }
 
-// Read reads a header from an io.Reader.
+// Read consumes bytes from an io.Reader to construct a Header.
+// It reads the exact number of bytes required for a full header and then unmarshals them.
+// Returns an error if reading from the reader fails or is incomplete.
 func (d *Deserializer) Read(r io.Reader) (*Header, error) {
-	// Read the header data from the reader.
+	// Allocate a buffer of the precise size for the header.
 	data := make([]byte, TotalHeaderSize)
+	// Read the full header data from the input stream.
 	n, err := io.ReadFull(r, data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read header data: read %d of %d bytes: %w", n, TotalHeaderSize, err)
 	}
 
-	// Unmarshal the header data.
+	// Unmarshal the byte data into a Header struct.
 	return d.Unmarshal(data)
 }
 
-// Unmarshal unmarshals a header from a byte slice.
+// Unmarshal parses a byte slice into a Header struct.
+// It performs a size check, parses the fields, and then validates the parsed header.
+// Returns an error if the data size is incorrect, parsing fails, or validation fails.
 func (d *Deserializer) Unmarshal(data []byte) (*Header, error) {
-	// Check the header size.
+	// Ensure the provided data is of the correct size for a header.
 	if len(data) != TotalHeaderSize {
 		return nil, fmt.Errorf("invalid header size: expected %d bytes, got %d", TotalHeaderSize, len(data))
 	}
+
+	// Reset the deserializer's state for the new data.
 	d.data = data
 	d.offset = 0
 
-	// Parse the header.
+	// Parse the byte data into the header fields.
 	header := &Header{}
 	if err := d.parseHeader(header); err != nil {
 		return nil, fmt.Errorf("header parsing failed: %w", err)
 	}
 
-	// Validate the parsed header.
-	if err := d.validateParsedHeader(header); err != nil {
+	// Validate the header's contents after deserialization.
+	if err := d.validator.ValidateAfterDeserialization(header); err != nil {
 		return nil, fmt.Errorf("header validation failed: %w", err)
 	}
 
 	return header, nil
 }
 
-// parseHeader parses the header fields from the byte slice.
+// parseHeader extracts data from the byte slice and populates the fields of the Header struct.
+// It reads the header fields in the order they are defined in the specification.
 func (d *Deserializer) parseHeader(h *Header) error {
+	// Parse the magic number, which identifies the file type.
 	copy(h.magic[:], d.readBytes(MagicSize))
-
+	// Parse the version of the header format.
 	h.version = utils.FromBytes[uint16](d.readBytes(VersionSize))
+	// Parse the flags that control encryption and compression options.
 	h.flags = utils.FromBytes[uint32](d.readBytes(FlagsSize))
+	// Parse the salt used in the key derivation process.
 	copy(h.salt[:], d.readBytes(SaltSize))
-
+	// Parse the original size of the file before any processing.
 	h.originalSize = utils.FromBytes[uint64](d.readBytes(OriginalSizeSize))
+	// Parse the hash of the original file to ensure integrity.
 	copy(h.integrityHash[:], d.readBytes(IntegrityHashSize))
+	// Parse the authentication tag for encrypted data.
 	copy(h.authTag[:], d.readBytes(AuthTagSize))
-
+	// Parse the checksum of the header itself.
 	h.checksum = utils.FromBytes[uint32](d.readBytes(ChecksumSize))
+	// Parse any padding bytes used to align the header.
 	copy(h.padding[:], d.readBytes(PaddingSize))
-
 	return nil
 }
 
-// validateParsedHeader validates the parsed header fields.
-func (d *Deserializer) validateParsedHeader(h *Header) error {
-	// Validate the magic bytes.
-	if !utils.SecureCompare(h.magic[:], []byte(MagicBytes)) {
-		return fmt.Errorf("invalid magic bytes: expected %s, got %s", MagicBytes, string(h.magic[:]))
-	}
-
-	// Validate the version.
-	if h.version == 0 {
-		return fmt.Errorf("invalid version: cannot be zero")
-	}
-
-	if h.version > CurrentVersion {
-		return fmt.Errorf("unsupported version: %d (maximum supported: %d)", h.version, CurrentVersion)
-	}
-
-	// Validate the original size.
-	if h.originalSize == 0 {
-		return fmt.Errorf("invalid original size: cannot be zero")
-	}
-
-	// Validate the salt.
-	zeroSalt := make([]byte, SaltSize)
-	if utils.SecureCompare(h.salt[:], zeroSalt) {
-		return fmt.Errorf("invalid salt: all zeros detected")
-	}
-
-	return nil
-}
-
-// readBytes reads n bytes from the data slice.
+// readBytes reads a specified number of bytes from the internal data slice and advances the offset.
+// It returns a new byte slice of the requested size, which will be zero-filled if the read goes out of bounds.
 func (d *Deserializer) readBytes(n int) []byte {
+	// Prevent panic on out-of-bounds read by returning a zeroed slice.
 	if d.offset+n > len(d.data) {
-		result := make([]byte, n)
-		return result
+		return make([]byte, n)
 	}
+	// Extract the slice and advance the internal offset.
 	result := d.data[d.offset : d.offset+n]
 	d.offset += n
 	return result

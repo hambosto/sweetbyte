@@ -8,30 +8,37 @@ import (
 	"github.com/hambosto/sweetbyte/internal/utils"
 )
 
-// Serializer handles serializing a header to a byte stream.
-type Serializer struct{}
-
-// NewSerializer creates a new Serializer.
-func NewSerializer() *Serializer {
-	return &Serializer{}
+// Serializer handles the conversion of a structured Header into a byte stream.
+// It ensures that the header is valid before serialization.
+type Serializer struct {
+	validator *Validator // A validator to check the header's integrity before writing.
 }
 
-// Write writes a header to an io.Writer.
+// NewSerializer creates and returns a new Serializer instance.
+func NewSerializer() *Serializer {
+	return &Serializer{
+		validator: NewValidator(),
+	}
+}
+
+// Write serializes a Header and writes it to an io.Writer.
+// It first validates the header, then marshals it into a byte slice, and finally writes the data.
+// Returns an error if validation, writing, or the write operation itself fails.
 func (s *Serializer) Write(w io.Writer, header *Header) error {
-	// Validate the header before writing.
-	if err := s.Validate(header); err != nil {
+	// Validate the header to ensure all fields are correctly populated before serialization.
+	if err := s.validator.ValidateForSerialization(header); err != nil {
 		return fmt.Errorf("serialization validation failed: %w", err)
 	}
 
-	// Marshal the header to a byte slice.
+	// Convert the Header struct to its byte representation.
 	data := s.Marshal(header)
-	// Write the data to the writer.
+	// Write the byte data to the output stream.
 	n, err := w.Write(data)
 	if err != nil {
 		return fmt.Errorf("failed to write header data: %w", err)
 	}
 
-	// Check if the entire header was written.
+	// Check that the entire header was written.
 	if n != len(data) {
 		return fmt.Errorf("incomplete write: expected %d bytes, wrote %d", len(data), n)
 	}
@@ -39,57 +46,21 @@ func (s *Serializer) Write(w io.Writer, header *Header) error {
 	return nil
 }
 
-// Validate validates the header fields before serialization.
-func (s *Serializer) Validate(h *Header) error {
-	// Validate the magic bytes.
-	if !utils.SecureCompare(h.magic[:], []byte(MagicBytes)) {
-		return fmt.Errorf("invalid magic bytes")
-	}
-
-	// Validate the version.
-	if h.version == 0 {
-		return fmt.Errorf("invalid version: %d", h.version)
-	}
-
-	// Validate the original size.
-	if h.originalSize == 0 {
-		return fmt.Errorf("original size cannot be zero")
-	}
-
-	// Validate the salt.
-	zeroSalt := make([]byte, SaltSize)
-	if utils.SecureCompare(h.salt[:], zeroSalt) {
-		return fmt.Errorf("salt cannot be all zeros")
-	}
-
-	// Validate the integrity hash.
-	zeroHash := make([]byte, IntegrityHashSize)
-	if utils.SecureCompare(h.integrityHash[:], zeroHash) {
-		return fmt.Errorf("integrity hash cannot be all zeros")
-	}
-
-	// Validate the auth tag.
-	zeroAuth := make([]byte, AuthTagSize)
-	if utils.SecureCompare(h.authTag[:], zeroAuth) {
-		return fmt.Errorf("auth tag cannot be all zeros")
-	}
-
-	return nil
-}
-
-// Marshal marshals a header to a byte slice.
+// Marshal converts a Header struct into a byte slice.
+// It concatenates the header fields in the correct order to produce the final byte representation.
 func (s *Serializer) Marshal(h *Header) []byte {
+	// Pre-allocate a slice with the exact size of the header for efficiency.
 	data := make([]byte, 0, TotalHeaderSize)
 
-	// Append all header fields to the byte slice.
+	// Append each field to the byte slice in the specified order.
 	data = append(data, h.magic[:]...)
-	data = append(data, utils.ToBytes(uint16(h.version))...)
-	data = append(data, utils.ToBytes(uint32(h.flags))...)
+	data = append(data, utils.ToBytes(h.version)...)
+	data = append(data, utils.ToBytes(h.flags)...)
 	data = append(data, h.salt[:]...)
-	data = append(data, utils.ToBytes(uint64(h.originalSize))...)
+	data = append(data, utils.ToBytes(h.originalSize)...)
 	data = append(data, h.integrityHash[:]...)
 	data = append(data, h.authTag[:]...)
-	data = append(data, utils.ToBytes(uint32(h.checksum))...)
+	data = append(data, utils.ToBytes(h.checksum)...)
 	data = append(data, h.padding[:]...)
 
 	return data
