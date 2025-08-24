@@ -1,22 +1,27 @@
+// Package header provides functionality for creating, reading, and writing file headers.
 package header
 
 import (
 	"fmt"
 )
 
-// Verifier coordinates all header verification operations
+// Verifier orchestrates the entire header verification process.
+// It aggregates multiple specialized verifiers to perform a comprehensive check
+// of the header's format, integrity, authenticity, and security properties.
 type Verifier struct {
-	key []byte
+	key []byte // The secret key used for cryptographic verification (checksum, integrity, auth).
 }
 
-// NewVerifier creates a new Verifier
+// NewVerifier creates a new Verifier instance with the given key.
 func NewVerifier(key []byte) *Verifier {
 	return &Verifier{key: key}
 }
 
-// VerifyAll performs all verification checks on the header
+// VerifyAll performs a full suite of verification checks on the header.
+// It sequences through format, checksum, integrity, authentication, anti-tampering,
+// and security pattern checks, returning an error on the first failure.
 func (v *Verifier) VerifyAll(header *Header) error {
-	// Create individual verifiers
+	// Instantiate all the necessary verifier components.
 	formatVerifier := NewFormatVerifier()
 	checksumVerifier := NewChecksumVerifier(v.key)
 	integrityVerifier := NewIntegrityVerifier(v.key)
@@ -24,7 +29,7 @@ func (v *Verifier) VerifyAll(header *Header) error {
 	tamperVerifier := NewTamperVerifier()
 	patternVerifier := NewPatternVerifier()
 
-	// Run all verifications
+	// Define the sequence of verifications to be performed.
 	verifiers := []struct {
 		name string
 		fn   func(*Header) error
@@ -37,6 +42,7 @@ func (v *Verifier) VerifyAll(header *Header) error {
 		{"security patterns", patternVerifier.Verify},
 	}
 
+	// Execute each verifier in order, wrapping any error with the verifier's name.
 	for _, verifier := range verifiers {
 		if err := verifier.fn(header); err != nil {
 			return fmt.Errorf("%s verification failed: %w", verifier.name, err)
