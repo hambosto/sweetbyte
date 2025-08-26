@@ -12,9 +12,9 @@ import (
 
 const (
 	// ArgonTime is the number of iterations for Argon2.
-	ArgonTime uint32 = 4
+	ArgonTime uint32 = 8
 	// ArgonMemory is the memory usage in KiB for Argon2.
-	ArgonMemory uint32 = 128 * 1024
+	ArgonMemory uint32 = 256 * 1024
 	// ArgonThreads is the number of threads for Argon2.
 	ArgonThreads uint8 = 4
 )
