@@ -158,7 +158,7 @@ func (c *CLI) runEncrypt(inputFile, outputFile, password string, deleteSource, s
 	}
 
 	// If the output file is not specified, create a default name.
-	if outputFile == "" {
+	if len(outputFile) == 0 {
 		outputFile = inputFile + config.FileExtension
 	}
 
@@ -185,7 +185,7 @@ func (c *CLI) runDecrypt(inputFile, outputFile, password string, deleteSource, s
 	}
 
 	// If the output file is not specified, create a default name.
-	if outputFile == "" {
+	if len(outputFile) == 0 {
 		if len(inputFile) > len(config.FileExtension) &&
 			inputFile[len(inputFile)-len(config.FileExtension):] == config.FileExtension {
 			outputFile = inputFile[:len(inputFile)-len(config.FileExtension)]
