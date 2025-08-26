@@ -55,8 +55,16 @@ type Header struct {
 // and computes all necessary protection fields (integrity hash, auth tag, checksum).
 func NewHeader(originalSize uint64, salt []byte, key []byte) (*Header, error) {
 	// Validate the input parameters before proceeding.
-	if err := validateNewHeaderParams(originalSize, salt, key); err != nil {
-		return nil, err
+	if len(salt) != SaltSize {
+		return nil, fmt.Errorf("salt must be exactly %d bytes", SaltSize)
+	}
+
+	if len(key) == 0 {
+		return nil, fmt.Errorf("key cannot be empty")
+	}
+
+	if originalSize == 0 {
+		return nil, fmt.Errorf("original size cannot be zero")
 	}
 
 	// Initialize the header with basic information.
@@ -71,8 +79,8 @@ func NewHeader(originalSize uint64, salt []byte, key []byte) (*Header, error) {
 	copy(header.salt[:], salt)
 
 	// Generate random data for the padding field.
-	if err := generatePadding(header); err != nil {
-		return nil, err
+	if _, err := rand.Read(header.padding[:]); err != nil {
+		return nil, fmt.Errorf("failed to generate padding: %w", err)
 	}
 
 	// Compute and set the integrity hash, authentication tag, and checksum.
@@ -137,26 +145,4 @@ func (h *Header) OriginalSize() uint64 {
 // HasFlag checks if a specific flag is set in the header.
 func (h *Header) HasFlag(flag uint32) bool {
 	return h.flags&flag != 0
-}
-
-// validateNewHeaderParams ensures that the parameters for creating a new header are valid.
-func validateNewHeaderParams(originalSize uint64, salt []byte, key []byte) error {
-	if len(salt) != SaltSize {
-		return fmt.Errorf("salt must be exactly %d bytes", SaltSize)
-	}
-	if len(key) == 0 {
-		return fmt.Errorf("key cannot be empty")
-	}
-	if originalSize == 0 {
-		return fmt.Errorf("original size cannot be zero")
-	}
-	return nil
-}
-
-// generatePadding fills the header's padding field with random bytes.
-func generatePadding(header *Header) error {
-	if _, err := rand.Read(header.padding[:]); err != nil {
-		return fmt.Errorf("failed to generate padding: %w", err)
-	}
-	return nil
 }
