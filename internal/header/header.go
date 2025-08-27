@@ -1,6 +1,4 @@
 // Package header provides functionality for creating, reading, and writing file headers.
-// This includes defining the header structure, handling serialization and deserialization,
-// and performing validation and verification to ensure integrity and authenticity.
 package header
 
 import (
@@ -9,108 +7,96 @@ import (
 	"io"
 )
 
-// Constants defining the structure and size of the file header.
 const (
-	MagicBytes        = "SWX4" // MagicBytes is a 4-byte sequence that identifies the file type.
-	MagicSize         = 4      // MagicSize is the size of the magic bytes.
-	VersionSize       = 2      // VersionSize is the size of the version field.
-	FlagsSize         = 4      // FlagsSize is the size of the flags field.
-	SaltSize          = 32     // SaltSize is the size of the salt used in key derivation.
-	OriginalSizeSize  = 8      // OriginalSizeSize is the size of the original file size field.
-	IntegrityHashSize = 32     // IntegrityHashSize is the size of the integrity hash.
-	AuthTagSize       = 32     // AuthTagSize is the size of the authentication tag.
-	ChecksumSize      = 4      // ChecksumSize is the size of the header checksum.
-	PaddingSize       = 16     // PaddingSize is the size of the random padding.
-	TotalHeaderSize   = 134    // TotalHeaderSize is the total size of the header in bytes.
+	// MagicBytes is a 4-byte sequence that identifies the file type.
+	MagicBytes = "SWX4"
+	// MagicSize is the size of the magic bytes.
+	MagicSize = 4
+	// VersionSize is the size of the version field.
+	VersionSize = 2
+	// FlagsSize is the size of the flags field.
+	FlagsSize = 4
+	// SaltSize is the size of the salt used in key derivation.
+	SaltSize = 32
+	// OriginalSizeSize is the size of the original file size field.
+	OriginalSizeSize = 8
+	// AuthTagSize is the size of the authentication tag (HMAC-SHA256).
+	AuthTagSize = 32
+	// PaddingSize is the size of the random padding.
+	PaddingSize = 16
+	// TotalHeaderSize is the total size of the header in bytes.
+	TotalHeaderSize = MagicSize + VersionSize + FlagsSize + SaltSize + OriginalSizeSize + AuthTagSize + PaddingSize
 )
 
-// Version and flag constants for controlling file processing.
 const (
-	CurrentVersion  uint16 = 0x0001 // CurrentVersion is the latest version of the header format.
-	FlagCompressed  uint32 = 1 << 0 // FlagCompressed indicates that the file content is compressed.
-	FlagEncrypted   uint32 = 1 << 1 // FlagEncrypted indicates that the file content is encrypted.
-	FlagIntegrityV2 uint32 = 1 << 2 // FlagIntegrityV2 indicates the use of a specific integrity checking mechanism.
-	FlagAntiTamper  uint32 = 1 << 3 // FlagAntiTamper indicates that anti-tampering measures are in place.
+	// CurrentVersion is the latest version of the header format.
+	CurrentVersion uint16 = 0x0001
+	// FlagCompressed indicates that the file content is compressed.
+	FlagCompressed uint32 = 1 << 0
+	// FlagEncrypted indicates that the file content is encrypted.
+	FlagEncrypted uint32 = 1 << 1
 	// DefaultFlags represents the standard set of flags applied to new headers.
-	DefaultFlags = FlagEncrypted | FlagIntegrityV2 | FlagAntiTamper
+	DefaultFlags = FlagEncrypted
 )
 
 // Header represents the structured data at the beginning of a SweetByte file.
 // It contains metadata and security information essential for file processing.
 // The fields are private and accessed via getter methods to ensure immutability.
 type Header struct {
-	magic         [MagicSize]byte         // Magic bytes to identify the file type.
-	version       uint16                  // Version of the header format.
-	flags         uint32                  // Flags indicating processing options (e.g., compression, encryption).
-	salt          [SaltSize]byte          // Salt for key derivation, enhancing security.
-	originalSize  uint64                  // Original size of the file before any processing.
-	integrityHash [IntegrityHashSize]byte // Hash of the header's structural components to detect corruption.
-	authTag       [AuthTagSize]byte       // Authentication tag to verify the header's authenticity.
-	checksum      uint32                  // Checksum of the entire header for a quick integrity check.
-	padding       [PaddingSize]byte       // Random padding to obscure the header size and prevent certain attacks.
+	magic        [MagicSize]byte
+	version      uint16
+	flags        uint32
+	salt         [SaltSize]byte
+	originalSize uint64
+	authTag      [AuthTagSize]byte
+	padding      [PaddingSize]byte
 }
 
 // NewHeader creates a new Header with the given parameters.
 // It initializes the header with default values, generates random padding,
-// and computes all necessary protection fields (integrity hash, auth tag, checksum).
+// and computes the authentication tag.
 func NewHeader(originalSize uint64, salt []byte, key []byte) (*Header, error) {
-	// Validate the input parameters before proceeding.
 	if len(salt) != SaltSize {
 		return nil, fmt.Errorf("salt must be exactly %d bytes", SaltSize)
 	}
-
 	if len(key) == 0 {
 		return nil, fmt.Errorf("key cannot be empty")
 	}
-
 	if originalSize == 0 {
 		return nil, fmt.Errorf("original size cannot be zero")
 	}
 
-	// Initialize the header with basic information.
 	header := &Header{
 		version:      CurrentVersion,
 		flags:        DefaultFlags,
 		originalSize: originalSize,
 	}
 
-	// Set the magic bytes and the provided salt.
 	copy(header.magic[:], []byte(MagicBytes))
 	copy(header.salt[:], salt)
 
-	// Generate random data for the padding field.
 	if _, err := rand.Read(header.padding[:]); err != nil {
 		return nil, fmt.Errorf("failed to generate padding: %w", err)
 	}
 
-	// Compute and set the integrity hash, authentication tag, and checksum.
 	protector := NewProtector(key)
-	if err := protector.ComputeAllProtection(header); err != nil {
-		return nil, fmt.Errorf("failed to compute protection: %w", err)
+	if err := protector.Protect(header); err != nil {
+		return nil, fmt.Errorf("failed to protect header: %w", err)
 	}
 
 	return header, nil
 }
 
-// Read deserializes a header from an io.Reader.
-// It uses a Deserializer to handle the reading and parsing process.
-func Read(r io.Reader) (*Header, error) {
-	deserializer := NewDeserializer()
-	return deserializer.Read(r)
-}
-
 // Write serializes the header to an io.Writer.
-// It uses a Serializer to handle the writing process.
 func (h *Header) Write(w io.Writer) error {
-	serializer := NewSerializer()
-	return serializer.Write(w, h)
+	writer := NewWriter()
+	return writer.Write(w, h)
 }
 
 // Verify checks the integrity and authenticity of the header using a provided key.
-// It uses a Verifier to perform a comprehensive set of checks.
 func (h *Header) Verify(key []byte) error {
 	verifier := NewVerifier(key)
-	return verifier.VerifyAll(h)
+	return verifier.Verify(h)
 }
 
 // Magic returns a copy of the magic bytes.
@@ -140,6 +126,20 @@ func (h *Header) Salt() []byte {
 // OriginalSize returns the original size of the file.
 func (h *Header) OriginalSize() uint64 {
 	return h.originalSize
+}
+
+// AuthTag returns a copy of the authentication tag.
+func (h *Header) AuthTag() []byte {
+	result := make([]byte, AuthTagSize)
+	copy(result, h.authTag[:])
+	return result
+}
+
+// Padding returns a copy of the padding.
+func (h *Header) Padding() []byte {
+	result := make([]byte, PaddingSize)
+	copy(result, h.padding[:])
+	return result
 }
 
 // HasFlag checks if a specific flag is set in the header.
