@@ -7,27 +7,17 @@ import (
 	"github.com/hambosto/sweetbyte/internal/utils"
 )
 
-// Validator is responsible for performing integrity checks on header fields.
-// It is used at different stages of the header's lifecycle, such as before serialization
-// and after deserialization, to ensure that the header's contents are valid.
-type Validator struct{}
-
-// NewValidator creates and returns a new Validator instance.
-func NewValidator() *Validator {
-	return &Validator{}
-}
-
 // ValidateForSerialization checks the header fields just before it is written to a stream.
 // This ensures that all computed fields (like hashes and tags) are present and valid.
-func (v *Validator) ValidateForSerialization(h *Header) error {
+func ValidateForSerialization(h *Header) error {
 	// A list of validation functions to be executed in order.
 	validators := []func(*Header) error{
-		v.validateMagicBytes,
-		v.validateVersion,
-		v.validateOriginalSize,
-		v.validateSalt,
-		v.validateIntegrityHash,
-		v.validateAuthTag,
+		validateMagicBytes,
+		validateVersion,
+		validateOriginalSize,
+		validateSalt,
+		validateIntegrityHash,
+		validateAuthTag,
 	}
 
 	// Execute each validator and return immediately on the first error.
@@ -42,13 +32,13 @@ func (v *Validator) ValidateForSerialization(h *Header) error {
 
 // ValidateAfterDeserialization checks the header fields immediately after it has been read from a stream.
 // This focuses on the fields that are not dependent on cryptographic verification.
-func (v *Validator) ValidateAfterDeserialization(h *Header) error {
+func ValidateAfterDeserialization(h *Header) error {
 	// A list of validation functions for the initial check after reading.
 	validators := []func(*Header) error{
-		v.validateMagicBytes,
-		v.validateVersion,
-		v.validateOriginalSize,
-		v.validateSalt,
+		validateMagicBytes,
+		validateVersion,
+		validateOriginalSize,
+		validateSalt,
 	}
 
 	// Execute each validator and return on the first error.
@@ -62,7 +52,7 @@ func (v *Validator) ValidateAfterDeserialization(h *Header) error {
 }
 
 // validateMagicBytes ensures that the magic bytes of the header are correct.
-func (v *Validator) validateMagicBytes(h *Header) error {
+func validateMagicBytes(h *Header) error {
 	if !utils.SecureCompare(h.magic[:], []byte(MagicBytes)) {
 		return fmt.Errorf("invalid magic bytes: expected %s, got %s", MagicBytes, string(h.magic[:]))
 	}
@@ -70,7 +60,7 @@ func (v *Validator) validateMagicBytes(h *Header) error {
 }
 
 // validateVersion checks that the header version is supported.
-func (v *Validator) validateVersion(h *Header) error {
+func validateVersion(h *Header) error {
 	if h.version == 0 {
 		return fmt.Errorf("invalid version: cannot be zero")
 	}
@@ -81,7 +71,7 @@ func (v *Validator) validateVersion(h *Header) error {
 }
 
 // validateOriginalSize ensures that the original size is a non-zero value.
-func (v *Validator) validateOriginalSize(h *Header) error {
+func validateOriginalSize(h *Header) error {
 	if h.originalSize == 0 {
 		return fmt.Errorf("invalid original size: cannot be zero")
 	}
@@ -89,22 +79,22 @@ func (v *Validator) validateOriginalSize(h *Header) error {
 }
 
 // validateSalt checks that the salt field is not all zeros.
-func (v *Validator) validateSalt(h *Header) error {
-	return v.validateNonZeroField(h.salt[:], "salt")
+func validateSalt(h *Header) error {
+	return validateNonZeroField(h.salt[:], "salt")
 }
 
 // validateIntegrityHash checks that the integrity hash field is not all zeros.
-func (v *Validator) validateIntegrityHash(h *Header) error {
-	return v.validateNonZeroField(h.integrityHash[:], "integrity hash")
+func validateIntegrityHash(h *Header) error {
+	return validateNonZeroField(h.integrityHash[:], "integrity hash")
 }
 
 // validateAuthTag checks that the authentication tag field is not all zeros.
-func (v *Validator) validateAuthTag(h *Header) error {
-	return v.validateNonZeroField(h.authTag[:], "auth tag")
+func validateAuthTag(h *Header) error {
+	return validateNonZeroField(h.authTag[:], "auth tag")
 }
 
 // validateNonZeroField is a generic helper to check if a byte slice is all zeros.
-func (v *Validator) validateNonZeroField(field []byte, fieldName string) error {
+func validateNonZeroField(field []byte, fieldName string) error {
 	zeroField := make([]byte, len(field))
 	if utils.SecureCompare(field, zeroField) {
 		return fmt.Errorf("%s cannot be all zeros", fieldName)

@@ -24,20 +24,29 @@ func NewProtector(key []byte) *Protector {
 }
 
 // ComputeAllProtection orchestrates the computation of all protection fields for the header.
-// It calls the individual computation methods for integrity hash, auth tag, and checksum.
+// It computes the integrity hash, auth tag, and checksum, and sets them on the header.
 func (p *Protector) ComputeAllProtection(header *Header) error {
 	// Compute and set the integrity hash.
-	if err := p.computeIntegrityHash(header); err != nil {
+	hash, err := p.ComputeIntegrityHash(header)
+	if err != nil {
 		return fmt.Errorf("integrity hash computation failed: %w", err)
 	}
+	copy(header.integrityHash[:], hash)
+
 	// Compute and set the authentication tag.
-	if err := p.computeAuthTag(header); err != nil {
+	tag, err := p.ComputeAuthTag(header)
+	if err != nil {
 		return fmt.Errorf("auth tag computation failed: %w", err)
 	}
+	copy(header.authTag[:], tag)
+
 	// Compute and set the checksum.
-	if err := p.computeChecksum(header); err != nil {
+	checksum, err := p.ComputeChecksum(header)
+	if err != nil {
 		return fmt.Errorf("checksum computation failed: %w", err)
 	}
+	header.checksum = checksum
+
 	return nil
 }
 
@@ -87,36 +96,6 @@ func (p *Protector) ComputeChecksum(header *Header) (uint32, error) {
 		return 0, fmt.Errorf("failed to compute checksum: %w", err)
 	}
 	return crc.Sum32(), nil
-}
-
-// computeIntegrityHash is an internal helper that computes the integrity hash and sets it on the header.
-func (p *Protector) computeIntegrityHash(header *Header) error {
-	hash, err := p.ComputeIntegrityHash(header)
-	if err != nil {
-		return err
-	}
-	copy(header.integrityHash[:], hash)
-	return nil
-}
-
-// computeAuthTag is an internal helper that computes the auth tag and sets it on the header.
-func (p *Protector) computeAuthTag(header *Header) error {
-	tag, err := p.ComputeAuthTag(header)
-	if err != nil {
-		return err
-	}
-	copy(header.authTag[:], tag)
-	return nil
-}
-
-// computeChecksum is an internal helper that computes the checksum and sets it on the header.
-func (p *Protector) computeChecksum(header *Header) error {
-	checksum, err := p.ComputeChecksum(header)
-	if err != nil {
-		return err
-	}
-	header.checksum = checksum
-	return nil
 }
 
 // writeStructuralData writes the core, non-protection fields of the header to an io.Writer.

@@ -11,17 +11,14 @@ import (
 // Deserializer handles the process of converting a byte stream into a structured Header.
 // It includes validation to ensure the header is well-formed and conforms to expected values.
 type Deserializer struct {
-	data      []byte     // The raw byte slice containing the header data.
-	offset    int        // The current reading offset within the data slice.
-	validator *Validator // A validator to check the header's integrity after parsing.
+	data   []byte // The raw byte slice containing the header data.
+	offset int    // The current reading offset within the data slice.
 }
 
 // NewDeserializer creates and returns a new Deserializer instance.
 // It initializes the necessary components, including the validator.
 func NewDeserializer() *Deserializer {
-	return &Deserializer{
-		validator: NewValidator(),
-	}
+	return &Deserializer{}
 }
 
 // Read consumes bytes from an io.Reader to construct a Header.
@@ -60,7 +57,7 @@ func (d *Deserializer) Unmarshal(data []byte) (*Header, error) {
 	}
 
 	// Validate the header's contents after deserialization.
-	if err := d.validator.ValidateAfterDeserialization(header); err != nil {
+	if err := ValidateAfterDeserialization(header); err != nil {
 		return nil, fmt.Errorf("header validation failed: %w", err)
 	}
 

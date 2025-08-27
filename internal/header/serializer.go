@@ -10,15 +10,11 @@ import (
 
 // Serializer handles the conversion of a structured Header into a byte stream.
 // It ensures that the header is valid before serialization.
-type Serializer struct {
-	validator *Validator // A validator to check the header's integrity before writing.
-}
+type Serializer struct{}
 
 // NewSerializer creates and returns a new Serializer instance.
 func NewSerializer() *Serializer {
-	return &Serializer{
-		validator: NewValidator(),
-	}
+	return &Serializer{}
 }
 
 // Write serializes a Header and writes it to an io.Writer.
@@ -26,7 +22,7 @@ func NewSerializer() *Serializer {
 // Returns an error if validation, writing, or the write operation itself fails.
 func (s *Serializer) Write(w io.Writer, header *Header) error {
 	// Validate the header to ensure all fields are correctly populated before serialization.
-	if err := s.validator.ValidateForSerialization(header); err != nil {
+	if err := ValidateForSerialization(header); err != nil {
 		return fmt.Errorf("serialization validation failed: %w", err)
 	}
 
