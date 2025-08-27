@@ -3,10 +3,11 @@ package header
 import (
 	"crypto/hmac"
 	"crypto/sha256"
-	"encoding/binary"
 	"fmt"
 	"hash/crc32"
 	"io"
+
+	"github.com/hambosto/sweetbyte/internal/utils"
 )
 
 // Verify checks the integrity and authenticity of the header using a provided key.
@@ -107,20 +108,18 @@ func computeChecksum(h *Header) (uint32, error) {
 // writeStructuralData writes the core metadata fields of the header to an io.Writer.
 // This data is used for computing the integrity hash and authentication tag.
 func writeStructuralData(w io.Writer, h *Header) error {
-	if _, err := w.Write(h.magic[:]); err != nil {
-		return err
+	fields := [][]byte{
+		h.magic[:],
+		utils.ToBytes(h.version),
+		utils.ToBytes(h.flags),
+		h.salt[:],
+		utils.ToBytes(h.originalSize),
 	}
-	if err := binary.Write(w, binary.BigEndian, h.version); err != nil {
-		return err
-	}
-	if err := binary.Write(w, binary.BigEndian, h.flags); err != nil {
-		return err
-	}
-	if _, err := w.Write(h.salt[:]); err != nil {
-		return err
-	}
-	if err := binary.Write(w, binary.BigEndian, h.originalSize); err != nil {
-		return err
+
+	for i, field := range fields {
+		if _, err := w.Write(field); err != nil {
+			return fmt.Errorf("failed to write field %d: %w", i, err)
+		}
 	}
 	return nil
 }
