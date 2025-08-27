@@ -13,8 +13,6 @@ const (
 const (
 	// DefaultChunkSize is the default size of chunks for streaming operations.
 	DefaultChunkSize = 1 * 1024 * 1024
-	// MaxConcurrency is the maximum number of concurrent operations.
-	MaxConcurrency = 8
 	// OverwritePasses is the number of passes for secure file deletion.
 	OverwritePasses = 3
 )

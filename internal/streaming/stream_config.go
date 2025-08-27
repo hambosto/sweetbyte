@@ -30,7 +30,7 @@ func (s *StreamConfig) Validate() error {
 func (s *StreamConfig) ApplyDefaults() {
 	// If concurrency is not set, use the number of CPU cores.
 	if s.Concurrency <= 0 {
-		s.Concurrency = runtime.NumCPU()
+		s.Concurrency = runtime.GOMAXPROCS(0)
 	}
 	// If chunk size is not set, use the default chunk size.
 	if s.ChunkSize <= 0 {

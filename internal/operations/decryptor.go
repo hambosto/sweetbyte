@@ -66,10 +66,9 @@ func (d *Decryptor) DecryptFile(srcPath, destPath, password string) error {
 
 	// Create a new stream processor for decryption.
 	config := streaming.StreamConfig{
-		Key:         key,
-		Processing:  options.Decryption,
-		Concurrency: config.MaxConcurrency,
-		ChunkSize:   config.DefaultChunkSize,
+		Key:        key,
+		Processing: options.Decryption,
+		ChunkSize:  config.DefaultChunkSize,
 	}
 
 	processor, err := streaming.NewStreamProcessor(config)
