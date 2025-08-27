@@ -4,12 +4,12 @@
 package header
 
 import (
-	"bytes"
 	"crypto/hmac"
 	"crypto/rand"
-	"encoding/binary"
 	"fmt"
 	"io"
+
+	"github.com/hambosto/sweetbyte/internal/utils"
 )
 
 // Constants defining the structure and size of the file header.
@@ -152,65 +152,72 @@ func (h *Header) MarshalBinary() ([]byte, error) {
 		return nil, fmt.Errorf("serialization validation failed: %w", err)
 	}
 
-	// Use a buffer to efficiently write the binary data.
-	buf := new(bytes.Buffer)
-	buf.Grow(TotalHeaderSize)
+	// Pre-allocate a slice with the exact size of the header for efficiency.
+	data := make([]byte, 0, TotalHeaderSize)
 
-	// Write each field of the header to the buffer in BigEndian order.
-	buf.Write(h.magic[:])
-	binary.Write(buf, binary.BigEndian, h.version)
-	binary.Write(buf, binary.BigEndian, h.flags)
-	buf.Write(h.salt[:])
-	binary.Write(buf, binary.BigEndian, h.originalSize)
-	buf.Write(h.integrityHash[:])
-	buf.Write(h.authTag[:])
-	binary.Write(buf, binary.BigEndian, h.checksum)
-	buf.Write(h.padding[:])
+	// Append each field to the byte slice in the specified order.
+	data = append(data, h.magic[:]...)
+	data = append(data, utils.ToBytes(h.version)...)
+	data = append(data, utils.ToBytes(h.flags)...)
+	data = append(data, h.salt[:]...)
+	data = append(data, utils.ToBytes(h.originalSize)...)
+	data = append(data, h.integrityHash[:]...)
+	data = append(data, h.authTag[:]...)
+	data = append(data, utils.ToBytes(h.checksum)...)
+	data = append(data, h.padding[:]...)
 
-	return buf.Bytes(), nil
+	return data, nil
 }
 
 // UnmarshalBinary implements the encoding.BinaryUnmarshaler interface.
-// It deserializes a byte slice into the Header struct.
+// It deserializes a byte slice into the Header struct, populating its fields
+// by reading from the provided data slice according to the defined header structure.
 func (h *Header) UnmarshalBinary(data []byte) error {
-	// Check if the data slice has the expected size.
+	// Ensure the provided data slice has the expected total header size.
 	if len(data) != TotalHeaderSize {
-		return fmt.Errorf("invalid header size")
+		return fmt.Errorf("invalid header size: expected %d bytes, got %d", TotalHeaderSize, len(data))
 	}
 
-	// Use a reader to process the byte slice.
-	r := bytes.NewReader(data)
+	// Initialize offset to track the current reading position within the data slice.
+	offset := 0
 
-	// Read each field from the reader in BigEndian order.
-	if _, err := io.ReadFull(r, h.magic[:]); err != nil {
-		return err
-	}
-	if err := binary.Read(r, binary.BigEndian, &h.version); err != nil {
-		return err
-	}
-	if err := binary.Read(r, binary.BigEndian, &h.flags); err != nil {
-		return err
-	}
-	if _, err := io.ReadFull(r, h.salt[:]); err != nil {
-		return err
-	}
-	if err := binary.Read(r, binary.BigEndian, &h.originalSize); err != nil {
-		return err
-	}
-	if _, err := io.ReadFull(r, h.integrityHash[:]); err != nil {
-		return err
-	}
-	if _, err := io.ReadFull(r, h.authTag[:]); err != nil {
-		return err
-	}
-	if err := binary.Read(r, binary.BigEndian, &h.checksum); err != nil {
-		return err
-	}
-	if _, err := io.ReadFull(r, h.padding[:]); err != nil {
-		return err
-	}
+	// Read and copy the magic bytes.
+	copy(h.magic[:], data[offset:offset+MagicSize])
+	offset += MagicSize
 
-	// Validate the header fields after deserialization to ensure integrity.
+	// Read and convert the version from bytes to uint16.
+	h.version = utils.FromBytes[uint16](data[offset : offset+VersionSize])
+	offset += VersionSize
+
+	// Read and convert the flags from bytes to uint32.
+	h.flags = utils.FromBytes[uint32](data[offset : offset+FlagsSize])
+	offset += FlagsSize
+
+	// Read and copy the salt.
+	copy(h.salt[:], data[offset:offset+SaltSize])
+	offset += SaltSize
+
+	// Read and convert the original file size from bytes to uint64.
+	h.originalSize = utils.FromBytes[uint64](data[offset : offset+OriginalSizeSize])
+	offset += OriginalSizeSize
+
+	// Read and copy the integrity hash.
+	copy(h.integrityHash[:], data[offset:offset+IntegrityHashSize])
+	offset += IntegrityHashSize
+
+	// Read and copy the authentication tag.
+	copy(h.authTag[:], data[offset:offset+AuthTagSize])
+	offset += AuthTagSize
+
+	// Read and convert the checksum from bytes to uint32.
+	h.checksum = utils.FromBytes[uint32](data[offset : offset+ChecksumSize])
+	offset += ChecksumSize
+
+	// Read and copy the padding.
+	copy(h.padding[:], data[offset:offset+PaddingSize])
+	// No need to advance offset after the last field.
+
+	// Perform post-deserialization validation checks on the header fields.
 	if err := h.validateAfterDeserialization(); err != nil {
 		return fmt.Errorf("header validation failed: %w", err)
 	}
