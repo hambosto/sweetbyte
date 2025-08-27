@@ -17,31 +17,31 @@ const (
 	// MagicBytes is a 4-byte sequence that identifies the file type.
 	// This helps in quickly determining if the file is a SweetByte file.
 	MagicBytes        = "SWX4"
-	MagicSize         = 4      // MagicSize is the size of the magic bytes.
-	VersionSize       = 2      // VersionSize is the size of the version field.
-	FlagsSize         = 4      // FlagsSize is the size of the flags field.
-	SaltSize          = 32     // SaltSize is the size of the salt used in key derivation.
-	OriginalSizeSize  = 8      // OriginalSizeSize is the size of the original file size field.
-	IntegrityHashSize = 32     // IntegrityHashSize is the size of the integrity hash.
-	AuthTagSize       = 32     // AuthTagSize is the size of the authentication tag.
-	ChecksumSize      = 4      // ChecksumSize is the size of the header checksum.
-	PaddingSize       = 16     // PaddingSize is the size of the random padding.
-	TotalHeaderSize   = 134    // TotalHeaderSize is the total size of the header in bytes.
+	MagicSize         = 4   // MagicSize is the size of the magic bytes.
+	VersionSize       = 2   // VersionSize is the size of the version field.
+	FlagsSize         = 4   // FlagsSize is the size of the flags field.
+	SaltSize          = 32  // SaltSize is the size of the salt used in key derivation.
+	OriginalSizeSize  = 8   // OriginalSizeSize is the size of the original file size field.
+	IntegrityHashSize = 32  // IntegrityHashSize is the size of the integrity hash.
+	AuthTagSize       = 32  // AuthTagSize is the size of the authentication tag.
+	ChecksumSize      = 4   // ChecksumSize is the size of the header checksum.
+	PaddingSize       = 16  // PaddingSize is the size of the random padding.
+	TotalHeaderSize   = 134 // TotalHeaderSize is the total size of the header in bytes.
 )
 
 // Version and flag constants for controlling file processing.
 const (
 	// CurrentVersion is the latest version of the header format.
 	// It is used to ensure backward compatibility with older file formats.
-	CurrentVersion  uint16 = 0x0001
+	CurrentVersion uint16 = 0x0001
 	// FlagCompressed indicates that the file content is compressed.
-	FlagCompressed  uint32 = 1 << 0
+	FlagCompressed uint32 = 1 << 0
 	// FlagEncrypted indicates that the file content is encrypted.
-	FlagEncrypted   uint32 = 1 << 1
+	FlagEncrypted uint32 = 1 << 1
 	// FlagIntegrityV2 indicates the use of a specific integrity checking mechanism.
 	FlagIntegrityV2 uint32 = 1 << 2
 	// FlagAntiTamper indicates that anti-tampering measures are in place.
-	FlagAntiTamper  uint32 = 1 << 3
+	FlagAntiTamper uint32 = 1 << 3
 	// DefaultFlags represents the standard set of flags applied to new headers.
 	// These flags enable all security features by default.
 	DefaultFlags = FlagEncrypted | FlagIntegrityV2 | FlagAntiTamper
