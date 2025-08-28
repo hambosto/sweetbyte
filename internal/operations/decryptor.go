@@ -37,7 +37,7 @@ func (d *Decryptor) DecryptFile(srcPath, destPath, password string) error {
 	defer srcFile.Close() //nolint:errcheck
 
 	// Read the header from the source file.
-	header, err := header.Read(srcFile)
+	header, err := header.ReadHeader(srcFile)
 	if err != nil {
 		return fmt.Errorf("failed to read header: %w", err)
 	}
