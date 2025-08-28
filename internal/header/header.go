@@ -44,7 +44,7 @@ const (
 	FlagAntiTamper uint32 = 1 << 3
 	// DefaultFlags represents the standard set of flags applied to new headers.
 	// These flags enable all security features by default.
-	DefaultFlags = FlagEncrypted | FlagIntegrityV2 | FlagAntiTamper
+	DefaultFlags = FlagCompressed | FlagEncrypted | FlagIntegrityV2 | FlagAntiTamper
 )
 
 // Header represents the structured data at the beginning of a SweetByte file.
@@ -116,7 +116,7 @@ func ReadHeader(r io.Reader) (*Header, error) {
 
 // WriteTo implements the io.WriterTo interface, serializing the header to an io.Writer.
 // This is an efficient way to write the header data to a stream.
-func (h *Header) WriteTo(w io.Writer) (int64, error) {
+func (h *Header) WriteHeader(w io.Writer) (int64, error) {
 	// Marshal the header into a byte slice.
 	data, err := h.MarshalBinary()
 	if err != nil {

@@ -68,7 +68,7 @@ func (e *Encryptor) EncryptFile(srcPath, destPath, password string) error {
 	}
 
 	// Write the header to the destination file.
-	if _, err := h.WriteTo(destFile); err != nil {
+	if _, err := h.WriteHeader(destFile); err != nil {
 		return fmt.Errorf("failed to write header: %w", err)
 	}
 
