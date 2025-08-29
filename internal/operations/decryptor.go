@@ -2,8 +2,10 @@
 package operations
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"math"
 
 	"github.com/hambosto/sweetbyte/internal/config"
 	"github.com/hambosto/sweetbyte/internal/files"
@@ -36,26 +38,41 @@ func (d *Decryptor) DecryptFile(srcPath, destPath, password string) error {
 	}
 	defer srcFile.Close() //nolint:errcheck
 
-	// Read the header from the source file.
-	header, err := header.ReadHeader(srcFile)
+	magic, err := header.ReadMagic(srcFile)
 	if err != nil {
-		return fmt.Errorf("failed to read header: %w", err)
+		return fmt.Errorf("failed to read magic bytes: %w", err)
+	}
+
+	if !bytes.Equal(magic, []byte(header.MagicBytes)) {
+		return fmt.Errorf("invalid magic bytes: not a sweetbyte file")
+	}
+
+	salt, err := header.ReadSalt(srcFile)
+	if err != nil {
+		return fmt.Errorf("failed to read salt: %w", err)
 	}
 
 	// Derive the key from the password and salt.
-	key, err := keys.Hash([]byte(password), header.Salt())
+	key, err := keys.Hash([]byte(password), salt)
 	if err != nil {
 		return fmt.Errorf("failed to derive key: %w", err)
 	}
 
-	// Verify the header.
-	if err := header.Verify(key); err != nil {
+	// Unmarshal and verify the rest of the header.
+	h, err := header.Unmarshal(srcFile, key, magic, salt)
+	if err != nil {
 		return fmt.Errorf("decryption failed: incorrect password or corrupt file: %w", err)
 	}
 
 	// Get the original size of the file from the header.
-	// #nosec G115
-	originalSize := int64(header.OriginalSize())
+	originalSizeUint, err := h.OriginalSize()
+	if err != nil {
+		return fmt.Errorf("failed to get original size from header: %w", err)
+	}
+	if originalSizeUint > math.MaxInt64 {
+		return fmt.Errorf("original file size (%d) exceeds the maximum supported size (%d)", originalSizeUint, int64(math.MaxInt64))
+	}
+	originalSize := int64(originalSizeUint)
 
 	// Create the destination file.
 	destFile, err := d.fileManager.CreateFile(destPath)
