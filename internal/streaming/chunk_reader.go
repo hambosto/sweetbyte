@@ -3,12 +3,11 @@ package streaming
 
 import (
 	"context"
-	"encoding/binary"
 	"fmt"
 	"io"
 
-	"github.com/hambosto/sweetbyte/internal/config"
 	"github.com/hambosto/sweetbyte/internal/options"
+	"github.com/hambosto/sweetbyte/internal/utils"
 )
 
 // chunkReader reads data from an io.Reader and splits it into chunks for processing.
@@ -151,12 +150,12 @@ func (r *chunkReader) readForDecryption(ctx context.Context, reader io.Reader, t
 
 // readChunkSize reads the 4-byte chunk size header from the reader.
 func (r *chunkReader) readChunkSize(reader io.Reader) (uint32, error) {
-	var sizeBuffer [config.ChunkHeaderSize]byte
+	var sizeBuffer [4]byte
 	_, err := io.ReadFull(reader, sizeBuffer[:])
 	if err != nil {
 		return 0, err
 	}
-	return binary.BigEndian.Uint32(sizeBuffer[:]), nil
+	return utils.FromBytes[uint32](sizeBuffer[:]), nil
 }
 
 // readChunkData reads a chunk of a given length from the reader.

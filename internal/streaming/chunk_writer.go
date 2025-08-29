@@ -3,13 +3,12 @@ package streaming
 
 import (
 	"context"
-	"encoding/binary"
 	"fmt"
 	"io"
 
-	"github.com/hambosto/sweetbyte/internal/config"
 	"github.com/hambosto/sweetbyte/internal/options"
 	"github.com/hambosto/sweetbyte/internal/ui"
+	"github.com/hambosto/sweetbyte/internal/utils"
 )
 
 // chunkWriter writes processed chunks to an io.Writer.
@@ -101,11 +100,9 @@ func (w *chunkWriter) writeResult(output io.Writer, result TaskResult) error {
 
 // writeChunkSize writes the size of a chunk as a 4-byte header to the output.
 func (w *chunkWriter) writeChunkSize(output io.Writer, size int) error {
-	var buffer [config.ChunkHeaderSize]byte
-
 	// #nosec G115
-	binary.BigEndian.PutUint32(buffer[:], uint32(size))
-	if _, err := output.Write(buffer[:]); err != nil {
+	buffer := utils.ToBytes(uint32(size))
+	if _, err := output.Write(buffer); err != nil {
 		return fmt.Errorf("chunk size write failed: %w", err)
 	}
 

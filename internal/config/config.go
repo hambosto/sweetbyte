@@ -42,11 +42,6 @@ var (
 )
 
 const (
-	// ChunkHeaderSize is the size of the header for each chunk.
-	ChunkHeaderSize = 4
-)
-
-const (
 	// DataShards is the number of data shards for Reed-Solomon encoding.
 	DataShards = 4
 	// ParityShards is the number of parity shards for Reed-Solomon encoding.

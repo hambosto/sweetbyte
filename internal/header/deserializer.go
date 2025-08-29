@@ -159,7 +159,6 @@ func (h *Header) validate() error {
 		if size, err := h.GetUint64(TagOriginalSize); err != nil {
 			return fmt.Errorf("invalid original size field: %w", err)
 		} else if size == 0 {
-			// A size of zero is invalid as we wouldn't be processing an empty file.
 			return fmt.Errorf("original size cannot be zero")
 		}
 	}
