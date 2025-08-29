@@ -48,8 +48,9 @@ const (
 	// MaxAuthDataSize defines the maximum allowed size for the entire authenticated
 	// data block, preventing denial-of-service via oversized headers.
 	MaxAuthDataSize = 1024 * 1024 // 1MB limit for header size
-	// MaxRecordSize defines the maximum allowed size for a single TLV record's value.
-	MaxRecordSize = 64 * 1024 // 64KB limit for individual records
+	// MaxRecordSize defines the maximum allowed size for a single TLV record's value,
+	// corresponding to the maximum value of a uint16.
+	MaxRecordSize = (1 << 16) - 1 // 65535 bytes
 )
 
 // Header represents a file header composed of extensible TLV (Tag-Length-Value) records.

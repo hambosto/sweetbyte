@@ -2,8 +2,8 @@ package header
 
 import (
 	"bytes"
-	"encoding/binary"
 	"fmt"
+	"math"
 
 	"github.com/hambosto/sweetbyte/internal/config"
 	"github.com/hambosto/sweetbyte/internal/utils"
@@ -31,13 +31,20 @@ func (h *Header) Marshal(salt, key []byte) ([]byte, error) {
 		return nil, fmt.Errorf("failed to serialize records: %w", err)
 	}
 
+	authDataLenInt := len(authData)
 	// Enforce the maximum size limit for the authenticated data to prevent generating an invalid header.
-	if len(authData) > MaxAuthDataSize {
-		return nil, fmt.Errorf("auth data exceeds maximum allowed size: auth data size %d exceeds limit %d", len(authData), MaxAuthDataSize)
+	if authDataLenInt > MaxAuthDataSize {
+		return nil, fmt.Errorf("auth data exceeds maximum allowed size: auth data size %d exceeds limit %d", authDataLenInt, MaxAuthDataSize)
 	}
 
+	// Add a redundant check against math.MaxUint32 to satisfy the linter.
+	if authDataLenInt > math.MaxUint32 {
+		return nil, fmt.Errorf("auth data length %d exceeds math.MaxUint32", authDataLenInt)
+	}
+	authDataLen := uint32(authDataLenInt)
+
 	// Convert the length of the authenticated data to a 4-byte slice.
-	authDataLenBytes := utils.ToBytes(uint32(len(authData)))
+	authDataLenBytes := utils.ToBytes(authDataLen)
 
 	// Compute the HMAC-SHA256 MAC. The MAC covers all preceding fields:
 	// magic bytes, salt, authenticated data length, and the authenticated data itself.
@@ -62,9 +69,7 @@ func (h *Header) Marshal(salt, key []byte) ([]byte, error) {
 }
 
 // serializeRecords converts the header's internal map of TLV records into a
-// concatenated byte slice. The iteration order over maps is not guaranteed,
-// but this is acceptable because the MAC is computed over the final serialized data,
-// preserving integrity regardless of order.
+// concatenated byte slice using the utility functions for byte conversion.
 func (h *Header) serializeRecords() ([]byte, error) {
 	// Use a bytes.Buffer for efficient concatenation.
 	buf := new(bytes.Buffer)
@@ -72,17 +77,23 @@ func (h *Header) serializeRecords() ([]byte, error) {
 	// Iterate over all records in the header's map.
 	for tag, value := range h.records {
 		// Enforce the maximum size limit for each individual record.
+		// With MaxRecordSize at 65535, this check prevents overflow when converting len(value) to uint16.
 		if len(value) > MaxRecordSize {
 			return nil, fmt.Errorf("record exceeds maximum allowed size: record with tag %d has size %d", tag, len(value))
 		}
 
-		// Write the 16-bit tag in big-endian format.
-		if err := binary.Write(buf, binary.BigEndian, tag); err != nil {
+		// Convert tag to bytes and write to buffer.
+		if _, err := buf.Write(utils.ToBytes(tag)); err != nil {
 			return nil, fmt.Errorf("failed to write tag %d: %w", tag, err)
 		}
 
-		// Write the 16-bit length of the value in big-endian format.
-		if err := binary.Write(buf, binary.BigEndian, uint16(len(value))); err != nil {
+		// Add a redundant check to satisfy the linter, similar to the one for authDataLenInt.
+		recordLen := len(value)
+		if recordLen > math.MaxUint16 {
+			return nil, fmt.Errorf("record value length %d exceeds math.MaxUint16", recordLen)
+		}
+		// Convert length to bytes and write to buffer. The uint16 conversion is safe due to the check above.
+		if _, err := buf.Write(utils.ToBytes(uint16(recordLen))); err != nil {
 			return nil, fmt.Errorf("failed to write length for tag %d: %w", tag, err)
 		}
 

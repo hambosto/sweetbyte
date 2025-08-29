@@ -87,7 +87,8 @@ func Unmarshal(r io.Reader, key, magic, salt []byte) (*Header, error) {
 }
 
 // parseRecords parses a byte slice of concatenated TLV (Tag-Length-Value) records
-// and populates a Header struct with the parsed data.
+// and populates a Header struct with the parsed data. This version uses utility
+// functions to convert from bytes instead of binary.Read.
 func parseRecords(data []byte) (*Header, error) {
 	// Initialize a new Header and a reader for the raw data.
 	h := &Header{records: make(map[uint16][]byte)}
@@ -95,17 +96,19 @@ func parseRecords(data []byte) (*Header, error) {
 
 	// Loop until all bytes from the reader have been consumed.
 	for reader.Len() > 0 {
-		// Read the 16-bit tag for the current record.
-		var tag uint16
-		if err := binary.Read(reader, binary.BigEndian, &tag); err != nil {
-			return nil, fmt.Errorf("failed to parse record tag: %w", err)
+		// Read and parse the 16-bit tag.
+		tagBytes := make([]byte, 2)
+		if _, err := io.ReadFull(reader, tagBytes); err != nil {
+			return nil, fmt.Errorf("failed to read record tag: %w", err)
 		}
+		tag := utils.FromBytes[uint16](tagBytes)
 
-		// Read the 16-bit length for the current record's value.
-		var length uint16
-		if err := binary.Read(reader, binary.BigEndian, &length); err != nil {
-			return nil, fmt.Errorf("failed to parse record length for tag %d: %w", tag, err)
+		// Read and parse the 16-bit length.
+		lenBytes := make([]byte, 2)
+		if _, err := io.ReadFull(reader, lenBytes); err != nil {
+			return nil, fmt.Errorf("failed to read record length for tag %d: %w", tag, err)
 		}
+		length := utils.FromBytes[uint16](lenBytes)
 
 		// Sanity check the record size to prevent parsing overly large records.
 		if int(length) > MaxRecordSize {

@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"math"
 
 	"github.com/hambosto/sweetbyte/internal/config"
 	"github.com/hambosto/sweetbyte/internal/files"
@@ -67,6 +68,9 @@ func (d *Decryptor) DecryptFile(srcPath, destPath, password string) error {
 	originalSizeUint, err := h.OriginalSize()
 	if err != nil {
 		return fmt.Errorf("failed to get original size from header: %w", err)
+	}
+	if originalSizeUint > math.MaxInt64 {
+		return fmt.Errorf("original file size (%d) exceeds the maximum supported size (%d)", originalSizeUint, int64(math.MaxInt64))
 	}
 	originalSize := int64(originalSizeUint)
 
