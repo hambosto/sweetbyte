@@ -20,7 +20,7 @@ type chunkReader struct {
 }
 
 // NewChunkReader creates a new ChunkReader with the specified processing mode and chunk size.
-func NewChunkReader(processing options.Processing, chunkSize, concurrency int) ChunkReader {
+func NewChunkReader(processing options.Processing, chunkSize, concurrency int) *chunkReader {
 	return &chunkReader{
 		processing:  processing,
 		chunkSize:   chunkSize,

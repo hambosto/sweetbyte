@@ -16,13 +16,13 @@ import (
 // It uses an OrderBuffer to ensure chunks are written in the correct sequence.
 type chunkWriter struct {
 	processing options.Processing
-	buffer     OrderBuffer
+	buffer     *orderBuffer
 	bar        *ui.ProgressBar
 }
 
 // NewChunkWriter creates a new ChunkWriter.
 // It takes the processing mode (encryption/decryption) and an optional progress bar.
-func NewChunkWriter(processing options.Processing, bar *ui.ProgressBar) ChunkWriter {
+func NewChunkWriter(processing options.Processing, bar *ui.ProgressBar) *chunkWriter {
 	return &chunkWriter{
 		processing: processing,
 		buffer:     NewOrderBuffer(),

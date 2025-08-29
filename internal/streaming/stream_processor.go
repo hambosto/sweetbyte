@@ -27,14 +27,14 @@ type TaskResult struct {
 // streamProcessor handles the entire streaming process.
 type streamProcessor struct {
 	streamConfig  StreamConfig
-	taskProcessor TaskProcessor
-	reader        ChunkReader
-	writer        ChunkWriter
+	taskProcessor *taskProcessor
+	reader        *chunkReader
+	writer        *chunkWriter
 	pool          *workerPool
 }
 
 // NewStreamProcessor creates a new streamProcessor with the given configuration.
-func NewStreamProcessor(config StreamConfig) (Processor, error) {
+func NewStreamProcessor(config StreamConfig) (*streamProcessor, error) {
 	// Validate the configuration.
 	if err := config.Validate(); err != nil {
 		return nil, err
@@ -52,7 +52,7 @@ func NewStreamProcessor(config StreamConfig) (Processor, error) {
 		streamConfig:  config,
 		taskProcessor: taskProcessor,
 		reader:        NewChunkReader(config.Processing, config.ChunkSize, config.Concurrency),
-		pool:          NewWorkerPool(taskProcessor, config.Concurrency),
+		pool:          NewWorkerPool(*taskProcessor, config.Concurrency),
 	}, nil
 }
 
