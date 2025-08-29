@@ -64,12 +64,8 @@ func (d *Decryptor) DecryptFile(srcPath, destPath, password string) error {
 	}
 
 	// Get the original size of the file from the header.
-	originalSizeUint, err := h.OriginalSize()
-	if err != nil {
-		return fmt.Errorf("failed to get original size from header: %w", err)
-	}
 	// #nosec G115
-	originalSize := int64(originalSizeUint)
+	originalSize := int64(h.OriginalSize)
 
 	// Create the destination file.
 	destFile, err := d.fileManager.CreateFile(destPath)
