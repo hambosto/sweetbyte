@@ -16,7 +16,7 @@ type taskProcessor struct {
 }
 
 // NewTaskProcessor creates a new taskProcessor with the given key and processing type.
-func NewTaskProcessor(key []byte, processing options.Processing) (TaskProcessor, error) {
+func NewTaskProcessor(key []byte, processing options.Processing) (*taskProcessor, error) {
 	// Create a new processor.
 	proc, err := processor.NewProcessor(key)
 	if err != nil {

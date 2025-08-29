@@ -8,12 +8,12 @@ import (
 
 // workerPool manages a pool of workers for processing tasks concurrently.
 type workerPool struct {
-	processor   TaskProcessor
+	processor   taskProcessor
 	concurrency int
 }
 
 // NewWorkerPool creates a new workerPool with the given task processor and concurrency level.
-func NewWorkerPool(processor TaskProcessor, concurrency int) *workerPool {
+func NewWorkerPool(processor taskProcessor, concurrency int) *workerPool {
 	return &workerPool{
 		processor:   processor,
 		concurrency: concurrency,

@@ -14,7 +14,7 @@ type orderBuffer struct {
 }
 
 // NewOrderBuffer creates a new orderBuffer.
-func NewOrderBuffer() OrderBuffer {
+func NewOrderBuffer() *orderBuffer {
 	return &orderBuffer{
 		results: make(map[uint64]TaskResult),
 		next:    0,
