@@ -142,35 +142,34 @@ An encrypted file consists of a fixed-size header followed by a series of variab
 ```
 
 #### Secure Header
-The header contains all the metadata required to decrypt the file. It uses a flexible and secure format designed to be extensible while protecting against tampering.
+The header contains all the metadata required to decrypt the file. It uses a fixed-size, authenticated format for simplicity and efficiency.
 
 The header has the following structure:
 
-`[Magic Bytes (4)] [Salt (32)] [Auth Data Length (4)] [Authenticated Data (variable)] [MAC (32)]`
+`[Magic Bytes (4)] [Salt (32)] [Header Data (14)] [MAC (32)]`
 
-| Part                 | Size (bytes)   | Description                                                                                                                                                           |
-| -------------------- | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Magic Bytes**      | 4              | `SWX4` - A constant value that identifies the file as a SweetByte encrypted file.                                                                                     |
-| **Salt**             | 32             | A unique, random value used as an input for the Argon2id key derivation function. This ensures that even with the same password, the derived encryption key is unique. |
-| **Auth Data Length** | 4              | A 32-bit unsigned integer specifying the length of the following `Authenticated Data` block.                                                                          |
-| **Authenticated Data** | Variable       | A block of data containing file metadata, structured in a Tag-Length-Value (TLV) format. This allows for future extensibility.                                       |
-| **MAC**              | 32             | A **Message Authentication Code** (HMAC-SHA256) that provides integrity and authenticity for the header.                                                                |
+| Part          | Size (bytes) | Description                                                                                                                                                           |
+|---------------|--------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Magic Bytes** | 4            | `SWX4` - A constant value that identifies the file as a SweetByte encrypted file.                                                                                     |
+| **Salt**        | 32           | A unique, random value used as an input for the Argon2id key derivation function. This ensures that even with the same password, the derived encryption key is unique. |
+| **Header Data** | 14           | A fixed-size block containing serialized file metadata. See details below.                                                                                            |
+| **MAC**         | 32           | A **Message Authentication Code** (HMAC-SHA256) that provides integrity and authenticity for the entire header structure (`Magic Bytes` + `Salt` + `Header Data`).      |
 
 **Header Authentication**
 
-To prevent tampering, the **MAC** is computed over the `Magic Bytes`, `Salt`, `Auth Data Length`, and the `Authenticated Data` block itself. If any of these parts are modified, the MAC verification will fail during decryption, and the process will be aborted. This is verified using a constant-time comparison to protect against timing attacks.
+To prevent tampering, the **MAC** is computed over the `Magic Bytes`, `Salt`, and the `Header Data` block. If any of these parts are modified, the MAC verification will fail during decryption, and the process will be aborted. This is verified using a constant-time comparison to protect against timing attacks.
 
-**Authenticated Data (TLV Records)**
+**Header Data**
 
-The metadata within the `Authenticated Data` block is stored as a series of Tag-Length-Value (TLV) records. This makes the format flexible. The currently defined tags are:
+The `Header Data` block is a 14-byte structure containing the core metadata for the file. It is created by directly serializing the internal `Header` struct and has the following layout:
 
-| Tag                 | ID     | Description                                                                                             |
-| ------------------- | ------ | ------------------------------------------------------------------------------------------------------- |
-| **TagVersion**      | 0x0001 | The version of the file format.                                                                         |
-| **TagFlags**        | 0x0002 | A bitfield of flags indicating processing options, such as `FlagCompressed` and `FlagEncrypted`.          |
-| **TagOriginalSize** | 0x0004 | The original, uncompressed size of the file content.                                                    |
+| Field          | Size (bytes) | Description                                                                                                                              |
+|----------------|--------------|------------------------------------------------------------------------------------------------------------------------------------------|
+| **Version**      | 2            | A 16-bit unsigned integer representing the file format version (currently `0x0001`).                                                     |
+| **Flags**        | 4            | A 32-bit unsigned integer bitfield of flags indicating processing options (e.g., `FlagCompressed`, `FlagEncrypted`).                     |
+| **OriginalSize** | 8            | A 64-bit unsigned integer representing the original, uncompressed size of the file content.                                            |
 
-To prevent resource exhaustion attacks, the total size of the `Authenticated Data` is limited to 1MB, and each individual record is limited to 64KB.
+This fixed-structure approach is simple and efficient, providing all necessary information for decryption without the overhead of a more complex and extensible format like TLV.
 
 #### Cryptographic Parameters
 SweetByte uses strong, modern cryptographic parameters for key derivation and encryption.
