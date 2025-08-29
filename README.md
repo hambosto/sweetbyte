@@ -58,12 +58,12 @@ SweetByte processes data through a sophisticated pipeline to ensure confidential
 
 ```mermaid
 graph TD
-    A[Original Data] --> B{Zlib Compression};
-    B --> C{PKCS7 Padding};
-    C --> D{AES-256-GCM Encryption};
-    D --> E{XChaCha20-Poly1305 Encryption};
-    E --> F{Reed-Solomon Encoding};
-    F --> G[Encrypted File];
+    A[Data] --> B[Zlib]
+    B --> C[PKCS7]
+    C --> D[AES-GCM]
+    D --> E[XChaCha20]
+    E --> F[Reed-Solomon]
+    F --> G[Output]
 ```
 
 #### Encryption Flow
