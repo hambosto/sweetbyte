@@ -41,9 +41,9 @@ type Header struct {
 	records map[uint16][]byte
 }
 
-// New creates a new Header with essential metadata.
+// NewHeader creates a new Header with essential metadata.
 // The originalSize parameter specifies the uncompressed size of the file content.
-func New(originalSize uint64) (*Header, error) {
+func NewHeader(originalSize uint64) (*Header, error) {
 	if originalSize == 0 {
 		return nil, fmt.Errorf("original size cannot be zero")
 	}

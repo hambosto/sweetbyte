@@ -62,7 +62,7 @@ func (e *Encryptor) EncryptFile(srcPath, destPath, password string) error {
 	}
 
 	// Create a new header.
-	h, err := header.New(uint64(originalSize))
+	h, err := header.NewHeader(uint64(originalSize))
 	if err != nil {
 		return fmt.Errorf("failed to create header: %w", err)
 	}
