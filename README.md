@@ -24,6 +24,7 @@
 - [Usage](#-usage)
 - [Building from Source](#️-building-from-source)
 - [Internal Packages Overview](#-internal-packages-overview)
+- [Security Considerations](#-security-considerations)
 - [Contributing](#-contributing)
 - [License](#-license)
 
@@ -44,10 +45,7 @@ SweetByte was built with three core principles in mind:
 - **Dual-Algorithm Encryption:** Chains **AES-256-GCM** and **XChaCha20-Poly1305** for a layered defense, combining the AES standard with the modern, high-performance ChaCha20 stream cipher.
 - **Strong Key Derivation:** Utilizes **Argon2id**, the winner of the Password Hashing Competition, to protect against brute-force attacks on your password.
 - **Resilient File Format:** Integrates **Reed-Solomon error correction codes**, which add redundancy to the data. This allows the file to be successfully decrypted even if it suffers from partial corruption.
-- **Tamper-Proof File Header:** Each encrypted file includes a secure header with multiple layers of verification:
-    - **HMAC-SHA256 Authentication Tag:** Ensures the header has not been tampered with by an attacker.
-    - **SHA-256 Integrity Hash:** Verifies the structural integrity of the header's metadata.
-    - **CRC32 Checksum:** Provides a fast check against accidental data corruption.
+- **Tamper-Proof & Extensible File Header:** Each encrypted file includes a secure header that is both authenticated and flexible. It uses an HMAC-SHA256 to prevent tampering and a Tag-Length-Value (TLV) format to allow for future extension.
 - **Efficient Streaming:** Processes files in concurrent chunks, ensuring low memory usage and high throughput, even for very large files.
 - **Dual-Mode Operation:**
     - **Interactive Mode:** A user-friendly, wizard-style interface that guides you through every step.
@@ -58,8 +56,14 @@ SweetByte was built with three core principles in mind:
 
 SweetByte processes data through a sophisticated pipeline to ensure confidentiality, integrity, and resilience.
 
-```
-Original Data ➔ [Compression] ➔ [Padding] ➔ [AES Encrypt] ➔ [XChaCha20 Encrypt] ➔ [Reed-Solomon Encode] ➔ Encrypted File
+```mermaid
+graph TD
+    A[Original Data] --> B{Zlib Compression};
+    B --> C{PKCS7 Padding};
+    C --> D{AES-256-GCM Encryption};
+    D --> E{XChaCha20-Poly1305 Encryption};
+    E --> F{Reed-Solomon Encoding};
+    F --> G[Encrypted File];
 ```
 
 #### Encryption Flow
@@ -141,35 +145,50 @@ Encrypted files (`.swb`) have a custom binary structure designed for security an
 An encrypted file consists of a fixed-size header followed by a series of variable-length data chunks.
 
 ```
-[ Secure Header (134 bytes) ] [ Chunk 1 ] [ Chunk 2 ] ... [ Chunk N ]
+[ Secure Header (variable size) ] [ Chunk 1 ] [ Chunk 2 ] ... [ Chunk N ]
 ```
 
-#### Secure Header (134 bytes)
-The header contains all the metadata required to decrypt the file. It is heavily protected against tampering and corruption.
+#### Secure Header
+The header contains all the metadata required to decrypt the file. It uses a flexible and secure format designed to be extensible while protecting against tampering.
 
-| Field            | Size (bytes) | Description                                                                    |
-| ---------------- | ------------ | ------------------------------------------------------------------------------ |
-| **Magic Bytes**  | 4            | `SWX4` - Identifies the file as a SweetByte file.                              |
-| **Version**      | 2            | The version of the file format.                                                |
-| **Flags**        | 4            | Bitfield indicating properties like encryption and compression.                |
-| **Salt**         | 32           | A unique, random salt for the Argon2id key derivation.                         |
-| **Original Size**| 8            | The size of the original, unencrypted file.                                    |
-| **Integrity Hash**| 32           | A SHA-256 hash of core header fields to verify structural integrity.           |
-| **Auth Tag**     | 32           | An HMAC-SHA256 tag to authenticate the entire header and prevent tampering.    |
-| **Checksum**     | 4            | A CRC32 checksum for fast detection of accidental corruption.                  |
-| **Padding**      | 16           | Random data to ensure the header has a fixed size.                             |
-| **Total**        | **134**      |                                                                                |
+The header has the following structure:
+
+`[Magic Bytes (4)] [Salt (32)] [Auth Data Length (4)] [Authenticated Data (variable)] [MAC (32)]`
+
+| Part                 | Size (bytes)   | Description                                                                                                                                                           |
+| -------------------- | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Magic Bytes**      | 4              | `SWX4` - A constant value that identifies the file as a SweetByte encrypted file.                                                                                     |
+| **Salt**             | 32             | A unique, random value used as an input for the Argon2id key derivation function. This ensures that even with the same password, the derived encryption key is unique. |
+| **Auth Data Length** | 4              | A 32-bit unsigned integer specifying the length of the following `Authenticated Data` block.                                                                          |
+| **Authenticated Data** | Variable       | A block of data containing file metadata, structured in a Tag-Length-Value (TLV) format. This allows for future extensibility.                                       |
+| **MAC**              | 32             | A **Message Authentication Code** (HMAC-SHA256) that provides integrity and authenticity for the header.                                                                |
+
+**Header Authentication**
+
+To prevent tampering, the **MAC** is computed over the `Magic Bytes`, `Salt`, `Auth Data Length`, and the `Authenticated Data` block itself. If any of these parts are modified, the MAC verification will fail during decryption, and the process will be aborted. This is verified using a constant-time comparison to protect against timing attacks.
+
+**Authenticated Data (TLV Records)**
+
+The metadata within the `Authenticated Data` block is stored as a series of Tag-Length-Value (TLV) records. This makes the format flexible. The currently defined tags are:
+
+| Tag                 | ID     | Description                                                                                             |
+| ------------------- | ------ | ------------------------------------------------------------------------------------------------------- |
+| **TagVersion**      | 0x0001 | The version of the file format.                                                                         |
+| **TagFlags**        | 0x0002 | A bitfield of flags indicating processing options, such as `FlagCompressed` and `FlagEncrypted`.          |
+| **TagOriginalSize** | 0x0004 | The original, uncompressed size of the file content.                                                    |
+
+To prevent resource exhaustion attacks, the total size of the `Authenticated Data` is limited to 1MB, and each individual record is limited to 64KB.
 
 #### Cryptographic Parameters
 SweetByte uses strong, modern cryptographic parameters for key derivation and encryption.
 
 - **Argon2id Parameters:**
-    - **Time Cost:** 4
-    - **Memory Cost:** 128 MB
+    - **Time Cost:** 8
+    - **Memory Cost:** 256 MB
     - **Parallelism:** 4 threads
 - **Reed-Solomon Parameters:**
-    - **Data Shards:** 4
-    - **Parity Shards:** 10 (Provides high redundancy)
+    - **Data Shards:** 10
+    - **Parity Shards:** 4 (Provides high redundancy)
 
 #### Data Chunks
 Following the header, the file contains the encrypted data, split into chunks. Each chunk is prefixed with a 4-byte length header, which is essential for the streaming-based decryption process.
@@ -250,6 +269,15 @@ SweetByte is built with a modular architecture, with each package handling a spe
 | `streaming`       | Manages concurrent, chunk-based file processing with a worker pool.      |
 | `ui`              | Provides UI components like interactive prompts, progress bars, and banners. |
 | `utils`           | Contains miscellaneous helper functions.                                 |
+
+## 🛡️ Security Considerations
+
+SweetByte is designed with a strong focus on security. However, it's important to be aware of the following considerations:
+
+- **Password Strength:** The security of your encrypted files depends heavily on the strength of your password. Use a long, complex, and unique password to protect against brute-force attacks.
+- **Secure Environment:** Run SweetByte in a secure environment. If your system is compromised with malware, your password could be stolen, and your encrypted files could be decrypted.
+- **Source File Deletion:** The `--delete-source` and `--secure-delete` options are provided for convenience. However, secure file deletion is a complex problem that depends on the underlying hardware and operating system. While SweetByte takes measures to overwrite the source file with random data, it cannot guarantee that the file is unrecoverable.
+- **Side-Channel Attacks:** While SweetByte uses modern, secure ciphers, it's not immune to side-channel attacks. These attacks are beyond the scope of this tool and require physical access to the machine.
 
 ## 🤝 Contributing
 
