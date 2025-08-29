@@ -86,32 +86,25 @@ SweetByte is designed with a modular, layered architecture that separates concer
 
 ```mermaid
 graph TD
-    subgraph "User Interfaces"
         A[CLI Mode]
         B[Interactive Mode]
-    end
 
-    subgraph "Core Logic"
         C[Operations]
         E[Streaming]
         D[Processor]
-    end
 
-    subgraph "Cryptographic & Data Processing"
+
         F[Cipher]
         G[Keys]
         H[Header]
         I[Compression]
         J[Encoding]
         K[Padding]
-    end
 
-    subgraph "Utilities & Support"
         L[Files]
         M[UI]
         N[Config]
         P[Utils]
-    end
 
     A --> C
     B --> C
