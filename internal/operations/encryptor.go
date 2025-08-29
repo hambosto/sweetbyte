@@ -62,13 +62,17 @@ func (e *Encryptor) EncryptFile(srcPath, destPath, password string) error {
 	}
 
 	// Create a new header.
-	h, err := header.NewHeader(uint64(originalSize), salt, key)
+	h, err := header.New(uint64(originalSize))
 	if err != nil {
 		return fmt.Errorf("failed to create header: %w", err)
 	}
 
-	// Write the header to the destination file.
-	if _, err := h.WriteHeader(destFile); err != nil {
+	// Marshal the header and write it to the destination file.
+	headerBytes, err := h.Marshal(salt, key)
+	if err != nil {
+		return fmt.Errorf("failed to marshal header: %w", err)
+	}
+	if _, err := destFile.Write(headerBytes); err != nil {
 		return fmt.Errorf("failed to write header: %w", err)
 	}
 
