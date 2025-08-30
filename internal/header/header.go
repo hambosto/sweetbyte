@@ -3,6 +3,7 @@
 package header
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 
@@ -69,4 +70,8 @@ func ReadSalt(r io.Reader) ([]byte, error) {
 	salt := make([]byte, config.SaltSize)
 	_, err := io.ReadFull(r, salt)
 	return salt, err
+}
+
+func VerifyMagic(magic []byte) bool {
+	return bytes.Equal(magic, []byte(MagicBytes))
 }

@@ -2,7 +2,6 @@
 package operations
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 
@@ -42,7 +41,7 @@ func (d *Decryptor) DecryptFile(srcPath, destPath, password string) error {
 		return fmt.Errorf("failed to read magic bytes: %w", err)
 	}
 
-	if !bytes.Equal(magic, []byte(header.MagicBytes)) {
+	if !header.VerifyMagic(magic) {
 		return fmt.Errorf("invalid magic bytes: not a sweetbyte file")
 	}
 
