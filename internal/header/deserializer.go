@@ -1,4 +1,3 @@
-
 // Package header provides functionality for creating, reading, and writing
 // authenticated file headers using direct struct serialization.
 package header
@@ -83,8 +82,8 @@ func deserialize(data []byte) (*Header, error) {
 
 	// Construct the Header struct by slicing the data and converting each part.
 	return &Header{
-		Version:      utils.FromBytes[uint16](data[0:2]),   // First 2 bytes for Version.
-		Flags:        utils.FromBytes[uint32](data[2:6]),   // Next 4 bytes for Flags.
+		Version:      utils.FromBytes[uint16](data[0:2]),  // First 2 bytes for Version.
+		Flags:        utils.FromBytes[uint32](data[2:6]),  // Next 4 bytes for Flags.
 		OriginalSize: utils.FromBytes[uint64](data[6:14]), // Last 8 bytes for OriginalSize.
 	}, nil
 }
