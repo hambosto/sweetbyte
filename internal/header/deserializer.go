@@ -52,12 +52,6 @@ func deserialize(data []byte) (*Header, error) {
 		return nil, fmt.Errorf("invalid header data size: expected 14 bytes, got %d", len(data))
 	}
 
-	// return &Header{
-	// 	Version:      binary.BigEndian.Uint16(data[0:2]),
-	// 	Flags:        binary.BigEndian.Uint32(data[2:6]),
-	// 	OriginalSize: binary.BigEndian.Uint64(data[6:14]),
-	// }, nil
-
 	return &Header{
 		Version:      utils.FromBytes[uint16](data[0:2]),
 		Flags:        utils.FromBytes[uint32](data[2:6]),
