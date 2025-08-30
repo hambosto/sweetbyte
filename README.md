@@ -12,6 +12,7 @@
 **A resilient, secure, and efficient file encryption tool.**
 
 [![Quality Checks](https://github.com/hambosto/sweetbyte/actions/workflows/quality-checks.yaml/badge.svg)](https://github.com/hambosto/sweetbyte/actions/workflows/quality-checks.yaml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/hambosto/sweetbyte)](https://goreportcard.com/report/github.com/hambosto/sweetbyte)
 [![Go Version](https://img.shields.io/badge/Go-1.24.6-blue.svg)](https://golang.org/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
