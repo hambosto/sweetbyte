@@ -1,4 +1,3 @@
-// Package header provides functionality for creating, reading, and writing
 // authenticated file headers using direct struct serialization.
 package header
 
