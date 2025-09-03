@@ -24,7 +24,7 @@ func NewCLIProcessor() *CLIProcessor {
 		encryptor:   operations.NewEncryptor(),
 		decryptor:   operations.NewDecryptor(),
 		fileManager: files.NewManager(),
-		prompt:      ui.NewPrompt(),
+		prompt:      ui.NewPrompt(8),
 	}
 }
 

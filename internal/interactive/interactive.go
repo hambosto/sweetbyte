@@ -13,7 +13,6 @@ import (
 
 // InteractiveApp represents the interactive application.
 type InteractiveApp struct {
-	terminal    *ui.Terminal
 	prompt      *ui.Prompt
 	fileManager *files.Manager
 	fileFinder  *files.Finder
@@ -24,8 +23,7 @@ type InteractiveApp struct {
 // NewInteractiveApp creates a new InteractiveApp.
 func NewInteractiveApp() *InteractiveApp {
 	return &InteractiveApp{
-		terminal:    ui.NewTerminal(),
-		prompt:      ui.NewPrompt(),
+		prompt:      ui.NewPrompt(8),
 		fileManager: files.NewManager(),
 		fileFinder:  files.NewFinder(),
 		encryptor:   operations.NewEncryptor(),
@@ -35,20 +33,15 @@ func NewInteractiveApp() *InteractiveApp {
 
 // Run starts the interactive application.
 func (a *InteractiveApp) Run() {
-	a.initializeTerminal()
-	a.terminal.PrintBanner()
+	ui.Clear()
+	ui.MoveTopLeft()
+	ui.PrintBanner()
 
 	// Run the main interactive loop.
 	if err := a.runInteractiveLoop(); err != nil {
 		fmt.Printf("Application error: %v\n", err)
 		os.Exit(1)
 	}
-}
-
-// initializeTerminal initializes the terminal.
-func (a *InteractiveApp) initializeTerminal() {
-	a.terminal.Clear()
-	a.terminal.MoveTopLeft()
 }
 
 // runInteractiveLoop runs the main interactive loop.
@@ -82,7 +75,7 @@ func (a *InteractiveApp) runInteractiveLoop() error {
 
 	// Process the selected file.
 	if err := a.processFile(selectedFile, operation); err != nil {
-		return fmt.Errorf("failed to process file '%s': %w", selectedFile, err)
+		return fmt.Errorf("failed to process file %s: %w", selectedFile, err)
 	}
 
 	return nil
@@ -143,7 +136,7 @@ func (a *InteractiveApp) processFile(inputPath string, mode options.ProcessorMod
 		fileType = "encrypted"
 	}
 
-	if shouldDelete, deleteType, err := a.prompt.ConfirmFileRemoval(inputPath, fmt.Sprintf("Delete %s file", fileType)); err == nil && shouldDelete {
+	if shouldDelete, deleteType, err := a.prompt.ConfirmFileRemoval(inputPath, fileType); err == nil && shouldDelete {
 		if err := a.fileManager.Remove(inputPath, deleteType); err != nil {
 			return fmt.Errorf("failed to delete source file: %w", err)
 		}

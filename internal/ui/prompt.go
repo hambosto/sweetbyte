@@ -3,6 +3,7 @@ package ui
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/hambosto/sweetbyte/internal/files"
@@ -10,85 +11,113 @@ import (
 	"github.com/hambosto/sweetbyte/internal/utils"
 )
 
-// Prompt provides functions for interacting with the user via prompts.
-type Prompt struct{}
+// PasswordRequest represents a password prompt request
+type PasswordRequest struct {
+	Message    string
+	Confirm    bool
+	MinLength  int
+	Validation func(string) error
+}
 
-// NewPrompt creates a new Prompt instance.
-func NewPrompt() *Prompt {
-	return &Prompt{}
+// SelectionRequest represents a selection prompt request
+type SelectionRequest struct {
+	Message  string
+	Options  []string
+	HelpText string
+	PageSize int
+}
+
+// ConfirmationRequest represents a confirmation prompt request
+type ConfirmationRequest struct {
+	Message  string
+	Default  bool
+	HelpText string
+}
+
+// FileDisplayOptions controls how file information is displayed
+type FileDisplayOptions struct {
+	ShowIndex    bool
+	ShowSize     bool
+	ShowStatus   bool
+	Compact      bool
+	ColorEnabled bool
+}
+
+// Prompt provides functions for interacting with the user via prompts.
+type Prompt struct {
+	PasswordMinLength int
+}
+
+// NewPrompt creates a new Prompt instance
+func NewPrompt(passwordMinLength int) *Prompt {
+	return &Prompt{PasswordMinLength: passwordMinLength}
 }
 
 // ConfirmFileOverwrite asks the user to confirm overwriting a file.
 func (p *Prompt) ConfirmFileOverwrite(path string) (bool, error) {
-	var result bool
-	prompt := &survey.Confirm{
-		Message: fmt.Sprintf("Output file %s already exists. Overwrite?", path),
+	req := &ConfirmationRequest{
+		Message:  fmt.Sprintf("Output file %s already exists. Overwrite?", path),
+		Default:  false,
+		HelpText: "This action cannot be undone",
 	}
-
-	// Ask the user for confirmation.
-	if err := survey.AskOne(prompt, &result); err != nil {
-		return false, fmt.Errorf("prompt failed: %w", err)
-	}
-
-	return result, nil
+	return p.confirm(req)
 }
 
 // GetEncryptionPassword prompts the user for an encryption password and confirms it.
 func (p *Prompt) GetEncryptionPassword() (string, error) {
-	// Get the initial password.
-	password, err := p.getPassword("Enter password:")
-	if err != nil {
-		return "", fmt.Errorf("failed to get password: %w", err)
+	req := &PasswordRequest{
+		Message:   "Enter encryption password:",
+		Confirm:   true,
+		MinLength: p.PasswordMinLength,
+		Validation: func(password string) error {
+			if len(password) < p.PasswordMinLength {
+				return fmt.Errorf("password must be at least %d characters", p.PasswordMinLength)
+			}
+			if strings.TrimSpace(password) == "" {
+				return fmt.Errorf("password cannot be empty")
+			}
+			return nil
+		},
 	}
-
-	// Confirm the password.
-	confirm, err := p.getPassword("Confirm password:")
-	if err != nil {
-		return "", fmt.Errorf("failed to confirm password: %w", err)
-	}
-
-	// Check if the passwords match.
-	if password != confirm {
-		return "", fmt.Errorf("password mismatch")
-	}
-
-	return password, nil
+	return p.getPasswordWithRequest(req)
 }
 
 // GetDecryptionPassword prompts the user for a decryption password.
 func (p *Prompt) GetDecryptionPassword() (string, error) {
-	return p.getPassword("Enter password:")
-}
-
-// getPassword prompts the user for a password with a given message.
-func (p *Prompt) getPassword(message string) (string, error) {
-	var password string
-	prompt := &survey.Password{
-		Message: message,
+	req := &PasswordRequest{
+		Message:   "Enter decryption password:",
+		Confirm:   false,
+		MinLength: 1,
+		Validation: func(password string) error {
+			if strings.TrimSpace(password) == "" {
+				return fmt.Errorf("password cannot be empty")
+			}
+			return nil
+		},
 	}
-
-	// Ask the user for the password.
-	if err := survey.AskOne(prompt, &password); err != nil {
-		return "", fmt.Errorf("prompt failed: %w", err)
-	}
-
-	return password, nil
+	return p.getPasswordWithRequest(req)
 }
 
 // ConfirmFileRemoval asks the user to confirm removing a file and the deletion type.
-func (p *Prompt) ConfirmFileRemoval(path, message string) (bool, options.DeleteOption, error) {
-	// Confirm the removal action.
-	confirmed, err := p.confirmAction(fmt.Sprintf("%s %s", message, path))
+func (p *Prompt) ConfirmFileRemoval(path, fileType string) (bool, options.DeleteOption, error) {
+	// Confirm the removal action
+	confirmReq := &ConfirmationRequest{
+		Message:  fmt.Sprintf("Delete %s file %s", fileType, path),
+		Default:  false,
+		HelpText: "Choose deletion type after confirmation",
+	}
+
+	confirmed, err := p.confirm(confirmReq)
 	if err != nil {
 		return false, "", fmt.Errorf("failed to confirm file removal: %w", err)
 	}
 
-	// If not confirmed, return.
+	// If not confirmed, return early
 	if !confirmed {
 		return false, "", nil
 	}
 
-	// Select the deletion type.
+	// Select the deletion type
 	deleteType, err := p.selectDeleteOption()
 	if err != nil {
 		return false, "", fmt.Errorf("failed to select delete option: %w", err)
@@ -97,46 +126,16 @@ func (p *Prompt) ConfirmFileRemoval(path, message string) (bool, options.DeleteO
 	return true, deleteType, nil
 }
 
-// confirmAction asks the user to confirm an action with a given message.
-func (p *Prompt) confirmAction(message string) (bool, error) {
-	var result bool
-	prompt := &survey.Confirm{
-		Message: message,
-	}
-
-	// Ask the user for confirmation.
-	if err := survey.AskOne(prompt, &result); err != nil {
-		return false, fmt.Errorf("prompt failed: %w", err)
-	}
-
-	return result, nil
-}
-
-// selectDeleteOption prompts the user to select a deletion option.
-func (p *Prompt) selectDeleteOption() (options.DeleteOption, error) {
-	opt := []string{
-		string(options.DeleteStandard),
-		string(options.DeleteSecure),
-	}
-
-	// Select from the available options.
-	selected, err := p.selectFromOptions("Select delete type:", opt)
-	if err != nil {
-		return "", err
-	}
-
-	return options.DeleteOption(selected), nil
-}
-
 // GetProcessingMode prompts the user to select a processing mode (encrypt or decrypt).
 func (p *Prompt) GetProcessingMode() (options.ProcessorMode, error) {
-	opt := []string{
-		string(options.ModeEncrypt),
-		string(options.ModeDecrypt),
+	req := &SelectionRequest{
+		Message:  "Select Operation:",
+		Options:  []string{string(options.ModeEncrypt), string(options.ModeDecrypt)},
+		HelpText: "Choose whether to encrypt or decrypt files",
+		PageSize: 10,
 	}
 
-	// Select from the available options.
-	selected, err := p.selectFromOptions("Select Operation:", opt)
+	selected, err := p.selectFromRequest(req)
 	if err != nil {
 		return "", fmt.Errorf("operation selection failed: %w", err)
 	}
@@ -145,14 +144,19 @@ func (p *Prompt) GetProcessingMode() (options.ProcessorMode, error) {
 }
 
 // ChooseFile prompts the user to choose a file from a list of files.
-func (p *Prompt) ChooseFile(files []string) (string, error) {
-	// If no files are available, return an error.
-	if len(files) == 0 {
+func (p *Prompt) ChooseFile(fileList []string) (string, error) {
+	if len(fileList) == 0 {
 		return "", fmt.Errorf("no files available for selection")
 	}
 
-	// Select from the available files.
-	selected, err := p.selectFromOptions("Select file:", files)
+	req := &SelectionRequest{
+		Message:  "Select file:",
+		Options:  fileList,
+		HelpText: "Use arrow keys to navigate, Enter to select",
+		PageSize: min(len(fileList), 15),
+	}
+
+	selected, err := p.selectFromRequest(req)
 	if err != nil {
 		return "", fmt.Errorf("file selection failed: %w", err)
 	}
@@ -160,15 +164,112 @@ func (p *Prompt) ChooseFile(files []string) (string, error) {
 	return selected, nil
 }
 
-// selectFromOptions prompts the user to select an option from a list.
-func (p *Prompt) selectFromOptions(message string, options []string) (string, error) {
-	var selected string
-	prompt := &survey.Select{
-		Message: message,
-		Options: options,
+// ShowFileInfo displays information about a list of files.
+func (p *Prompt) ShowFileInfo(fileList []files.FileInfo) {
+	if len(fileList) == 0 {
+		fmt.Println("No files found.")
+		return
 	}
 
-	// Ask the user to select an option.
+	opts := &FileDisplayOptions{
+		ShowIndex:    true,
+		ShowSize:     true,
+		ShowStatus:   true,
+		Compact:      false,
+		ColorEnabled: true,
+	}
+
+	fmt.Println()
+	fmt.Printf("Found %d file(s):", len(fileList))
+	fmt.Println()
+
+	for i, file := range fileList {
+		p.displayFileInfo(i+1, file, opts)
+	}
+	fmt.Println()
+}
+
+// ShowProcessingInfo displays information about the current processing operation.
+func (p *Prompt) ShowProcessingInfo(mode options.ProcessorMode, filePath string) {
+	operation := "Encrypting"
+	if mode == options.ModeDecrypt {
+		operation = "Decrypting"
+	}
+
+	fmt.Println()
+	fmt.Printf("%s file: %s", operation, filePath)
+	fmt.Println()
+}
+
+// getPasswordWithRequest handles password prompts with validation and confirmation
+func (p *Prompt) getPasswordWithRequest(req *PasswordRequest) (string, error) {
+	// Get the initial password
+	password, err := p.getPassword(req.Message)
+	if err != nil {
+		return "", fmt.Errorf("failed to get password: %w", err)
+	}
+
+	// Validate the password
+	if req.Validation != nil {
+		if err := req.Validation(password); err != nil {
+			return "", fmt.Errorf("failed to validate password: %v", err)
+		}
+	}
+
+	// Confirm password if required
+	if req.Confirm {
+		confirm, err := p.getPassword("Confirm password:")
+		if err != nil {
+			return "", fmt.Errorf("failed to confirm password: %w", err)
+		}
+
+		if password != confirm {
+			return "", fmt.Errorf("password mismatch. Please try again")
+		}
+	}
+	return password, nil
+}
+
+// getPassword prompts the user for a password with a given message
+func (p *Prompt) getPassword(message string) (string, error) {
+	var password string
+	prompt := &survey.Password{
+		Message: message,
+	}
+
+	if err := survey.AskOne(prompt, &password); err != nil {
+		return "", fmt.Errorf("prompt failed: %w", err)
+	}
+
+	return password, nil
+}
+
+// confirm handles confirmation prompts
+func (p *Prompt) confirm(req *ConfirmationRequest) (bool, error) {
+	var result bool
+	prompt := &survey.Confirm{
+		Message: req.Message,
+		Default: req.Default,
+		Help:    req.HelpText,
+	}
+
+	if err := survey.AskOne(prompt, &result); err != nil {
+		return false, fmt.Errorf("prompt failed: %w", err)
+	}
+
+	return result, nil
+}
+
+// selectFromRequest handles selection prompts with options
+func (p *Prompt) selectFromRequest(req *SelectionRequest) (string, error) {
+	var selected string
+	prompt := &survey.Select{
+		Message:  req.Message,
+		Options:  req.Options,
+		Help:     req.HelpText,
+		PageSize: req.PageSize,
+	}
+
 	if err := survey.AskOne(prompt, &selected); err != nil {
 		return "", fmt.Errorf("prompt failed: %w", err)
 	}
@@ -176,33 +277,56 @@ func (p *Prompt) selectFromOptions(message string, options []string) (string, er
 	return selected, nil
 }
 
-// ShowFileInfo displays information about a list of files.
-func (p *Prompt) ShowFileInfo(files []files.FileInfo) {
-	// If no files are found, print a message.
-	if len(files) == 0 {
-		fmt.Println("No files found.")
-		return
+// selectDeleteOption prompts the user to select a deletion option
+func (p *Prompt) selectDeleteOption() (options.DeleteOption, error) {
+	req := &SelectionRequest{
+		Message: "Select delete type:",
+		Options: []string{
+			string(options.DeleteStandard),
+			string(options.DeleteSecure),
+		},
+		HelpText: "Standard: normal deletion, Secure: overwrite data before deletion",
+		PageSize: 10,
 	}
 
-	// Print information for each file.
-	fmt.Printf("\nFound %d file(s):\n", len(files))
-	for i, file := range files {
+	selected, err := p.selectFromRequest(req)
+	if err != nil {
+		return "", err
+	}
+
+	return options.DeleteOption(selected), nil
+}
+
+// displayFileInfo formats and displays individual file information
+func (p *Prompt) displayFileInfo(index int, file files.FileInfo, opts *FileDisplayOptions) {
+	var parts []string
+
+	if opts.ShowIndex {
+		parts = append(parts, fmt.Sprintf("%d.", index))
+	}
+
+	parts = append(parts, file.Path)
+
+	var details []string
+	if opts.ShowSize {
+		details = append(details, utils.FormatBytes(file.Size))
+	}
+
+	if opts.ShowStatus {
 		status := "unencrypted"
 		if file.IsEncrypted {
 			status = "encrypted"
 		}
-
-		fmt.Printf("%d. %s (%s, %s)\n", i+1, file.Path, utils.FormatBytes(file.Size), status)
-	}
-	fmt.Println()
-}
-
-// ShowProcessingInfo displays information about the current processing operation.
-func (p *Prompt) ShowProcessingInfo(mode options.ProcessorMode, file string) {
-	operation := "Encrypting"
-	if mode == options.ModeDecrypt {
-		operation = "Decrypting"
+		details = append(details, status)
 	}
 
-	fmt.Printf("\n%s file: %s\n", operation, file)
+	if len(details) > 0 {
+		if opts.Compact {
+			parts = append(parts, fmt.Sprintf("(%s)", strings.Join(details, ", ")))
+		} else {
+			parts = append(parts, fmt.Sprintf("(%s)", strings.Join(details, ", ")))
+		}
+	}
+
+	fmt.Println(strings.Join(parts, " "))
 }
