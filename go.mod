@@ -7,7 +7,7 @@ require (
 	github.com/inancgumus/screen v0.0.0-20190314163918-06e984b86ed3
 	github.com/klauspost/reedsolomon v1.12.5
 	github.com/schollz/progressbar/v3 v3.18.0
-	github.com/spf13/cobra v1.9.1
+	github.com/spf13/cobra v1.10.1
 	golang.org/x/crypto v0.41.0
 )
 
@@ -20,7 +20,7 @@ require (
 	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b // indirect
 	github.com/mitchellh/colorstring v0.0.0-20190213212951-d06e56a500db // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
-	github.com/spf13/pflag v1.0.6 // indirect
+	github.com/spf13/pflag v1.0.9 // indirect
 	golang.org/x/sys v0.35.0 // indirect
 	golang.org/x/term v0.34.0 // indirect
 	golang.org/x/text v0.28.0 // indirect
