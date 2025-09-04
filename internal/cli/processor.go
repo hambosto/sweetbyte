@@ -14,7 +14,7 @@ import (
 type CLIProcessor struct {
 	encryptor   *operations.Encryptor
 	decryptor   *operations.Decryptor
-	fileManager *files.Manager
+	fileManager *files.FileManager
 	prompt      *ui.Prompt
 }
 
@@ -23,7 +23,7 @@ func NewCLIProcessor() *CLIProcessor {
 	return &CLIProcessor{
 		encryptor:   operations.NewEncryptor(),
 		decryptor:   operations.NewDecryptor(),
-		fileManager: files.NewManager(),
+		fileManager: files.NewFileManager(3, 4096, true),
 		prompt:      ui.NewPrompt(8),
 	}
 }

@@ -15,15 +15,13 @@ import (
 
 // Encryptor handles the encryption of files.
 type Encryptor struct {
-	fileManager *files.Manager
-	fileFinder  *files.Finder
+	fileManager *files.FileManager
 }
 
 // NewEncryptor creates a new Encryptor.
 func NewEncryptor() *Encryptor {
 	return &Encryptor{
-		fileManager: files.NewManager(),
-		fileFinder:  files.NewFinder(),
+		fileManager: files.NewFileManager(3, 4096, true),
 	}
 }
 

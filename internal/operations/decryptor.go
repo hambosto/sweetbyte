@@ -15,15 +15,13 @@ import (
 
 // Decryptor handles the decryption of files.
 type Decryptor struct {
-	fileManager *files.Manager
-	fileFinder  *files.Finder
+	fileManager *files.FileManager
 }
 
 // NewDecryptor creates a new Decryptor.
 func NewDecryptor() *Decryptor {
 	return &Decryptor{
-		fileManager: files.NewManager(),
-		fileFinder:  files.NewFinder(),
+		fileManager: files.NewFileManager(3, 4096, true),
 	}
 }
 

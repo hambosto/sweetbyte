@@ -40,7 +40,7 @@ SweetByte can be run in a user-friendly interactive mode or via the command line
 		Version: config.AppVersion,
 		Run: func(cmd *cobra.Command, args []string) {
 			// If no command is specified, run the interactive mode.
-			interactiveApp := interactive.NewInteractiveApp()
+			interactiveApp := interactive.NewInteractive()
 			interactiveApp.Run()
 		},
 	}
@@ -141,7 +141,7 @@ experience for encrypting and decrypting files using the multi-layered security 
 This is ideal for users who prefer a more intuitive and user-friendly interface.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			// Run the interactive mode.
-			interactiveApp := interactive.NewInteractiveApp()
+			interactiveApp := interactive.NewInteractive()
 			interactiveApp.Run()
 		},
 	}

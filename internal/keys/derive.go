@@ -14,9 +14,9 @@ const (
 	// ArgonTime is the number of iterations for Argon2.
 	ArgonTime uint32 = 8
 	// ArgonMemory is the memory usage in KiB for Argon2.
-	ArgonMemory uint32 = 256 * 1024
+	ArgonMemory uint32 = 128 * 1024
 	// ArgonThreads is the number of threads for Argon2.
-	ArgonThreads uint8 = 4
+	ArgonThreads uint8 = 8
 )
 
 // Hash derives a key from a password and salt using Argon2.

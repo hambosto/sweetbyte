@@ -15,15 +15,15 @@ func main() {
 	// If there are more than one arguments, it means the user wants to run the CLI mode.
 	if len(os.Args) > 1 {
 		// Create a new CLI application instance.
-		cliApp := cli.NewCLI()
+		cli := cli.NewCLI()
 		// Execute the CLI application and exit with an error code if something goes wrong.
-		if err := cliApp.Execute(); err != nil {
+		if err := cli.Execute(); err != nil {
 			os.Exit(1)
 		}
 	} else {
 		// If there are no arguments, run the application in interactive mode.
-		interactiveApp := interactive.NewInteractiveApp()
+		interactive := interactive.NewInteractive()
 		// Run the interactive application.
-		interactiveApp.Run()
+		interactive.Run()
 	}
 }

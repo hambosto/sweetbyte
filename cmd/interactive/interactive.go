@@ -6,6 +6,6 @@ import (
 )
 
 // NewInteractiveApp creates a new interactive application instance.
-func NewInteractiveApp() *interactive.InteractiveApp {
-	return interactive.NewInteractiveApp()
+func NewInteractive() *interactive.Interactive {
+	return interactive.NewInteractive()
 }
