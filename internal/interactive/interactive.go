@@ -14,23 +14,20 @@ import (
 
 // Interactive represents the interactive application.
 type Interactive struct {
-	prompt      ui.Prompt
-	fileManager files.FileManager
-	encryptor   operations.Encryptor
-	decryptor   operations.Decryptor
+	fileManager    files.FileManager
+	fileOperations operations.Operations
+	prompt         ui.Prompt
 }
 
 // NewInteractive creates a new Interactive.
 func NewInteractive() *Interactive {
 	fileManager := files.NewFileManager(config.OverwritePasses)
+	fileOperations := operations.NewFileOperations(fileManager)
 	prompt := ui.NewPrompt(8)
-	encryptor := operations.NewFileEncryptor(fileManager)
-	decryptor := operations.NewFileDecryptor(fileManager)
 	return &Interactive{
-		prompt:      prompt,
-		fileManager: fileManager,
-		encryptor:   encryptor,
-		decryptor:   decryptor,
+		fileManager:    fileManager,
+		prompt:         prompt,
+		fileOperations: fileOperations,
 	}
 }
 
@@ -158,7 +155,7 @@ func (a *Interactive) encryptFile(srcPath, destPath string) error {
 	}
 
 	// Encrypt the file.
-	if err := a.encryptor.EncryptFile(srcPath, destPath, password); err != nil {
+	if err := a.fileOperations.Encrypt(srcPath, destPath, password); err != nil {
 		return fmt.Errorf("failed to encrypt '%s': %w", srcPath, err)
 	}
 
@@ -174,7 +171,7 @@ func (a *Interactive) decryptFile(srcPath, destPath string) error {
 	}
 
 	// Decrypt the file.
-	if err := a.decryptor.DecryptFile(srcPath, destPath, password); err != nil {
+	if err := a.fileOperations.Decrypt(srcPath, destPath, password); err != nil {
 		return fmt.Errorf("failed to decrypt '%s': %w", srcPath, err)
 	}
 

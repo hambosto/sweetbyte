@@ -13,23 +13,20 @@ import (
 
 // CLIProcessor handles the command-line interface operations.
 type CLIProcessor struct {
-	encryptor   operations.Encryptor
-	decryptor   operations.Decryptor
-	fileManager files.FileManager
-	prompt      ui.Prompt
+	fileManager    files.FileManager
+	fileOperations operations.Operations
+	prompt         ui.Prompt
 }
 
 // NewCLIProcessor creates a new CLIProcessor.
 func NewCLIProcessor() *CLIProcessor {
 	fileManager := files.NewFileManager(config.OverwritePasses)
+	fileOperations := operations.NewFileOperations(fileManager)
 	prompt := ui.NewPrompt(8)
-	encryptor := operations.NewFileEncryptor(fileManager)
-	decryptor := operations.NewFileDecryptor(fileManager)
 	return &CLIProcessor{
-		encryptor:   encryptor,
-		decryptor:   decryptor,
-		fileManager: fileManager,
-		prompt:      prompt,
+		fileManager:    fileManager,
+		fileOperations: fileOperations,
+		prompt:         prompt,
 	}
 }
 
@@ -46,7 +43,7 @@ func (p *CLIProcessor) Encrypt(inputFile, outputFile, password string, deleteSou
 
 	// Encrypt the file.
 	fmt.Printf("Encrypting: %s -> %s\n", inputFile, outputFile)
-	if err := p.encryptor.EncryptFile(inputFile, outputFile, password); err != nil {
+	if err := p.fileOperations.Encrypt(inputFile, outputFile, password); err != nil {
 		return fmt.Errorf("failed to encrypt '%s': %w", inputFile, err)
 	}
 
@@ -82,7 +79,7 @@ func (p *CLIProcessor) Decrypt(inputFile, outputFile, password string, deleteSou
 
 	// Decrypt the file.
 	fmt.Printf("Decrypting: %s -> %s\n", inputFile, outputFile)
-	if err := p.decryptor.DecryptFile(inputFile, outputFile, password); err != nil {
+	if err := p.fileOperations.Decrypt(inputFile, outputFile, password); err != nil {
 		return fmt.Errorf("failed to decrypt '%s': %w", inputFile, err)
 	}
 
