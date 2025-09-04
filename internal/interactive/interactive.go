@@ -57,7 +57,7 @@ func (a *Interactive) runInteractiveLoop() error {
 	}
 
 	// Get file information for the eligible files.
-	fileInfos, err := a.fileManager.GetFileInfo(eligibleFiles)
+	fileInfos, err := a.fileManager.GetFileInfoList(eligibleFiles)
 	if err != nil {
 		return fmt.Errorf("failed to get file information: %w", err)
 	}
