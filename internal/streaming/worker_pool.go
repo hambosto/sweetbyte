@@ -12,14 +12,14 @@ type WorkerPool interface {
 }
 
 // defaultWorkerPool manages a pool of workers for processing tasks concurrently.
-type defaultWorkerPool struct {
+type workerPool struct {
 	processor   TaskProcessor
 	concurrency int
 }
 
 // NewWorkerPool creates a new workerPool with the given task processor and concurrency level.
 func NewWorkerPool(processor TaskProcessor, concurrency int) WorkerPool {
-	return &defaultWorkerPool{
+	return &workerPool{
 		processor:   processor,
 		concurrency: concurrency,
 	}
@@ -27,7 +27,7 @@ func NewWorkerPool(processor TaskProcessor, concurrency int) WorkerPool {
 
 // Process starts the worker pool and processes tasks from the input channel.
 // It returns a channel of task results.
-func (p *defaultWorkerPool) Process(ctx context.Context, tasks <-chan Task) <-chan TaskResult {
+func (p *workerPool) Process(ctx context.Context, tasks <-chan Task) <-chan TaskResult {
 	// Create a buffered channel for results.
 	results := make(chan TaskResult, p.concurrency)
 	go func() {
@@ -47,7 +47,7 @@ func (p *defaultWorkerPool) Process(ctx context.Context, tasks <-chan Task) <-ch
 }
 
 // worker is a single worker that processes tasks from the tasks channel and sends results to the results channel.
-func (p *defaultWorkerPool) worker(ctx context.Context, wg *sync.WaitGroup, tasks <-chan Task, results chan<- TaskResult) {
+func (p *workerPool) worker(ctx context.Context, wg *sync.WaitGroup, tasks <-chan Task, results chan<- TaskResult) {
 	defer wg.Done()
 	for {
 		select {

@@ -29,7 +29,7 @@ type Compressor interface {
 }
 
 // zlibCompressor handles data compression and decompression using zlib.
-type ZlibCompressor struct {
+type compressor struct {
 	level int
 }
 
@@ -51,11 +51,11 @@ func NewZlibCompressor(level CompressionLevel) (Compressor, error) {
 		zlibLevel = zlib.DefaultCompression
 	}
 
-	return &ZlibCompressor{level: zlibLevel}, nil
+	return &compressor{level: zlibLevel}, nil
 }
 
 // Compress compresses the given data.
-func (c *ZlibCompressor) Compress(data []byte) ([]byte, error) {
+func (c *compressor) Compress(data []byte) ([]byte, error) {
 	// Data cannot be empty.
 	if len(data) == 0 {
 		return nil, fmt.Errorf("data cannot be empty")
@@ -82,7 +82,7 @@ func (c *ZlibCompressor) Compress(data []byte) ([]byte, error) {
 }
 
 // Decompress decompress the given data.
-func (c *ZlibCompressor) Decompress(data []byte) ([]byte, error) {
+func (c *compressor) Decompress(data []byte) ([]byte, error) {
 	// Data cannot be empty.
 	if len(data) == 0 {
 		return nil, fmt.Errorf("data cannot be empty")

@@ -11,8 +11,8 @@ type Padding interface {
 	Unpad(data []byte) ([]byte, error)
 }
 
-// pkcs7Padding handles PKCS#7 padding.
-type pkcs7Padding struct {
+// padding handles PKCS#7 padding.
+type padding struct {
 	blockSize int
 }
 
@@ -22,13 +22,13 @@ func NewPadding(blockSize int) (Padding, error) {
 	if blockSize <= 0 || blockSize > 255 {
 		return nil, fmt.Errorf("block size must be between 1 and 255, got %d", blockSize)
 	}
-	return &pkcs7Padding{
+	return &padding{
 		blockSize: blockSize,
 	}, nil
 }
 
 // Pad adds PKCS#7 padding to the data.
-func (p *pkcs7Padding) Pad(data []byte) ([]byte, error) {
+func (p *padding) Pad(data []byte) ([]byte, error) {
 	// Data cannot be nil.
 	if data == nil {
 		return nil, fmt.Errorf("data cannot be nil")
@@ -49,7 +49,7 @@ func (p *pkcs7Padding) Pad(data []byte) ([]byte, error) {
 }
 
 // Unpad removes PKCS#7 padding from the data.
-func (p *pkcs7Padding) Unpad(data []byte) ([]byte, error) {
+func (p *padding) Unpad(data []byte) ([]byte, error) {
 	// Data cannot be empty.
 	if len(data) == 0 {
 		return nil, fmt.Errorf("data cannot be empty")

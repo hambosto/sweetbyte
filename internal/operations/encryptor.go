@@ -19,7 +19,7 @@ type fileEncryptor struct {
 }
 
 // NewEncryptor creates a new Encryptor.
-func NewEncryptor(fileManager files.FileManager) Encryptor {
+func NewFileEncryptor(fileManager files.FileManager) Encryptor {
 	return &fileEncryptor{
 		fileManager: fileManager,
 	}

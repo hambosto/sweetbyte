@@ -22,8 +22,8 @@ type CLIProcessor struct {
 func NewCLIProcessor() *CLIProcessor {
 	fileManager := files.NewFileManager(3, 4096, true)
 	return &CLIProcessor{
-		encryptor:   operations.NewEncryptor(fileManager),
-		decryptor:   operations.NewDecryptor(fileManager),
+		encryptor:   operations.NewFileEncryptor(fileManager),
+		decryptor:   operations.NewFileDecryptor(fileManager),
 		fileManager: fileManager,
 		prompt:      ui.NewPrompt(8),
 	}

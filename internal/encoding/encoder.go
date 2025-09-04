@@ -19,7 +19,7 @@ type Encoder interface {
 }
 
 // reedSolomonEncoder handles Reed-Solomon encoding and decoding.
-type ReedSolomonEncoder struct {
+type encoder struct {
 	dataShards   int
 	parityShards int
 	encoder      reedsolomon.Encoder
@@ -45,7 +45,7 @@ func NewEncoder(dataShards, parityShards int) (Encoder, error) {
 		return nil, fmt.Errorf("failed to create reed-solomon encoder: %w", err)
 	}
 
-	return &ReedSolomonEncoder{
+	return &encoder{
 		dataShards:   dataShards,
 		parityShards: parityShards,
 		encoder:      enc,
@@ -54,7 +54,7 @@ func NewEncoder(dataShards, parityShards int) (Encoder, error) {
 }
 
 // Encode encodes the given data using Reed-Solomon codes.
-func (e *ReedSolomonEncoder) Encode(data []byte) ([]byte, error) {
+func (e *encoder) Encode(data []byte) ([]byte, error) {
 	// Validate the data length.
 	if len(data) == 0 {
 		return nil, fmt.Errorf("input data cannot be empty")
@@ -75,7 +75,7 @@ func (e *ReedSolomonEncoder) Encode(data []byte) ([]byte, error) {
 }
 
 // Decode decodes the given encoded data.
-func (e *ReedSolomonEncoder) Decode(encoded []byte) ([]byte, error) {
+func (e *encoder) Decode(encoded []byte) ([]byte, error) {
 	totalShards := e.dataShards + e.parityShards
 
 	// Validate the encoded data length.

@@ -19,7 +19,7 @@ type fileDecryptor struct {
 }
 
 // NewDecryptor creates a new Decryptor.
-func NewDecryptor(fileManager files.FileManager) Decryptor {
+func NewFileDecryptor(fileManager files.FileManager) Decryptor {
 	return &fileDecryptor{
 		fileManager: fileManager,
 	}

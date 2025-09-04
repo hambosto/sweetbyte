@@ -15,9 +15,9 @@ type ChunkReader interface {
 	ReadChunks(ctx context.Context, input io.Reader) (<-chan Task, <-chan error)
 }
 
-// defaultChunkReader reads data from an io.Reader and splits it into chunks for processing.
+// chunkReader reads data from an io.Reader and splits it into chunks for processing.
 // The reading strategy depends on whether the operation is encryption or decryption.
-type defaultChunkReader struct {
+type chunkReader struct {
 	processing  options.Processing
 	chunkSize   int
 	concurrency int
@@ -25,7 +25,7 @@ type defaultChunkReader struct {
 
 // NewChunkReader creates a new ChunkReader with the specified processing mode and chunk size.
 func NewChunkReader(processing options.Processing, chunkSize, concurrency int) ChunkReader {
-	return &defaultChunkReader{
+	return &chunkReader{
 		processing:  processing,
 		chunkSize:   chunkSize,
 		concurrency: concurrency,
@@ -34,7 +34,7 @@ func NewChunkReader(processing options.Processing, chunkSize, concurrency int) C
 
 // ReadChunks reads data from the input reader and sends it as tasks to a channel.
 // It runs in a separate goroutine and returns a channel for tasks and a channel for errors.
-func (r *defaultChunkReader) ReadChunks(ctx context.Context, input io.Reader) (<-chan Task, <-chan error) {
+func (r *chunkReader) ReadChunks(ctx context.Context, input io.Reader) (<-chan Task, <-chan error) {
 	taskChan := make(chan Task, r.concurrency)
 	errChan := make(chan error, 1)
 
@@ -66,7 +66,7 @@ func (r *defaultChunkReader) ReadChunks(ctx context.Context, input io.Reader) (<
 }
 
 // readForEncryption reads the input stream into fixed-size chunks for encryption.
-func (r *defaultChunkReader) readForEncryption(ctx context.Context, reader io.Reader, tasks chan<- Task) error {
+func (r *chunkReader) readForEncryption(ctx context.Context, reader io.Reader, tasks chan<- Task) error {
 	buffer := make([]byte, r.chunkSize)
 
 	var index uint64
@@ -106,7 +106,7 @@ func (r *defaultChunkReader) readForEncryption(ctx context.Context, reader io.Re
 }
 
 // readForDecryption reads the input stream, which is expected to have a chunk size header before each chunk.
-func (r *defaultChunkReader) readForDecryption(ctx context.Context, reader io.Reader, tasks chan<- Task) error {
+func (r *chunkReader) readForDecryption(ctx context.Context, reader io.Reader, tasks chan<- Task) error {
 	var index uint64
 
 	for {
@@ -154,7 +154,7 @@ func (r *defaultChunkReader) readForDecryption(ctx context.Context, reader io.Re
 }
 
 // readChunkSize reads the 4-byte chunk size header from the reader.
-func (r *defaultChunkReader) readChunkSize(reader io.Reader) (uint32, error) {
+func (r *chunkReader) readChunkSize(reader io.Reader) (uint32, error) {
 	var sizeBuffer [4]byte
 	_, err := io.ReadFull(reader, sizeBuffer[:])
 	if err != nil {
@@ -164,7 +164,7 @@ func (r *defaultChunkReader) readChunkSize(reader io.Reader) (uint32, error) {
 }
 
 // readChunkData reads a chunk of a given length from the reader.
-func (r *defaultChunkReader) readChunkData(reader io.Reader, length uint32) ([]byte, error) {
+func (r *chunkReader) readChunkData(reader io.Reader, length uint32) ([]byte, error) {
 	data := make([]byte, length)
 	if _, err := io.ReadFull(reader, data); err != nil {
 		return nil, fmt.Errorf("failed to read chunk data (length: %d): %w", length, err)

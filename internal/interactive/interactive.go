@@ -25,8 +25,8 @@ func NewInteractive() *Interactive {
 	return &Interactive{
 		prompt:      ui.NewPrompt(8),
 		fileManager: fileManager,
-		encryptor:   operations.NewEncryptor(fileManager),
-		decryptor:   operations.NewDecryptor(fileManager),
+		encryptor:   operations.NewFileEncryptor(fileManager),
+		decryptor:   operations.NewFileDecryptor(fileManager),
 	}
 }
 

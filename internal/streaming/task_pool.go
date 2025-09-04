@@ -14,8 +14,8 @@ type TaskProcessor interface {
 	Process(ctx context.Context, task Task) TaskResult
 }
 
-// defaultTaskProcessor processes individual tasks (chunks of data).
-type defaultTaskProcessor struct {
+// taskProcessor processes individual tasks (chunks of data).
+type taskProcessor struct {
 	processor  processor.Processor
 	processing options.Processing
 }
@@ -28,14 +28,14 @@ func NewTaskProcessor(key []byte, processing options.Processing) (TaskProcessor,
 		return nil, fmt.Errorf("failed to create processor: %w", err)
 	}
 
-	return &defaultTaskProcessor{
+	return &taskProcessor{
 		processor:  proc,
 		processing: processing,
 	}, nil
 }
 
 // Process processes a single task.
-func (tp *defaultTaskProcessor) Process(ctx context.Context, task Task) TaskResult {
+func (tp *taskProcessor) Process(ctx context.Context, task Task) TaskResult {
 	// Check if the context has been canceled.
 	select {
 	case <-ctx.Done():
@@ -71,7 +71,7 @@ func (tp *defaultTaskProcessor) Process(ctx context.Context, task Task) TaskResu
 
 // calculateProgressSize calculates the size of the data to be reported for progress.
 // For encryption, it's the input size; for decryption, it's the output size.
-func (tp *defaultTaskProcessor) calculateProgressSize(input, output []byte) int {
+func (tp *taskProcessor) calculateProgressSize(input, output []byte) int {
 	if tp.processing == options.Encryption {
 		return len(input)
 	}
