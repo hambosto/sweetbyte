@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/hambosto/sweetbyte/internal/config"
 	"github.com/hambosto/sweetbyte/internal/files"
 	"github.com/hambosto/sweetbyte/internal/operations"
 	"github.com/hambosto/sweetbyte/internal/options"
@@ -21,12 +22,15 @@ type Interactive struct {
 
 // NewInteractive creates a new Interactive.
 func NewInteractive() *Interactive {
-	fileManager := files.NewFileManager(3, 4096, true)
+	fileManager := files.NewFileManager(config.OverwritePasses)
+	prompt := ui.NewPrompt(8)
+	encryptor := operations.NewFileEncryptor(fileManager)
+	decryptor := operations.NewFileDecryptor(fileManager)
 	return &Interactive{
-		prompt:      ui.NewPrompt(8),
+		prompt:      prompt,
 		fileManager: fileManager,
-		encryptor:   operations.NewFileEncryptor(fileManager),
-		decryptor:   operations.NewFileDecryptor(fileManager),
+		encryptor:   encryptor,
+		decryptor:   decryptor,
 	}
 }
 

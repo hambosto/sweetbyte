@@ -4,6 +4,7 @@ package cli
 import (
 	"fmt"
 
+	"github.com/hambosto/sweetbyte/internal/config"
 	"github.com/hambosto/sweetbyte/internal/files"
 	"github.com/hambosto/sweetbyte/internal/operations"
 	"github.com/hambosto/sweetbyte/internal/options"
@@ -20,12 +21,15 @@ type CLIProcessor struct {
 
 // NewCLIProcessor creates a new CLIProcessor.
 func NewCLIProcessor() *CLIProcessor {
-	fileManager := files.NewFileManager(3, 4096, true)
+	fileManager := files.NewFileManager(config.OverwritePasses)
+	prompt := ui.NewPrompt(8)
+	encryptor := operations.NewFileEncryptor(fileManager)
+	decryptor := operations.NewFileDecryptor(fileManager)
 	return &CLIProcessor{
-		encryptor:   operations.NewFileEncryptor(fileManager),
-		decryptor:   operations.NewFileDecryptor(fileManager),
+		encryptor:   encryptor,
+		decryptor:   decryptor,
 		fileManager: fileManager,
-		prompt:      ui.NewPrompt(8),
+		prompt:      prompt,
 	}
 }
 

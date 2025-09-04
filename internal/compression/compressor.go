@@ -34,7 +34,7 @@ type compressor struct {
 }
 
 // NewCompressor creates a new Compressor with the specified compression level.
-func NewZlibCompressor(level CompressionLevel) (Compressor, error) {
+func NewCompressor(level CompressionLevel) (Compressor, error) {
 	var zlibLevel int
 
 	// Map the custom compression level to the zlib compression level.

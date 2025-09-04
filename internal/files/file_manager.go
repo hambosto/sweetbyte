@@ -37,17 +37,11 @@ type FileManager interface {
 // and finding eligible files for encryption/decryption.
 type fileManager struct {
 	OverwritePasses int
-	BufferSize      int
-	SyncAfterWrite  bool
 }
 
 // NewFileManager creates a new FileManager instance.
-func NewFileManager(overwritePasses, bufferSize int, syncAfterWrite bool) FileManager {
-	return &fileManager{
-		OverwritePasses: overwritePasses,
-		BufferSize:      bufferSize,
-		SyncAfterWrite:  syncAfterWrite,
-	}
+func NewFileManager(overwritePasses int) FileManager {
+	return &fileManager{OverwritePasses: overwritePasses}
 }
 
 // FindEligibleFiles finds all files in the current directory that are eligible for the given processing mode.
@@ -286,7 +280,7 @@ func (f *fileManager) overwriteWithRandomData(file *os.File, size int64) error {
 		return fmt.Errorf("failed to seek to file start: %w", err)
 	}
 
-	buffer := make([]byte, f.BufferSize)
+	buffer := make([]byte, 4096)
 	remaining := size
 
 	for remaining > 0 {
@@ -306,10 +300,8 @@ func (f *fileManager) overwriteWithRandomData(file *os.File, size int64) error {
 	}
 
 	// Sync data to storage if configured
-	if f.SyncAfterWrite {
-		if err := file.Sync(); err != nil {
-			return fmt.Errorf("failed to sync file to storage: %w", err)
-		}
+	if err := file.Sync(); err != nil {
+		return fmt.Errorf("failed to sync file to storage: %w", err)
 	}
 
 	return nil
