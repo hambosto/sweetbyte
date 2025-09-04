@@ -59,7 +59,7 @@ func (c *XChaCha20Cipher) Decrypt(ciphertext []byte) ([]byte, error) {
 	}
 
 	// The ciphertext must be at least the size of the nonce.
-	nonceSize := c.aead.NonceSize()
+	nonceSize := chacha20poly1305.NonceSizeX
 	if len(ciphertext) < nonceSize {
 		return nil, fmt.Errorf("ciphertext too short, need at least %d bytes, got %d", nonceSize, len(ciphertext))
 	}
