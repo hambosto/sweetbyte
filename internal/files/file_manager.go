@@ -248,7 +248,7 @@ func (f *fileManager) standardDelete(path string) error {
 
 // secureDelete securely deletes a file by overwriting it with random data.
 func (f *fileManager) secureDelete(path string) error {
-	file, err := os.OpenFile(path, os.O_WRONLY, 0)
+	file, err := os.OpenFile(filepath.Clean(path), os.O_WRONLY, 0)
 	if err != nil {
 		return fmt.Errorf("failed to open file %s for secure deletion: %w", path, err)
 	}
@@ -330,7 +330,7 @@ func (f *fileManager) validateFileExists(path string) error {
 func (f *fileManager) ensureParentDir(path string) error {
 	dir := filepath.Dir(path)
 	if dir != "." && dir != "/" {
-		return os.MkdirAll(dir, 0o755)
+		return os.MkdirAll(dir, 0o750)
 	}
 	return nil
 }
