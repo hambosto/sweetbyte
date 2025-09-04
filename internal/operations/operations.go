@@ -13,8 +13,8 @@ import (
 	"github.com/hambosto/sweetbyte/internal/streaming"
 )
 
-// Decryptor defines the interface for file operations.
-type Operations interface {
+// FileOperations defines the interface for file operations.
+type FileOperations interface {
 	Encrypt(srcPath, destPath, password string) error
 	Decrypt(srcPath, destPath, password string) error
 }
@@ -25,7 +25,7 @@ type fileOperations struct {
 }
 
 // NewFileOperations creates a new fileOperations.
-func NewFileOperations(fileManager files.FileManager) Operations {
+func NewFileOperations(fileManager files.FileManager) FileOperations {
 	return &fileOperations{fileManager: fileManager}
 }
 

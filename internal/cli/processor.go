@@ -14,7 +14,7 @@ import (
 // CLIProcessor handles the command-line interface operations.
 type CLIProcessor struct {
 	fileManager    files.FileManager
-	fileOperations operations.Operations
+	fileOperations operations.FileOperations
 	prompt         ui.Prompt
 }
 
