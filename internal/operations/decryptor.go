@@ -13,20 +13,20 @@ import (
 	"github.com/hambosto/sweetbyte/internal/streaming"
 )
 
-// Decryptor handles the decryption of files.
-type Decryptor struct {
-	fileManager *files.FileManager
+// fileDecryptor handles the decryption of files.
+type fileDecryptor struct {
+	fileManager files.FileManager
 }
 
 // NewDecryptor creates a new Decryptor.
-func NewDecryptor(fileManager *files.FileManager) *Decryptor {
-	return &Decryptor{
+func NewDecryptor(fileManager files.FileManager) Decryptor {
+	return &fileDecryptor{
 		fileManager: fileManager,
 	}
 }
 
 // DecryptFile decrypts a file.
-func (d *Decryptor) DecryptFile(srcPath, destPath, password string) error {
+func (d *fileDecryptor) DecryptFile(srcPath, destPath, password string) error {
 	// Open the source file.
 	srcFile, _, err := d.fileManager.OpenFile(srcPath)
 	if err != nil {

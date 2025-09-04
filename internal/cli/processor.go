@@ -12,10 +12,10 @@ import (
 
 // CLIProcessor handles the command-line interface operations.
 type CLIProcessor struct {
-	encryptor   *operations.Encryptor
-	decryptor   *operations.Decryptor
-	fileManager *files.FileManager
-	prompt      *ui.Prompt
+	encryptor   operations.Encryptor
+	decryptor   operations.Decryptor
+	fileManager files.FileManager
+	prompt      ui.Prompt
 }
 
 // NewCLIProcessor creates a new CLIProcessor.

@@ -9,28 +9,33 @@ import (
 	"github.com/hambosto/sweetbyte/internal/processor"
 )
 
-// taskProcessor processes individual tasks (chunks of data).
-type taskProcessor struct {
-	processor  *processor.Processor
+// TaskProcessor processes individual tasks (chunks of data).
+type TaskProcessor interface {
+	Process(ctx context.Context, task Task) TaskResult
+}
+
+// defaultTaskProcessor processes individual tasks (chunks of data).
+type defaultTaskProcessor struct {
+	processor  processor.Processor
 	processing options.Processing
 }
 
-// NewTaskProcessor creates a new taskProcessor with the given key and processing type.
-func NewTaskProcessor(key []byte, processing options.Processing) (*taskProcessor, error) {
+// NewTaskProcessor creates a new TaskProcessor with the given key and processing type.
+func NewTaskProcessor(key []byte, processing options.Processing) (TaskProcessor, error) {
 	// Create a new processor.
 	proc, err := processor.NewProcessor(key)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create processor: %w", err)
 	}
 
-	return &taskProcessor{
+	return &defaultTaskProcessor{
 		processor:  proc,
 		processing: processing,
 	}, nil
 }
 
 // Process processes a single task.
-func (tp *taskProcessor) Process(ctx context.Context, task Task) TaskResult {
+func (tp *defaultTaskProcessor) Process(ctx context.Context, task Task) TaskResult {
 	// Check if the context has been canceled.
 	select {
 	case <-ctx.Done():
@@ -66,7 +71,7 @@ func (tp *taskProcessor) Process(ctx context.Context, task Task) TaskResult {
 
 // calculateProgressSize calculates the size of the data to be reported for progress.
 // For encryption, it's the input size; for decryption, it's the output size.
-func (tp *taskProcessor) calculateProgressSize(input, output []byte) int {
+func (tp *defaultTaskProcessor) calculateProgressSize(input, output []byte) int {
 	if tp.processing == options.Encryption {
 		return len(input)
 	}

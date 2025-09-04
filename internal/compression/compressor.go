@@ -22,13 +22,19 @@ const (
 	LevelBestCompression
 )
 
-// Compressor handles data compression and decompression.
-type Compressor struct {
+// Compressor defines the interface for data compression and decompression.
+type Compressor interface {
+	Compress(data []byte) ([]byte, error)
+	Decompress(data []byte) ([]byte, error)
+}
+
+// zlibCompressor handles data compression and decompression using zlib.
+type ZlibCompressor struct {
 	level int
 }
 
 // NewCompressor creates a new Compressor with the specified compression level.
-func NewCompressor(level CompressionLevel) (*Compressor, error) {
+func NewZlibCompressor(level CompressionLevel) (Compressor, error) {
 	var zlibLevel int
 
 	// Map the custom compression level to the zlib compression level.
@@ -45,11 +51,11 @@ func NewCompressor(level CompressionLevel) (*Compressor, error) {
 		zlibLevel = zlib.DefaultCompression
 	}
 
-	return &Compressor{level: zlibLevel}, nil
+	return &ZlibCompressor{level: zlibLevel}, nil
 }
 
 // Compress compresses the given data.
-func (c *Compressor) Compress(data []byte) ([]byte, error) {
+func (c *ZlibCompressor) Compress(data []byte) ([]byte, error) {
 	// Data cannot be empty.
 	if len(data) == 0 {
 		return nil, fmt.Errorf("data cannot be empty")
@@ -76,7 +82,7 @@ func (c *Compressor) Compress(data []byte) ([]byte, error) {
 }
 
 // Decompress decompress the given data.
-func (c *Compressor) Decompress(data []byte) ([]byte, error) {
+func (c *ZlibCompressor) Decompress(data []byte) ([]byte, error) {
 	// Data cannot be empty.
 	if len(data) == 0 {
 		return nil, fmt.Errorf("data cannot be empty")

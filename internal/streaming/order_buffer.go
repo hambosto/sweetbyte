@@ -6,23 +6,29 @@ import (
 	"sync"
 )
 
-// orderBuffer is a buffer that stores and retrieves task results in order.
-type orderBuffer struct {
+// OrderBuffer is a buffer that stores and retrieves task results in order.
+type OrderBuffer interface {
+	Add(result TaskResult) []TaskResult
+	Flush() []TaskResult
+}
+
+// defaultOrderBuffer is a buffer that stores and retrieves task results in order.
+type defaultOrderBuffer struct {
 	mu      sync.Mutex
 	results map[uint64]TaskResult
 	next    uint64
 }
 
 // NewOrderBuffer creates a new orderBuffer.
-func NewOrderBuffer() *orderBuffer {
-	return &orderBuffer{
+func NewOrderBuffer() OrderBuffer {
+	return &defaultOrderBuffer{
 		results: make(map[uint64]TaskResult),
 		next:    0,
 	}
 }
 
 // Add adds a task result to the buffer and returns any ready results.
-func (b *orderBuffer) Add(result TaskResult) []TaskResult {
+func (b *defaultOrderBuffer) Add(result TaskResult) []TaskResult {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
@@ -44,7 +50,7 @@ func (b *orderBuffer) Add(result TaskResult) []TaskResult {
 }
 
 // Flush returns any remaining results in the buffer, in order.
-func (b *orderBuffer) Flush() []TaskResult {
+func (b *defaultOrderBuffer) Flush() []TaskResult {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 

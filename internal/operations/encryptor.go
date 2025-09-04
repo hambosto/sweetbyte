@@ -13,20 +13,20 @@ import (
 	"github.com/hambosto/sweetbyte/internal/streaming"
 )
 
-// Encryptor handles the encryption of files.
-type Encryptor struct {
-	fileManager *files.FileManager
+// fileEncryptor handles the encryption of files.
+type fileEncryptor struct {
+	fileManager files.FileManager
 }
 
 // NewEncryptor creates a new Encryptor.
-func NewEncryptor(fileManager *files.FileManager) *Encryptor {
-	return &Encryptor{
+func NewEncryptor(fileManager files.FileManager) Encryptor {
+	return &fileEncryptor{
 		fileManager: fileManager,
 	}
 }
 
 // EncryptFile encrypts a file.
-func (e *Encryptor) EncryptFile(srcPath, destPath, password string) error {
+func (e *fileEncryptor) EncryptFile(srcPath, destPath, password string) error {
 	// Open the source file.
 	srcFile, srcInfo, err := e.fileManager.OpenFile(srcPath)
 	if err != nil {

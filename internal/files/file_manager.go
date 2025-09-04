@@ -20,17 +20,30 @@ type FileInfo struct {
 	IsEligible  bool
 }
 
-// FileManager handles file operations such as creating, opening, deleting files,
+// FileManager defines the interface for file operations.
+type FileManager interface {
+	FindEligibleFiles(mode options.ProcessorMode) ([]string, error)
+	IsEncryptedFile(path string) bool
+	GetOutputPath(inputPath string, mode options.ProcessorMode) string
+	GetFileInfoList(files []string) ([]FileInfo, error)
+	Remove(path string, option options.DeleteOption) error
+	CreateFile(path string) (*os.File, error)
+	OpenFile(path string) (*os.File, os.FileInfo, error)
+	GetFileInfo(path string) (os.FileInfo, error)
+	ValidatePath(path string, mustExist bool) error
+}
+
+// fileManager handles file operations such as creating, opening, deleting files,
 // and finding eligible files for encryption/decryption.
-type FileManager struct {
+type fileManager struct {
 	OverwritePasses int
 	BufferSize      int
 	SyncAfterWrite  bool
 }
 
 // NewFileManager creates a new FileManager instance.
-func NewFileManager(overwritePasses, bufferSize int, syncAfterWrite bool) *FileManager {
-	return &FileManager{
+func NewFileManager(overwritePasses, bufferSize int, syncAfterWrite bool) FileManager {
+	return &fileManager{
 		OverwritePasses: overwritePasses,
 		BufferSize:      bufferSize,
 		SyncAfterWrite:  syncAfterWrite,
@@ -38,7 +51,7 @@ func NewFileManager(overwritePasses, bufferSize int, syncAfterWrite bool) *FileM
 }
 
 // FindEligibleFiles finds all files in the current directory that are eligible for the given processing mode.
-func (f *FileManager) FindEligibleFiles(mode options.ProcessorMode) ([]string, error) {
+func (f *fileManager) FindEligibleFiles(mode options.ProcessorMode) ([]string, error) {
 	var files []string
 
 	// Walk the current directory and find eligible files.
@@ -60,7 +73,7 @@ func (f *FileManager) FindEligibleFiles(mode options.ProcessorMode) ([]string, e
 }
 
 // isFileEligible checks if a file is eligible for the given processing mode.
-func (f *FileManager) isFileEligible(path string, info os.FileInfo, mode options.ProcessorMode) bool {
+func (f *fileManager) isFileEligible(path string, info os.FileInfo, mode options.ProcessorMode) bool {
 	// Skip directories, hidden files, and excluded paths.
 	if info.IsDir() || f.isHiddenFile(info.Name()) || f.shouldSkipPath(path) {
 		return false
@@ -72,12 +85,12 @@ func (f *FileManager) isFileEligible(path string, info os.FileInfo, mode options
 }
 
 // isHiddenFile checks if a file is a hidden file.
-func (f *FileManager) isHiddenFile(filename string) bool {
+func (f *fileManager) isHiddenFile(filename string) bool {
 	return strings.HasPrefix(filename, ".")
 }
 
 // shouldSkipPath checks if a path should be skipped based on the excluded directories and extensions.
-func (f *FileManager) shouldSkipPath(path string) bool {
+func (f *fileManager) shouldSkipPath(path string) bool {
 	// Check for excluded directories.
 	for _, dir := range config.ExcludedDirs {
 		if strings.Contains(path, dir) {
@@ -95,12 +108,12 @@ func (f *FileManager) shouldSkipPath(path string) bool {
 }
 
 // IsEncryptedFile checks if a file is an encrypted file.
-func (f *FileManager) IsEncryptedFile(path string) bool {
+func (f *fileManager) IsEncryptedFile(path string) bool {
 	return strings.HasSuffix(path, config.FileExtension)
 }
 
 // GetOutputPath returns the output path for a given input path and processing mode.
-func (f *FileManager) GetOutputPath(inputPath string, mode options.ProcessorMode) string {
+func (f *fileManager) GetOutputPath(inputPath string, mode options.ProcessorMode) string {
 	// If encrypting, add the file extension.
 	if mode == options.ModeEncrypt {
 		return inputPath + config.FileExtension
@@ -111,7 +124,7 @@ func (f *FileManager) GetOutputPath(inputPath string, mode options.ProcessorMode
 }
 
 // GetFileInfoList returns information about a list of files.
-func (f *FileManager) GetFileInfoList(files []string) ([]FileInfo, error) {
+func (f *fileManager) GetFileInfoList(files []string) ([]FileInfo, error) {
 	var fileInfos []FileInfo
 
 	// Get information for each file.
@@ -135,7 +148,7 @@ func (f *FileManager) GetFileInfoList(files []string) ([]FileInfo, error) {
 }
 
 // Remove removes a file with the specified delete option.
-func (f *FileManager) Remove(path string, option options.DeleteOption) error {
+func (f *fileManager) Remove(path string, option options.DeleteOption) error {
 	cleanPath := filepath.Clean(path)
 
 	if err := f.validateFileExists(cleanPath); err != nil {
@@ -153,7 +166,7 @@ func (f *FileManager) Remove(path string, option options.DeleteOption) error {
 }
 
 // CreateFile creates a new file at the specified path.
-func (f *FileManager) CreateFile(path string) (*os.File, error) {
+func (f *fileManager) CreateFile(path string) (*os.File, error) {
 	cleanPath := filepath.Clean(path)
 
 	// Ensure parent directory exists
@@ -170,7 +183,7 @@ func (f *FileManager) CreateFile(path string) (*os.File, error) {
 }
 
 // OpenFile opens a file at the specified path and returns file handle and os.FileInfo.
-func (f *FileManager) OpenFile(path string) (*os.File, os.FileInfo, error) {
+func (f *fileManager) OpenFile(path string) (*os.File, os.FileInfo, error) {
 	cleanPath := filepath.Clean(path)
 
 	file, err := os.Open(cleanPath)
@@ -187,7 +200,7 @@ func (f *FileManager) OpenFile(path string) (*os.File, os.FileInfo, error) {
 }
 
 // GetFileInfo retrieves os.FileInfo for a path.
-func (f *FileManager) GetFileInfo(path string) (os.FileInfo, error) {
+func (f *fileManager) GetFileInfo(path string) (os.FileInfo, error) {
 	cleanPath := filepath.Clean(path)
 	stat, err := os.Stat(cleanPath)
 	if err != nil {
@@ -200,7 +213,7 @@ func (f *FileManager) GetFileInfo(path string) (os.FileInfo, error) {
 }
 
 // ValidatePath validates a file path based on existence requirements.
-func (f *FileManager) ValidatePath(path string, mustExist bool) error {
+func (f *fileManager) ValidatePath(path string, mustExist bool) error {
 	info, err := f.GetFileInfo(path)
 	if err != nil {
 		return err
@@ -226,7 +239,7 @@ func (f *FileManager) ValidatePath(path string, mustExist bool) error {
 }
 
 // standardDelete performs standard file deletion.
-func (f *FileManager) standardDelete(path string) error {
+func (f *fileManager) standardDelete(path string) error {
 	if err := os.Remove(path); err != nil {
 		return fmt.Errorf("failed to remove file %s: %w", path, err)
 	}
@@ -234,7 +247,7 @@ func (f *FileManager) standardDelete(path string) error {
 }
 
 // secureDelete securely deletes a file by overwriting it with random data.
-func (f *FileManager) secureDelete(path string) error {
+func (f *fileManager) secureDelete(path string) error {
 	file, err := os.OpenFile(path, os.O_WRONLY, 0)
 	if err != nil {
 		return fmt.Errorf("failed to open file %s for secure deletion: %w", path, err)
@@ -267,7 +280,7 @@ func (f *FileManager) secureDelete(path string) error {
 }
 
 // overwriteWithRandomData overwrites a file with random data.
-func (f *FileManager) overwriteWithRandomData(file *os.File, size int64) error {
+func (f *fileManager) overwriteWithRandomData(file *os.File, size int64) error {
 	// Seek to the beginning of the file
 	if _, err := file.Seek(0, 0); err != nil {
 		return fmt.Errorf("failed to seek to file start: %w", err)
@@ -303,7 +316,7 @@ func (f *FileManager) overwriteWithRandomData(file *os.File, size int64) error {
 }
 
 // validateFileExists checks if a file exists and is accessible.
-func (f *FileManager) validateFileExists(path string) error {
+func (f *fileManager) validateFileExists(path string) error {
 	if _, err := os.Stat(path); err != nil {
 		if os.IsNotExist(err) {
 			return fmt.Errorf("file not found: %s", path)
@@ -314,7 +327,7 @@ func (f *FileManager) validateFileExists(path string) error {
 }
 
 // ensureParentDir creates parent directories if they don't exist.
-func (f *FileManager) ensureParentDir(path string) error {
+func (f *fileManager) ensureParentDir(path string) error {
 	dir := filepath.Dir(path)
 	if dir != "." && dir != "/" {
 		return os.MkdirAll(dir, 0o755)

@@ -24,17 +24,22 @@ type TaskResult struct {
 	Err   error
 }
 
-// streamProcessor handles the entire streaming process.
-type streamProcessor struct {
+// StreamProcessor handles the entire streaming process.
+type StreamProcessor interface {
+	Process(ctx context.Context, input io.Reader, output io.Writer, totalSize int64) error
+}
+
+// defaultStreamProcessor handles the entire streaming process.
+type defaultStreamProcessor struct {
 	streamConfig  StreamConfig
-	taskProcessor *taskProcessor
-	reader        *chunkReader
-	writer        *chunkWriter
-	pool          *workerPool
+	taskProcessor TaskProcessor
+	reader        ChunkReader
+	writer        ChunkWriter
+	pool          WorkerPool
 }
 
 // NewStreamProcessor creates a new streamProcessor with the given configuration.
-func NewStreamProcessor(config StreamConfig) (*streamProcessor, error) {
+func NewStreamProcessor(config StreamConfig) (StreamProcessor, error) {
 	// Validate the configuration.
 	if err := config.Validate(); err != nil {
 		return nil, err
@@ -48,16 +53,16 @@ func NewStreamProcessor(config StreamConfig) (*streamProcessor, error) {
 		return nil, fmt.Errorf("failed to create task processor: %w", err)
 	}
 
-	return &streamProcessor{
+	return &defaultStreamProcessor{
 		streamConfig:  config,
 		taskProcessor: taskProcessor,
 		reader:        NewChunkReader(config.Processing, config.ChunkSize, config.Concurrency),
-		pool:          NewWorkerPool(*taskProcessor, config.Concurrency),
+		pool:          NewWorkerPool(taskProcessor, config.Concurrency),
 	}, nil
 }
 
 // Process starts the streaming process for the given input and output streams.
-func (s *streamProcessor) Process(ctx context.Context, input io.Reader, output io.Writer, totalSize int64) error {
+func (s *defaultStreamProcessor) Process(ctx context.Context, input io.Reader, output io.Writer, totalSize int64) error {
 	// Ensure input and output streams are not nil.
 	if input == nil || output == nil {
 		return fmt.Errorf("input and output streams must not be nil")
@@ -72,7 +77,7 @@ func (s *streamProcessor) Process(ctx context.Context, input io.Reader, output i
 }
 
 // runPipeline sets up and runs the streaming pipeline.
-func (s *streamProcessor) runPipeline(ctx context.Context, input io.Reader, output io.Writer) error {
+func (s *defaultStreamProcessor) runPipeline(ctx context.Context, input io.Reader, output io.Writer) error {
 	// Create a new context for the pipeline.
 	pipelineCtx, cancel := context.WithCancel(ctx)
 	defer cancel()

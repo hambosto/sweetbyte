@@ -11,18 +11,23 @@ import (
 	"github.com/hambosto/sweetbyte/internal/utils"
 )
 
-// chunkWriter writes processed chunks to an io.Writer.
+// ChunkWriter writes processed chunks to an io.Writer.
+type ChunkWriter interface {
+	WriteChunks(ctx context.Context, output io.Writer, results <-chan TaskResult) error
+}
+
+// defaultChunkWriter writes processed chunks to an io.Writer.
 // It uses an OrderBuffer to ensure chunks are written in the correct sequence.
-type chunkWriter struct {
+type defaultChunkWriter struct {
 	processing options.Processing
-	buffer     *orderBuffer
+	buffer     OrderBuffer
 	bar        *ui.ProgressBar
 }
 
 // NewChunkWriter creates a new ChunkWriter.
 // It takes the processing mode (encryption/decryption) and an optional progress bar.
-func NewChunkWriter(processing options.Processing, bar *ui.ProgressBar) *chunkWriter {
-	return &chunkWriter{
+func NewChunkWriter(processing options.Processing, bar *ui.ProgressBar) ChunkWriter {
+	return &defaultChunkWriter{
 		processing: processing,
 		buffer:     NewOrderBuffer(),
 		bar:        bar,
@@ -31,7 +36,7 @@ func NewChunkWriter(processing options.Processing, bar *ui.ProgressBar) *chunkWr
 
 // WriteChunks receives processed task results from a channel and writes them to the output writer.
 // It ensures that chunks are written in the correct order.
-func (w *chunkWriter) WriteChunks(ctx context.Context, output io.Writer, results <-chan TaskResult) error {
+func (w *defaultChunkWriter) WriteChunks(ctx context.Context, output io.Writer, results <-chan TaskResult) error {
 	for {
 		select {
 		case result, ok := <-results:
@@ -58,13 +63,13 @@ func (w *chunkWriter) WriteChunks(ctx context.Context, output io.Writer, results
 }
 
 // flushRemaining writes any chunks that are still in the buffer to the output.
-func (w *chunkWriter) flushRemaining(output io.Writer) error {
+func (w *defaultChunkWriter) flushRemaining(output io.Writer) error {
 	remaining := w.buffer.Flush()
 	return w.writeResults(output, remaining)
 }
 
 // writeResults iterates over a slice of task results and writes them to the output.
-func (w *chunkWriter) writeResults(output io.Writer, results []TaskResult) error {
+func (w *defaultChunkWriter) writeResults(output io.Writer, results []TaskResult) error {
 	for _, result := range results {
 		if err := w.writeResult(output, result); err != nil {
 			return err
@@ -75,7 +80,7 @@ func (w *chunkWriter) writeResults(output io.Writer, results []TaskResult) error
 
 // writeResult writes a single task result to the output.
 // For encryption, it prepends the chunk data with its size.
-func (w *chunkWriter) writeResult(output io.Writer, result TaskResult) error {
+func (w *defaultChunkWriter) writeResult(output io.Writer, result TaskResult) error {
 	// For encryption, write the chunk size as a header before the data.
 	if w.processing == options.Encryption {
 		if err := w.writeChunkSize(output, len(result.Data)); err != nil {
@@ -99,7 +104,7 @@ func (w *chunkWriter) writeResult(output io.Writer, result TaskResult) error {
 }
 
 // writeChunkSize writes the size of a chunk as a 4-byte header to the output.
-func (w *chunkWriter) writeChunkSize(output io.Writer, size int) error {
+func (w *defaultChunkWriter) writeChunkSize(output io.Writer, size int) error {
 	// #nosec G115
 	buffer := utils.ToBytes(uint32(size))
 	if _, err := output.Write(buffer); err != nil {

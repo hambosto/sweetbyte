@@ -13,10 +13,10 @@ import (
 
 // Interactive represents the interactive application.
 type Interactive struct {
-	prompt      *ui.Prompt
-	fileManager *files.FileManager
-	encryptor   *operations.Encryptor
-	decryptor   *operations.Decryptor
+	prompt      ui.Prompt
+	fileManager files.FileManager
+	encryptor   operations.Encryptor
+	decryptor   operations.Decryptor
 }
 
 // NewInteractive creates a new Interactive.
