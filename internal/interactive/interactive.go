@@ -21,11 +21,12 @@ type Interactive struct {
 
 // NewInteractive creates a new Interactive.
 func NewInteractive() *Interactive {
+	fileManager := files.NewFileManager(3, 4096, true)
 	return &Interactive{
 		prompt:      ui.NewPrompt(8),
-		fileManager: files.NewFileManager(3, 4096, true),
-		encryptor:   operations.NewEncryptor(),
-		decryptor:   operations.NewDecryptor(),
+		fileManager: fileManager,
+		encryptor:   operations.NewEncryptor(fileManager),
+		decryptor:   operations.NewDecryptor(fileManager),
 	}
 }
 

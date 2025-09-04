@@ -20,10 +20,11 @@ type CLIProcessor struct {
 
 // NewCLIProcessor creates a new CLIProcessor.
 func NewCLIProcessor() *CLIProcessor {
+	fileManager := files.NewFileManager(3, 4096, true)
 	return &CLIProcessor{
-		encryptor:   operations.NewEncryptor(),
-		decryptor:   operations.NewDecryptor(),
-		fileManager: files.NewFileManager(3, 4096, true),
+		encryptor:   operations.NewEncryptor(fileManager),
+		decryptor:   operations.NewDecryptor(fileManager),
+		fileManager: fileManager,
 		prompt:      ui.NewPrompt(8),
 	}
 }

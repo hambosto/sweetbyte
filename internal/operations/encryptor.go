@@ -19,9 +19,9 @@ type Encryptor struct {
 }
 
 // NewEncryptor creates a new Encryptor.
-func NewEncryptor() *Encryptor {
+func NewEncryptor(fileManager *files.FileManager) *Encryptor {
 	return &Encryptor{
-		fileManager: files.NewFileManager(3, 4096, true),
+		fileManager: fileManager,
 	}
 }
 

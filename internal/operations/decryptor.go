@@ -19,9 +19,9 @@ type Decryptor struct {
 }
 
 // NewDecryptor creates a new Decryptor.
-func NewDecryptor() *Decryptor {
+func NewDecryptor(fileManager *files.FileManager) *Decryptor {
 	return &Decryptor{
-		fileManager: files.NewFileManager(3, 4096, true),
+		fileManager: fileManager,
 	}
 }
 
