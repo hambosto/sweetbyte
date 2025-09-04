@@ -21,12 +21,12 @@ type ChunkWriter interface {
 type chunkWriter struct {
 	processing options.Processing
 	buffer     OrderBuffer
-	bar        *ui.ProgressBar
+	bar        ui.ProgressBar
 }
 
 // NewChunkWriter creates a new ChunkWriter.
 // It takes the processing mode (encryption/decryption) and an optional progress bar.
-func NewChunkWriter(processing options.Processing, bar *ui.ProgressBar) ChunkWriter {
+func NewChunkWriter(processing options.Processing, bar ui.ProgressBar) ChunkWriter {
 	return &chunkWriter{
 		processing: processing,
 		buffer:     NewOrderBuffer(),
