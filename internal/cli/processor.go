@@ -22,7 +22,7 @@ type CLIProcessor struct {
 func NewCLIProcessor() *CLIProcessor {
 	fileManager := files.NewFileManager(config.OverwritePasses)
 	fileOperations := operations.NewFileOperations(fileManager)
-	prompt := ui.NewPrompt(8)
+	prompt := ui.NewPrompt(config.PasswordMinLen)
 	return &CLIProcessor{
 		fileManager:    fileManager,
 		fileOperations: fileOperations,
