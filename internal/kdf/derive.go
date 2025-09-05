@@ -1,5 +1,5 @@
-// Package keys provides key derivation functionality.
-package keys
+// Package kdf provides key derivation functionality.
+package kdf
 
 import (
 	"crypto/rand"

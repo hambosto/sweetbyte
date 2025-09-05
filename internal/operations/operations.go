@@ -8,7 +8,7 @@ import (
 	"github.com/hambosto/sweetbyte/internal/config"
 	"github.com/hambosto/sweetbyte/internal/files"
 	"github.com/hambosto/sweetbyte/internal/header"
-	"github.com/hambosto/sweetbyte/internal/keys"
+	"github.com/hambosto/sweetbyte/internal/kdf"
 	"github.com/hambosto/sweetbyte/internal/options"
 	"github.com/hambosto/sweetbyte/internal/streaming"
 )
@@ -45,13 +45,13 @@ func (o *fileOperations) Encrypt(srcPath, destPath, password string) error {
 	defer destFile.Close() //nolint:errcheck
 
 	// Generate a random salt.
-	salt, err := keys.GetRandomSalt(config.SaltSize)
+	salt, err := kdf.GetRandomSalt(config.SaltSize)
 	if err != nil {
 		return fmt.Errorf("failed to generate salt: %w", err)
 	}
 
 	// Derive the key from the password and salt.
-	key, err := keys.Hash([]byte(password), salt)
+	key, err := kdf.Hash([]byte(password), salt)
 	if err != nil {
 		return fmt.Errorf("failed to derive key: %w", err)
 	}
@@ -120,7 +120,7 @@ func (o *fileOperations) Decrypt(srcPath, destPath, password string) error {
 	}
 
 	// Derive the key from the password and salt.
-	key, err := keys.Hash([]byte(password), salt)
+	key, err := kdf.Hash([]byte(password), salt)
 	if err != nil {
 		return fmt.Errorf("failed to derive key: %w", err)
 	}
