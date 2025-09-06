@@ -293,14 +293,19 @@ func (fm *fileManager) ShowFileInfo(files []FileInfo) {
 		fmt.Println("No files found.")
 		return
 	}
-	fmt.Printf("\nFound %d file(s):\n\n", len(files))
+
+	// fmt.Printf("\nFound %d file(s):\n\n", len(files))
+
+	fmt.Println()
+	fmt.Printf("Found %d file(s):", len(files))
+	fmt.Println()
+
 	for i, fi := range files {
 		status := "unencrypted"
 		if fi.IsEncrypted {
 			status = "encrypted"
 		}
-		fmt.Printf("%d. %s (%s, %s)\n",
-			i+1, fi.Path, utils.FormatBytes(fi.Size), status)
+		fmt.Printf("%d. %s (%s, %s)\n", i+1, fi.Path, utils.FormatBytes(fi.Size), status)
 	}
 	fmt.Println()
 }
