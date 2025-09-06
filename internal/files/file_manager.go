@@ -10,9 +10,10 @@ import (
 
 	"github.com/hambosto/sweetbyte/internal/config"
 	"github.com/hambosto/sweetbyte/internal/options"
+	"github.com/hambosto/sweetbyte/internal/utils"
 )
 
-// FileInfo represents information about a file.
+// FileInfo holds metadata about a file.
 type FileInfo struct {
 	Path        string
 	Size        int64
@@ -31,30 +32,29 @@ type FileManager interface {
 	OpenFile(path string) (*os.File, os.FileInfo, error)
 	GetFileInfo(path string) (os.FileInfo, error)
 	ValidatePath(path string, mustExist bool) error
+	ShowFileInfo(fileList []FileInfo)
+	ShowProcessingInfo(mode options.ProcessorMode, filePath string)
 }
 
-// fileManager handles file operations such as creating, opening, deleting files,
-// and finding eligible files for encryption/decryption.
+// fileManager implements FileManager and provides file utilities.
 type fileManager struct {
-	OverwritePasses int
+	overwritePasses int
 }
 
-// NewFileManager creates a new FileManager instance.
-func NewFileManager(overwritePasses int) FileManager {
-	return &fileManager{OverwritePasses: overwritePasses}
+// NewManager returns a new FileManager with the given overwrite passes.
+func NewFileManager(passes int) FileManager {
+	return &fileManager{overwritePasses: passes}
 }
 
-// FindEligibleFiles finds all files in the current directory that are eligible for the given processing mode.
-func (f *fileManager) FindEligibleFiles(mode options.ProcessorMode) ([]string, error) {
+// FindEligibleFiles scans the current directory for files eligible for the given mode.
+func (fm *fileManager) FindEligibleFiles(mode options.ProcessorMode) ([]string, error) {
 	var files []string
 
-	// Walk the current directory and find eligible files.
 	err := filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
-
-		if f.isFileEligible(path, info, mode) {
+		if fm.isEligible(path, info, mode) {
 			files = append(files, path)
 		}
 		return nil
@@ -62,267 +62,231 @@ func (f *fileManager) FindEligibleFiles(mode options.ProcessorMode) ([]string, e
 	if err != nil {
 		return nil, fmt.Errorf("failed to scan for eligible files: %w", err)
 	}
-
 	return files, nil
 }
 
-// isFileEligible checks if a file is eligible for the given processing mode.
-func (f *fileManager) isFileEligible(path string, info os.FileInfo, mode options.ProcessorMode) bool {
-	// Skip directories, hidden files, and excluded paths.
-	if info.IsDir() || f.isHiddenFile(info.Name()) || f.shouldSkipPath(path) {
+// isEligible checks if a file can be processed based on mode and exclusions.
+func (fm *fileManager) isEligible(path string, info os.FileInfo, mode options.ProcessorMode) bool {
+	if info.IsDir() || strings.HasPrefix(info.Name(), ".") || fm.isExcluded(path) {
 		return false
 	}
-	// Check if the file is encrypted.
-	isEncrypted := strings.HasSuffix(path, config.FileExtension)
-	// Determine eligibility based on the processing mode.
-	return (mode == options.ModeEncrypt && !isEncrypted) || (mode == options.ModeDecrypt && isEncrypted)
+	encrypted := strings.HasSuffix(path, config.FileExtension)
+	return (mode == options.ModeEncrypt && !encrypted) || (mode == options.ModeDecrypt && encrypted)
 }
 
-// isHiddenFile checks if a file is a hidden file.
-func (f *fileManager) isHiddenFile(filename string) bool {
-	return strings.HasPrefix(filename, ".")
-}
-
-// shouldSkipPath checks if a path should be skipped based on the excluded directories and extensions.
-func (f *fileManager) shouldSkipPath(path string) bool {
-	// Check for excluded directories.
+// isExcluded returns true if the path matches excluded dirs or extensions.
+func (fm *fileManager) isExcluded(path string) bool {
 	for _, dir := range config.ExcludedDirs {
 		if strings.Contains(path, dir) {
 			return true
 		}
 	}
-	// Check for excluded extensions.
 	for _, ext := range config.ExcludedExts {
 		if strings.HasSuffix(path, ext) {
 			return true
 		}
 	}
-
 	return false
 }
 
-// IsEncryptedFile checks if a file is an encrypted file.
-func (f *fileManager) IsEncryptedFile(path string) bool {
+// IsEncryptedFile checks if the file ends with the encrypted extension.
+func (fm *fileManager) IsEncryptedFile(path string) bool {
 	return strings.HasSuffix(path, config.FileExtension)
 }
 
-// GetOutputPath returns the output path for a given input path and processing mode.
-func (f *fileManager) GetOutputPath(inputPath string, mode options.ProcessorMode) string {
-	// If encrypting, add the file extension.
+// GetOutputPath returns the processed output path for the given mode.
+func (fm *fileManager) GetOutputPath(inputPath string, mode options.ProcessorMode) string {
 	if mode == options.ModeEncrypt {
 		return inputPath + config.FileExtension
 	}
-
-	// If decrypting, remove the file extension.
 	return strings.TrimSuffix(inputPath, config.FileExtension)
 }
 
-// GetFileInfoList returns information about a list of files.
-func (f *fileManager) GetFileInfoList(files []string) ([]FileInfo, error) {
-	var fileInfos []FileInfo
+// GetFileInfoList returns metadata for the given files.
+func (fm *fileManager) GetFileInfoList(files []string) ([]FileInfo, error) {
+	var infos []FileInfo
 
-	// Get information for each file.
-	for _, file := range files {
-		info, err := os.Stat(file)
+	for _, f := range files {
+		stat, err := os.Stat(f)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get file info for '%s': %w", file, err)
+			return nil, fmt.Errorf("stat failed for %q: %w", f, err)
 		}
-
-		fileInfo := FileInfo{
-			Path:        file,
-			Size:        info.Size(),
-			IsEncrypted: f.IsEncryptedFile(file),
+		infos = append(infos, FileInfo{
+			Path:        f,
+			Size:        stat.Size(),
+			IsEncrypted: fm.IsEncryptedFile(f),
 			IsEligible:  true,
-		}
-
-		fileInfos = append(fileInfos, fileInfo)
+		})
 	}
-
-	return fileInfos, nil
+	return infos, nil
 }
 
-// Remove removes a file with the specified delete option.
-func (f *fileManager) Remove(path string, option options.DeleteOption) error {
-	cleanPath := filepath.Clean(path)
+// Remove deletes a file using the provided option.
+func (fm *fileManager) Remove(path string, opt options.DeleteOption) error {
+	path = filepath.Clean(path)
 
-	if err := f.validateFileExists(cleanPath); err != nil {
-		return fmt.Errorf("cannot remove file: %w", err)
+	if err := fm.requireExists(path); err != nil {
+		return fmt.Errorf("cannot remove: %w", err)
 	}
 
-	switch option {
+	switch opt {
 	case options.DeleteStandard:
-		return f.standardDelete(cleanPath)
+		return os.Remove(path)
 	case options.DeleteSecure:
-		return f.secureDelete(cleanPath)
+		return fm.secureDelete(path)
 	default:
-		return fmt.Errorf("unsupported delete option: %s", option)
+		return fmt.Errorf("unsupported delete option: %s", opt)
 	}
 }
 
-// CreateFile creates a new file at the specified path.
-func (f *fileManager) CreateFile(path string) (*os.File, error) {
-	cleanPath := filepath.Clean(path)
-
-	// Ensure parent directory exists
-	if err := f.ensureParentDir(cleanPath); err != nil {
-		return nil, fmt.Errorf("failed to create parent directory: %w", err)
+// CreateFile creates a new file, ensuring parent directories exist.
+func (fm *fileManager) CreateFile(path string) (*os.File, error) {
+	path = filepath.Clean(path)
+	if err := fm.ensureParentDir(path); err != nil {
+		return nil, err
 	}
-
-	file, err := os.Create(cleanPath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create file %s: %w", cleanPath, err)
-	}
-
-	return file, nil
+	return os.Create(path)
 }
 
-// OpenFile opens a file at the specified path and returns file handle and os.FileInfo.
-func (f *fileManager) OpenFile(path string) (*os.File, os.FileInfo, error) {
-	cleanPath := filepath.Clean(path)
+// OpenFile opens a file and returns its handle and info.
+func (fm *fileManager) OpenFile(path string) (*os.File, os.FileInfo, error) {
+	path = filepath.Clean(path)
 
-	file, err := os.Open(cleanPath)
+	f, err := os.Open(path)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to open file %s: %w", cleanPath, err)
+		return nil, nil, fmt.Errorf("open failed: %w", err)
 	}
-
-	info, err := file.Stat()
+	info, err := f.Stat()
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to stat file %s: %w", cleanPath, err)
+		return nil, nil, fmt.Errorf("stat failed: %w", err)
 	}
-
-	return file, info, nil
+	return f, info, nil
 }
 
-// GetFileInfo retrieves os.FileInfo for a path.
-func (f *fileManager) GetFileInfo(path string) (os.FileInfo, error) {
-	cleanPath := filepath.Clean(path)
-	stat, err := os.Stat(cleanPath)
+// GetFileInfo retrieves file info or nil if it does not exist.
+func (fm *fileManager) GetFileInfo(path string) (os.FileInfo, error) {
+	path = filepath.Clean(path)
+	stat, err := os.Stat(path)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil, nil
 		}
-		return nil, fmt.Errorf("failed to get file info for %s: %w", cleanPath, err)
+		return nil, fmt.Errorf("stat failed: %w", err)
 	}
 	return stat, nil
 }
 
-// ValidatePath validates a file path based on existence requirements.
-func (f *fileManager) ValidatePath(path string, mustExist bool) error {
-	info, err := f.GetFileInfo(path)
+// ValidatePath validates a path for existence or non-existence.
+func (fm *fileManager) ValidatePath(path string, mustExist bool) error {
+	info, err := fm.GetFileInfo(path)
 	if err != nil {
 		return err
 	}
-
 	if mustExist {
-		if info == nil {
+		switch {
+		case info == nil:
 			return fmt.Errorf("file not found: %s", path)
+		case info.IsDir():
+			return fmt.Errorf("path is directory: %s", path)
+		case info.Size() == 0:
+			return fmt.Errorf("file is empty: %s", path)
 		}
-		if info.IsDir() {
-			return fmt.Errorf("path is a directory, not a file: %s", path)
-		}
-		if info.Size() == 0 {
-			return fmt.Errorf("file is empty and cannot be processed: %s", path)
-		}
-	} else {
-		if info != nil {
-			return fmt.Errorf("output file already exists: %s", path)
-		}
-	}
-
-	return nil
-}
-
-// standardDelete performs standard file deletion.
-func (f *fileManager) standardDelete(path string) error {
-	if err := os.Remove(path); err != nil {
-		return fmt.Errorf("failed to remove file %s: %w", path, err)
+	} else if info != nil {
+		return fmt.Errorf("output exists: %s", path)
 	}
 	return nil
 }
 
-// secureDelete securely deletes a file by overwriting it with random data.
-func (f *fileManager) secureDelete(path string) error {
-	file, err := os.OpenFile(filepath.Clean(path), os.O_WRONLY, 0)
+// secureDelete overwrites and removes a file.
+func (fm *fileManager) secureDelete(path string) error {
+	path = filepath.Clean(path)
+	f, err := os.OpenFile(path, os.O_WRONLY, 0)
 	if err != nil {
-		return fmt.Errorf("failed to open file %s for secure deletion: %w", path, err)
+		return fmt.Errorf("secure open failed: %w", err)
 	}
-	defer file.Close() //nolint:errcheck
+	defer f.Close()
 
-	stat, err := file.Stat()
+	stat, err := f.Stat()
 	if err != nil {
-		return fmt.Errorf("failed to get file info for secure deletion %s: %w", path, err)
+		return fmt.Errorf("stat failed: %w", err)
 	}
 
-	// Perform multiple overwrite passes
-	for pass := 0; pass < f.OverwritePasses; pass++ {
-		if err := f.overwriteWithRandomData(file, stat.Size()); err != nil {
-			return fmt.Errorf("secure overwrite pass %d failed for %s: %w", pass+1, path, err)
+	for i := 0; i < fm.overwritePasses; i++ {
+		if err := fm.overwriteRandom(f, stat.Size()); err != nil {
+			return fmt.Errorf("overwrite pass %d failed: %w", i+1, err)
 		}
 	}
 
-	// Close before removal
-	if err := file.Close(); err != nil {
-		return fmt.Errorf("failed to close file %s before removal: %w", path, err)
-	}
-
-	// Finally remove the file
 	if err := os.Remove(path); err != nil {
-		return fmt.Errorf("failed to remove file %s after secure overwrite: %w", path, err)
+		return fmt.Errorf("remove failed: %w", err)
 	}
-
 	return nil
 }
 
-// overwriteWithRandomData overwrites a file with random data.
-func (f *fileManager) overwriteWithRandomData(file *os.File, size int64) error {
-	// Seek to the beginning of the file
-	if _, err := file.Seek(0, 0); err != nil {
-		return fmt.Errorf("failed to seek to file start: %w", err)
+// overwriteRandom writes random data across the file.
+func (fm *fileManager) overwriteRandom(f *os.File, size int64) error {
+	if _, err := f.Seek(0, 0); err != nil {
+		return fmt.Errorf("seek failed: %w", err)
 	}
+	buf := make([]byte, 4096)
+	left := size
 
-	buffer := make([]byte, 4096)
-	remaining := size
-
-	for remaining > 0 {
-		writeSize := min(remaining, int64(len(buffer)))
-
-		// Generate random data
-		if _, err := rand.Read(buffer[:writeSize]); err != nil {
-			return fmt.Errorf("failed to generate random data: %w", err)
+	for left > 0 {
+		chunk := min(left, int64(len(buf)))
+		if _, err := rand.Read(buf[:chunk]); err != nil {
+			return fmt.Errorf("rand read failed: %w", err)
 		}
-
-		// Write random data to file
-		if _, err := file.Write(buffer[:writeSize]); err != nil {
-			return fmt.Errorf("failed to write random data: %w", err)
+		if _, err := f.Write(buf[:chunk]); err != nil {
+			return fmt.Errorf("write failed: %w", err)
 		}
-
-		remaining -= writeSize
+		left -= chunk
 	}
-
-	// Sync data to storage if configured
-	if err := file.Sync(); err != nil {
-		return fmt.Errorf("failed to sync file to storage: %w", err)
-	}
-
-	return nil
+	return f.Sync()
 }
 
-// validateFileExists checks if a file exists and is accessible.
-func (f *fileManager) validateFileExists(path string) error {
+// requireExists ensures a file exists.
+func (fm *fileManager) requireExists(path string) error {
 	if _, err := os.Stat(path); err != nil {
 		if os.IsNotExist(err) {
-			return fmt.Errorf("file not found: %s", path)
+			return fmt.Errorf("not found: %s", path)
 		}
-		return fmt.Errorf("cannot access file %s: %w", path, err)
+		return fmt.Errorf("access failed: %w", err)
 	}
 	return nil
 }
 
-// ensureParentDir creates parent directories if they don't exist.
-func (f *fileManager) ensureParentDir(path string) error {
-	dir := filepath.Dir(path)
-	if dir != "." && dir != "/" {
-		return os.MkdirAll(dir, 0o750)
+// ShowFileInfo prints metadata about files.
+func (fm *fileManager) ShowFileInfo(files []FileInfo) {
+	if len(files) == 0 {
+		fmt.Println("No files found.")
+		return
 	}
-	return nil
+	fmt.Printf("\nFound %d file(s):\n\n", len(files))
+	for i, fi := range files {
+		status := "unencrypted"
+		if fi.IsEncrypted {
+			status = "encrypted"
+		}
+		fmt.Printf("%d. %s (%s, %s)\n",
+			i+1, fi.Path, utils.FormatBytes(fi.Size), status)
+	}
+	fmt.Println()
+}
+
+// ShowProcessingInfo displays progress of current operation.
+func (fm *fileManager) ShowProcessingInfo(mode options.ProcessorMode, file string) {
+	action := "Encrypting"
+	if mode == options.ModeDecrypt {
+		action = "Decrypting"
+	}
+	fmt.Printf("\n%s file: %s\n\n", action, file)
+}
+
+// ensureParentDir creates parent directories if needed.
+func (fm *fileManager) ensureParentDir(path string) error {
+	dir := filepath.Dir(path)
+	if dir == "." || dir == "/" {
+		return nil
+	}
+	return os.MkdirAll(dir, 0o750)
 }

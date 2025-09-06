@@ -15,14 +15,14 @@ import (
 type CLI struct {
 	fileManager    files.FileManager
 	fileOperations operations.FileOperations
-	prompt         ui.Prompt
+	prompt         ui.PromptInput
 }
 
 // NewCLI creates a new CLI.
 func NewCLI() *CLI {
 	fileManager := files.NewFileManager(config.OverwritePasses)
 	fileOperations := operations.NewFileOperations(fileManager)
-	prompt := ui.NewPrompt(config.PasswordMinLen)
+	prompt := ui.NewPromptInput(config.PasswordMinLen)
 	return &CLI{
 		fileManager:    fileManager,
 		fileOperations: fileOperations,
@@ -47,7 +47,7 @@ func (p *CLI) Encrypt(inputFile, outputFile, password string, deleteSource, secu
 		return fmt.Errorf("failed to encrypt %s: %w", inputFile, err)
 	}
 
-	fmt.Printf("✓ File encrypted successfully: %s\n", outputFile)
+	fmt.Printf("File encrypted successfully: %s", outputFile)
 
 	// If requested, delete the source file.
 	if deleteSource {

@@ -16,14 +16,14 @@ import (
 type Interactive struct {
 	fileManager    files.FileManager
 	fileOperations operations.FileOperations
-	prompt         ui.Prompt
+	prompt         ui.PromptInput
 }
 
 // NewInteractive creates a new Interactive.
 func NewInteractive() *Interactive {
 	fileManager := files.NewFileManager(config.OverwritePasses)
 	fileOperations := operations.NewFileOperations(fileManager)
-	prompt := ui.NewPrompt(config.PasswordMinLen)
+	prompt := ui.NewPromptInput(config.PasswordMinLen)
 	return &Interactive{
 		fileManager:    fileManager,
 		prompt:         prompt,
@@ -63,7 +63,7 @@ func (a *Interactive) runInteractiveLoop() error {
 	if err != nil {
 		return fmt.Errorf("failed to get file information: %w", err)
 	}
-	a.prompt.ShowFileInfo(fileInfos)
+	a.fileManager.ShowFileInfo(fileInfos)
 
 	// Let the user choose a file to process.
 	selectedFile, err := a.prompt.ChooseFile(eligibleFiles)
@@ -71,7 +71,7 @@ func (a *Interactive) runInteractiveLoop() error {
 		return fmt.Errorf("failed to select file: %w", err)
 	}
 
-	a.prompt.ShowProcessingInfo(operation, selectedFile)
+	a.fileManager.ShowProcessingInfo(operation, selectedFile)
 
 	// Process the selected file.
 	if err := a.processFile(selectedFile, operation); err != nil {
@@ -127,7 +127,7 @@ func (a *Interactive) processFile(inputPath string, mode options.ProcessorMode) 
 	}
 
 	fmt.Println()
-	fmt.Printf("File encrypted successfully: %s\n", outputPath)
+	fmt.Printf("File encrypted successfully: %s", outputPath)
 	fmt.Println()
 
 	// Ask the user if they want to delete the source file.
