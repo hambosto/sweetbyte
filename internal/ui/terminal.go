@@ -1,4 +1,3 @@
-// Package ui provides components for the user interface of the SweetByte application.
 package ui
 
 import (
@@ -7,17 +6,14 @@ import (
 	"github.com/inancgumus/screen"
 )
 
-// Clear clears the terminal screen.
 func Clear() {
 	screen.Clear()
 }
 
-// MoveTopLeft moves the cursor to the top-left corner of the terminal.
 func MoveTopLeft() {
 	screen.MoveTopLeft()
 }
 
-// PrintBanner prints the application's banner to the terminal.
 func PrintBanner() {
 	banner := `
    _____                   __  ____        __     
