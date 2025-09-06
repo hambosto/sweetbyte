@@ -25,7 +25,7 @@ type shards struct {
 }
 
 // NewShards creates a new Shards instance.
-func NewShards(dataShards, parityShards int) *shards {
+func NewShards(dataShards, parityShards int) Shards {
 	return &shards{
 		dataShards:   dataShards,
 		parityShards: parityShards,
