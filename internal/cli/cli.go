@@ -11,9 +11,9 @@ import (
 )
 
 type CLI struct {
-	fileManager	files.FileManager
-	fileOperations	operations.FileOperations
-	prompt		ui.PromptInput
+	fileManager    files.FileManager
+	fileOperations operations.FileOperations
+	prompt         ui.PromptInput
 }
 
 func NewCLI() *CLI {
@@ -21,9 +21,9 @@ func NewCLI() *CLI {
 	fileOperations := operations.NewFileOperations(fileManager)
 	prompt := ui.NewPromptInput(config.PasswordMinLen)
 	return &CLI{
-		fileManager:	fileManager,
-		fileOperations:	fileOperations,
-		prompt:		prompt,
+		fileManager:    fileManager,
+		fileOperations: fileOperations,
+		prompt:         prompt,
 	}
 }
 
@@ -42,7 +42,6 @@ func (p *CLI) Encrypt(inputFile, outputFile, password string, deleteSource, secu
 	}
 
 	fmt.Printf("File encrypted successfully: %s", outputFile)
-
 	if deleteSource {
 		deleteOption := options.DeleteStandard
 		if secureDelete {
@@ -74,7 +73,6 @@ func (p *CLI) Decrypt(inputFile, outputFile, password string, deleteSource, secu
 	}
 
 	fmt.Printf("✓ File decrypted successfully: %s\n", outputFile)
-
 	if deleteSource {
 		deleteOption := options.DeleteStandard
 		if secureDelete {

@@ -10,12 +10,9 @@ import (
 type Level int
 
 const (
-	LevelNoCompression	Level	= iota
-
+	LevelNoCompression Level = iota
 	LevelBestSpeed
-
 	LevelDefaultCompression
-
 	LevelBestCompression
 )
 

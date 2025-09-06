@@ -12,16 +12,16 @@ type Shards interface {
 }
 
 type shards struct {
-	dataShards	int
-	parityShards	int
-	totalShards	int
+	dataShards   int
+	parityShards int
+	totalShards  int
 }
 
 func NewShards(dataShards, parityShards int) *shards {
 	return &shards{
-		dataShards:	dataShards,
-		parityShards:	parityShards,
-		totalShards:	dataShards + parityShards,
+		dataShards:   dataShards,
+		parityShards: parityShards,
+		totalShards:  dataShards + parityShards,
 	}
 }
 
@@ -63,7 +63,6 @@ func (s *shards) Combine(shards [][]byte) []byte {
 	shardSize := len(shards[0])
 	totalSize := shardSize * len(shards)
 	result := make([]byte, totalSize)
-
 	for i, shard := range shards {
 		start := i * shardSize
 		copy(result[start:start+shardSize], shard)
@@ -79,7 +78,6 @@ func (s *shards) Extract(shards [][]byte) ([]byte, error) {
 
 	shardSize := len(shards[0])
 	combined := make([]byte, 0, shardSize*s.dataShards)
-
 	for i := 0; i < s.dataShards; i++ {
 		combined = append(combined, shards[i]...)
 	}

@@ -46,7 +46,6 @@ func (w *chunkWriter) WriteChunks(ctx context.Context, output io.Writer, results
 				return err
 			}
 		case <-ctx.Done():
-
 			return ctx.Err()
 		}
 	}

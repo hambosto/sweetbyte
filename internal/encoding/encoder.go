@@ -16,10 +16,10 @@ type Encoder interface {
 }
 
 type encoder struct {
-	dataShards	int
-	parityShards	int
-	encoder		reedsolomon.Encoder
-	shards		Shards
+	dataShards   int
+	parityShards int
+	encoder      reedsolomon.Encoder
+	shards       Shards
 }
 
 func NewEncoder(dataShards, parityShards int) (Encoder, error) {
@@ -39,10 +39,10 @@ func NewEncoder(dataShards, parityShards int) (Encoder, error) {
 	}
 
 	return &encoder{
-		dataShards:	dataShards,
-		parityShards:	parityShards,
-		encoder:	enc,
-		shards:		NewShards(dataShards, parityShards),
+		dataShards:   dataShards,
+		parityShards: parityShards,
+		encoder:      enc,
+		shards:       NewShards(dataShards, parityShards),
 	}, nil
 }
 
@@ -55,7 +55,6 @@ func (e *encoder) Encode(data []byte) ([]byte, error) {
 	}
 
 	shards := e.shards.Split(data)
-
 	if err := e.encoder.Encode(shards); err != nil {
 		return nil, fmt.Errorf("encoding failed: %w", err)
 	}
@@ -65,7 +64,6 @@ func (e *encoder) Encode(data []byte) ([]byte, error) {
 
 func (e *encoder) Decode(encoded []byte) ([]byte, error) {
 	totalShards := e.dataShards + e.parityShards
-
 	if len(encoded) == 0 {
 		return nil, fmt.Errorf("encoded data cannot be empty")
 	}

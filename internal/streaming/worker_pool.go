@@ -49,7 +49,6 @@ func (p *workerPool) worker(ctx context.Context, wg *sync.WaitGroup, tasks <-cha
 			}
 
 			result := p.processor.Process(ctx, task)
-
 			select {
 			case results <- result:
 
