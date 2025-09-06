@@ -9,14 +9,19 @@ import (
 	"github.com/hambosto/sweetbyte/internal/processor"
 )
 
+// TaskProcessor processes individual tasks (chunks of data).
+type TaskProcessor interface {
+	Process(ctx context.Context, task Task) TaskResult
+}
+
 // taskProcessor processes individual tasks (chunks of data).
 type taskProcessor struct {
-	processor  *processor.Processor
+	processor  processor.Processor
 	processing options.Processing
 }
 
-// NewTaskProcessor creates a new taskProcessor with the given key and processing type.
-func NewTaskProcessor(key []byte, processing options.Processing) (*taskProcessor, error) {
+// NewTaskProcessor creates a new TaskProcessor with the given key and processing type.
+func NewTaskProcessor(key []byte, processing options.Processing) (TaskProcessor, error) {
 	// Create a new processor.
 	proc, err := processor.NewProcessor(key)
 	if err != nil {

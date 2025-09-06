@@ -11,17 +11,23 @@ import (
 	"github.com/hambosto/sweetbyte/internal/padding"
 )
 
-// Processor handles the multi-layered encryption and decryption process.
-type Processor struct {
-	firstCipher  *cipher.AESCipher
-	secondCipher *cipher.XChaCha20Cipher
-	encoder      *encoding.Encoder
-	compressor   *compression.Compressor
-	padding      *padding.Padding
+// Processor defines the interface for the core processing logic.
+type Processor interface {
+	Encrypt(data []byte) ([]byte, error)
+	Decrypt(data []byte) ([]byte, error)
+}
+
+// processor handles the multi-layered encryption and decryption process.
+type processor struct {
+	firstCipher  cipher.Cipher
+	secondCipher cipher.Cipher
+	encoder      encoding.Encoder
+	compressor   compression.Compressor
+	padding      padding.Padding
 }
 
 // NewProcessor creates a new Processor with the given key.
-func NewProcessor(key []byte) (*Processor, error) {
+func NewProcessor(key []byte) (Processor, error) {
 	// The key must be the correct size.
 	if len(key) < config.MasterKeySize {
 		return nil, fmt.Errorf("encryption key must be at least %d bytes long, got %d bytes", config.MasterKeySize, len(key))
@@ -57,7 +63,7 @@ func NewProcessor(key []byte) (*Processor, error) {
 		return nil, fmt.Errorf("failed to initialize PKCS#7 padding: %w", err)
 	}
 
-	return &Processor{
+	return &processor{
 		firstCipher:  firstCipher,
 		secondCipher: secondCipher,
 		encoder:      encoder,
@@ -67,7 +73,7 @@ func NewProcessor(key []byte) (*Processor, error) {
 }
 
 // Encrypt encrypts the given data.
-func (p *Processor) Encrypt(data []byte) ([]byte, error) {
+func (p *processor) Encrypt(data []byte) ([]byte, error) {
 	// Compress the data.
 	compressed, err := p.compressor.Compress(data)
 	if err != nil {
@@ -102,7 +108,7 @@ func (p *Processor) Encrypt(data []byte) ([]byte, error) {
 }
 
 // Decrypt decrypts the given data.
-func (p *Processor) Decrypt(data []byte) ([]byte, error) {
+func (p *processor) Decrypt(data []byte) ([]byte, error) {
 	// Decode the data with Reed-Solomon codes.
 	decoded, err := p.encoder.Decode(data)
 	if err != nil {

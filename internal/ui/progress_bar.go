@@ -5,14 +5,19 @@ import (
 	"github.com/schollz/progressbar/v3"
 )
 
-// ProgressBar is a wrapper around the progressbar library.
-type ProgressBar struct {
+// ProgressBar defines the interface for a progress bar.
+type ProgressBar interface {
+	Add(size int64) error
+}
+
+// progressBar is a wrapper around the progressbar library.
+type progressBar struct {
 	bar         *progressbar.ProgressBar
 	description string
 }
 
 // NewProgressBar creates a new ProgressBar instance.
-func NewProgressBar(totalSize int64, description string) *ProgressBar {
+func NewProgressBar(totalSize int64, description string) ProgressBar {
 	// Initialize a new progress bar with the given options.
 	bar := progressbar.NewOptions64(
 		totalSize,
@@ -24,13 +29,13 @@ func NewProgressBar(totalSize int64, description string) *ProgressBar {
 		progressbar.OptionSetTheme(progressbar.ThemeUnicode),
 	)
 
-	return &ProgressBar{
+	return &progressBar{
 		bar:         bar,
 		description: description,
 	}
 }
 
 // Add adds the given size to the progress bar.
-func (p *ProgressBar) Add(size int64) error {
+func (p *progressBar) Add(size int64) error {
 	return p.bar.Add64(size)
 }

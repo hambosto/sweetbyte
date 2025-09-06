@@ -24,17 +24,22 @@ type TaskResult struct {
 	Err   error
 }
 
+// StreamProcessor handles the entire streaming process.
+type StreamProcessor interface {
+	Process(ctx context.Context, input io.Reader, output io.Writer, totalSize int64) error
+}
+
 // streamProcessor handles the entire streaming process.
 type streamProcessor struct {
 	streamConfig  StreamConfig
-	taskProcessor *taskProcessor
-	reader        *chunkReader
-	writer        *chunkWriter
-	pool          *workerPool
+	taskProcessor TaskProcessor
+	reader        ChunkReader
+	writer        ChunkWriter
+	pool          WorkerPool
 }
 
 // NewStreamProcessor creates a new streamProcessor with the given configuration.
-func NewStreamProcessor(config StreamConfig) (*streamProcessor, error) {
+func NewStreamProcessor(config StreamConfig) (StreamProcessor, error) {
 	// Validate the configuration.
 	if err := config.Validate(); err != nil {
 		return nil, err
@@ -52,7 +57,7 @@ func NewStreamProcessor(config StreamConfig) (*streamProcessor, error) {
 		streamConfig:  config,
 		taskProcessor: taskProcessor,
 		reader:        NewChunkReader(config.Processing, config.ChunkSize, config.Concurrency),
-		pool:          NewWorkerPool(*taskProcessor, config.Concurrency),
+		pool:          NewWorkerPool(taskProcessor, config.Concurrency),
 	}, nil
 }
 

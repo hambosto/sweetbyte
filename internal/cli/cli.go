@@ -4,32 +4,34 @@ package cli
 import (
 	"fmt"
 
+	"github.com/hambosto/sweetbyte/internal/config"
 	"github.com/hambosto/sweetbyte/internal/files"
 	"github.com/hambosto/sweetbyte/internal/operations"
 	"github.com/hambosto/sweetbyte/internal/options"
 	"github.com/hambosto/sweetbyte/internal/ui"
 )
 
-// CLIProcessor handles the command-line interface operations.
-type CLIProcessor struct {
-	encryptor   *operations.Encryptor
-	decryptor   *operations.Decryptor
-	fileManager *files.Manager
-	prompt      *ui.Prompt
+// CLI handles the command-line interface operations.
+type CLI struct {
+	fileManager    files.FileManager
+	fileOperations operations.FileOperations
+	prompt         ui.Prompt
 }
 
-// NewCLIProcessor creates a new CLIProcessor.
-func NewCLIProcessor() *CLIProcessor {
-	return &CLIProcessor{
-		encryptor:   operations.NewEncryptor(),
-		decryptor:   operations.NewDecryptor(),
-		fileManager: files.NewManager(),
-		prompt:      ui.NewPrompt(8),
+// NewCLI creates a new CLI.
+func NewCLI() *CLI {
+	fileManager := files.NewFileManager(config.OverwritePasses)
+	fileOperations := operations.NewFileOperations(fileManager)
+	prompt := ui.NewPrompt(config.PasswordMinLen)
+	return &CLI{
+		fileManager:    fileManager,
+		fileOperations: fileOperations,
+		prompt:         prompt,
 	}
 }
 
 // Encrypt encrypts a file using the command-line interface.
-func (p *CLIProcessor) Encrypt(inputFile, outputFile, password string, deleteSource, secureDelete bool) error {
+func (p *CLI) Encrypt(inputFile, outputFile, password string, deleteSource, secureDelete bool) error {
 	// If no password is provided, prompt the user for one.
 	if len(password) == 0 {
 		var err error
@@ -41,8 +43,8 @@ func (p *CLIProcessor) Encrypt(inputFile, outputFile, password string, deleteSou
 
 	// Encrypt the file.
 	fmt.Printf("Encrypting: %s -> %s\n", inputFile, outputFile)
-	if err := p.encryptor.EncryptFile(inputFile, outputFile, password); err != nil {
-		return fmt.Errorf("failed to encrypt '%s': %w", inputFile, err)
+	if err := p.fileOperations.Encrypt(inputFile, outputFile, password); err != nil {
+		return fmt.Errorf("failed to encrypt %s: %w", inputFile, err)
 	}
 
 	fmt.Printf("✓ File encrypted successfully: %s\n", outputFile)
@@ -65,7 +67,7 @@ func (p *CLIProcessor) Encrypt(inputFile, outputFile, password string, deleteSou
 }
 
 // Decrypt decrypts a file using the command-line interface.
-func (p *CLIProcessor) Decrypt(inputFile, outputFile, password string, deleteSource, secureDelete bool) error {
+func (p *CLI) Decrypt(inputFile, outputFile, password string, deleteSource, secureDelete bool) error {
 	// If no password is provided, prompt the user for one.
 	if len(password) == 0 {
 		var err error
@@ -77,8 +79,8 @@ func (p *CLIProcessor) Decrypt(inputFile, outputFile, password string, deleteSou
 
 	// Decrypt the file.
 	fmt.Printf("Decrypting: %s -> %s\n", inputFile, outputFile)
-	if err := p.decryptor.DecryptFile(inputFile, outputFile, password); err != nil {
-		return fmt.Errorf("failed to decrypt '%s': %w", inputFile, err)
+	if err := p.fileOperations.Decrypt(inputFile, outputFile, password); err != nil {
+		return fmt.Errorf("failed to decrypt %s: %w", inputFile, err)
 	}
 
 	fmt.Printf("✓ File decrypted successfully: %s\n", outputFile)

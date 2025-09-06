@@ -6,14 +6,19 @@ import (
 	"sync"
 )
 
-// workerPool manages a pool of workers for processing tasks concurrently.
+// WorkerPool manages a pool of workers for processing tasks concurrently.
+type WorkerPool interface {
+	Process(ctx context.Context, tasks <-chan Task) <-chan TaskResult
+}
+
+// defaultWorkerPool manages a pool of workers for processing tasks concurrently.
 type workerPool struct {
-	processor   taskProcessor
+	processor   TaskProcessor
 	concurrency int
 }
 
 // NewWorkerPool creates a new workerPool with the given task processor and concurrency level.
-func NewWorkerPool(processor taskProcessor, concurrency int) *workerPool {
+func NewWorkerPool(processor TaskProcessor, concurrency int) WorkerPool {
 	return &workerPool{
 		processor:   processor,
 		concurrency: concurrency,

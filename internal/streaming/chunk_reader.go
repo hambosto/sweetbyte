@@ -3,12 +3,18 @@ package streaming
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 
 	"github.com/hambosto/sweetbyte/internal/options"
 	"github.com/hambosto/sweetbyte/internal/utils"
 )
+
+// ChunkReader reads data from an io.Reader and splits it into chunks for processing.
+type ChunkReader interface {
+	ReadChunks(ctx context.Context, input io.Reader) (<-chan Task, <-chan error)
+}
 
 // chunkReader reads data from an io.Reader and splits it into chunks for processing.
 // The reading strategy depends on whether the operation is encryption or decryption.
@@ -19,7 +25,7 @@ type chunkReader struct {
 }
 
 // NewChunkReader creates a new ChunkReader with the specified processing mode and chunk size.
-func NewChunkReader(processing options.Processing, chunkSize, concurrency int) *chunkReader {
+func NewChunkReader(processing options.Processing, chunkSize, concurrency int) ChunkReader {
 	return &chunkReader{
 		processing:  processing,
 		chunkSize:   chunkSize,
@@ -49,7 +55,7 @@ func (r *chunkReader) ReadChunks(ctx context.Context, input io.Reader) (<-chan T
 		}
 
 		// If an error occurs (and it's not a context cancellation), send it to the error channel.
-		if err != nil && err != context.Canceled {
+		if err != nil && !errors.Is(err, context.Canceled) {
 			select {
 			case errChan <- err:
 			case <-ctx.Done():

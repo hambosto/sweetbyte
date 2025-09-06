@@ -8,12 +8,12 @@ import (
 	"io"
 )
 
-// CompressionLevel defines the level of compression to be used.
-type CompressionLevel int
+// Level CompressionLevel defines the level of compression to be used.
+type Level int
 
 const (
 	// LevelNoCompression disables compression.
-	LevelNoCompression CompressionLevel = iota
+	LevelNoCompression Level = iota
 	// LevelBestSpeed provides the fastest compression.
 	LevelBestSpeed
 	// LevelDefaultCompression provides the default compression level.
@@ -22,13 +22,19 @@ const (
 	LevelBestCompression
 )
 
-// Compressor handles data compression and decompression.
-type Compressor struct {
+// Compressor defines the interface for data compression and decompression.
+type Compressor interface {
+	Compress(data []byte) ([]byte, error)
+	Decompress(data []byte) ([]byte, error)
+}
+
+// zlibCompressor handles data compression and decompression using zlib.
+type compressor struct {
 	level int
 }
 
 // NewCompressor creates a new Compressor with the specified compression level.
-func NewCompressor(level CompressionLevel) (*Compressor, error) {
+func NewCompressor(level Level) (Compressor, error) {
 	var zlibLevel int
 
 	// Map the custom compression level to the zlib compression level.
@@ -45,11 +51,11 @@ func NewCompressor(level CompressionLevel) (*Compressor, error) {
 		zlibLevel = zlib.DefaultCompression
 	}
 
-	return &Compressor{level: zlibLevel}, nil
+	return &compressor{level: zlibLevel}, nil
 }
 
 // Compress compresses the given data.
-func (c *Compressor) Compress(data []byte) ([]byte, error) {
+func (c *compressor) Compress(data []byte) ([]byte, error) {
 	// Data cannot be empty.
 	if len(data) == 0 {
 		return nil, fmt.Errorf("data cannot be empty")
@@ -76,7 +82,7 @@ func (c *Compressor) Compress(data []byte) ([]byte, error) {
 }
 
 // Decompress decompress the given data.
-func (c *Compressor) Decompress(data []byte) ([]byte, error) {
+func (c *compressor) Decompress(data []byte) ([]byte, error) {
 	// Data cannot be empty.
 	if len(data) == 0 {
 		return nil, fmt.Errorf("data cannot be empty")

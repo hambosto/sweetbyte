@@ -10,25 +10,25 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// CLI represents the command-line interface of the application.
-type CLI struct {
+// Commands represents the command-line interface of the application.
+type Commands struct {
 	rootCmd *cobra.Command
 }
 
-// NewCLI creates a new CLI instance and sets up the commands.
-func NewCLI() *CLI {
-	cli := &CLI{}
+// NewCommands creates a new Commands instance and sets up the commands.
+func NewCommands() *Commands {
+	cli := &Commands{}
 	cli.setupCommands()
 	return cli
 }
 
-// Execute runs the root command of the CLI.
-func (c *CLI) Execute() error {
+// Execute runs the root command of the Commands.
+func (c *Commands) Execute() error {
 	return c.rootCmd.Execute()
 }
 
 // setupCommands sets up the root command and all subcommands.
-func (c *CLI) setupCommands() {
+func (c *Commands) setupCommands() {
 	c.rootCmd = &cobra.Command{
 		Use:   "sweetbyte",
 		Short: "A tool for multi-layered file encryption and error correction.",
@@ -40,7 +40,7 @@ SweetByte can be run in a user-friendly interactive mode or via the command line
 		Version: config.AppVersion,
 		Run: func(cmd *cobra.Command, args []string) {
 			// If no command is specified, run the interactive mode.
-			interactiveApp := interactive.NewInteractiveApp()
+			interactiveApp := interactive.NewInteractive()
 			interactiveApp.Run()
 		},
 	}
@@ -52,7 +52,7 @@ SweetByte can be run in a user-friendly interactive mode or via the command line
 }
 
 // createEncryptCommand creates the encrypt command.
-func (c *CLI) createEncryptCommand() *cobra.Command {
+func (c *Commands) createEncryptCommand() *cobra.Command {
 	var (
 		inputFile    string
 		outputFile   string
@@ -92,7 +92,7 @@ corruption. A strong encryption key is derived from your password using Argon2id
 }
 
 // createDecryptCommand creates the decrypt command.
-func (c *CLI) createDecryptCommand() *cobra.Command {
+func (c *Commands) createDecryptCommand() *cobra.Command {
 	var (
 		inputFile    string
 		outputFile   string
@@ -132,7 +132,7 @@ file. The correct password is required to derive the necessary decryption key.`,
 }
 
 // createInteractiveCommand creates the interactive command.
-func (c *CLI) createInteractiveCommand() *cobra.Command {
+func (c *Commands) createInteractiveCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "interactive",
 		Short: "Starts a guided session for multi-layered encryption and decryption.",
@@ -141,14 +141,14 @@ experience for encrypting and decrypting files using the multi-layered security 
 This is ideal for users who prefer a more intuitive and user-friendly interface.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			// Run the interactive mode.
-			interactiveApp := interactive.NewInteractiveApp()
+			interactiveApp := interactive.NewInteractive()
 			interactiveApp.Run()
 		},
 	}
 }
 
 // runEncrypt runs the encryption process.
-func (c *CLI) runEncrypt(inputFile, outputFile, password string, deleteSource, secureDelete bool) error {
+func (c *Commands) runEncrypt(inputFile, outputFile, password string, deleteSource, secureDelete bool) error {
 	// Check if the input file exists.
 	if _, err := os.Stat(inputFile); err != nil {
 		if os.IsNotExist(err) {
@@ -169,13 +169,13 @@ func (c *CLI) runEncrypt(inputFile, outputFile, password string, deleteSource, s
 		return fmt.Errorf("failed to access output file %s: %w", outputFile, err)
 	}
 
-	// Create a new CLI processor and run the encryption.
-	processor := NewCLIProcessor()
+	// Create a new Commands processor and run the encryption.
+	processor := NewCLI()
 	return processor.Encrypt(inputFile, outputFile, password, deleteSource, secureDelete)
 }
 
 // runDecrypt runs the decryption process.
-func (c *CLI) runDecrypt(inputFile, outputFile, password string, deleteSource, secureDelete bool) error {
+func (c *Commands) runDecrypt(inputFile, outputFile, password string, deleteSource, secureDelete bool) error {
 	// Check if the input file exists.
 	if _, err := os.Stat(inputFile); err != nil {
 		if os.IsNotExist(err) {
@@ -201,7 +201,7 @@ func (c *CLI) runDecrypt(inputFile, outputFile, password string, deleteSource, s
 		return fmt.Errorf("failed to access output file %s: %w", outputFile, err)
 	}
 
-	// Create a new CLI processor and run the decryption.
-	processor := NewCLIProcessor()
+	// Create a new Commands processor and run the decryption.
+	processor := NewCLI()
 	return processor.Decrypt(inputFile, outputFile, password, deleteSource, secureDelete)
 }

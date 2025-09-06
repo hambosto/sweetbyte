@@ -6,6 +6,12 @@ import (
 	"sync"
 )
 
+// OrderBuffer is a buffer that stores and retrieves task results in order.
+type OrderBuffer interface {
+	Add(result TaskResult) []TaskResult
+	Flush() []TaskResult
+}
+
 // orderBuffer is a buffer that stores and retrieves task results in order.
 type orderBuffer struct {
 	mu      sync.Mutex
@@ -14,7 +20,7 @@ type orderBuffer struct {
 }
 
 // NewOrderBuffer creates a new orderBuffer.
-func NewOrderBuffer() *orderBuffer {
+func NewOrderBuffer() OrderBuffer {
 	return &orderBuffer{
 		results: make(map[uint64]TaskResult),
 		next:    0,

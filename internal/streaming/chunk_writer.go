@@ -11,17 +11,22 @@ import (
 	"github.com/hambosto/sweetbyte/internal/utils"
 )
 
+// ChunkWriter writes processed chunks to an io.Writer.
+type ChunkWriter interface {
+	WriteChunks(ctx context.Context, output io.Writer, results <-chan TaskResult) error
+}
+
 // chunkWriter writes processed chunks to an io.Writer.
 // It uses an OrderBuffer to ensure chunks are written in the correct sequence.
 type chunkWriter struct {
 	processing options.Processing
-	buffer     *orderBuffer
-	bar        *ui.ProgressBar
+	buffer     OrderBuffer
+	bar        ui.ProgressBar
 }
 
 // NewChunkWriter creates a new ChunkWriter.
 // It takes the processing mode (encryption/decryption) and an optional progress bar.
-func NewChunkWriter(processing options.Processing, bar *ui.ProgressBar) *chunkWriter {
+func NewChunkWriter(processing options.Processing, bar ui.ProgressBar) ChunkWriter {
 	return &chunkWriter{
 		processing: processing,
 		buffer:     NewOrderBuffer(),
