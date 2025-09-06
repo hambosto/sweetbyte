@@ -109,7 +109,7 @@ func (p *promptInput) ChooseFile(fileList []string) (string, error) {
 // getPassword securely prompts for a password (hidden input).
 func (p *promptInput) getPassword(message string) (string, error) {
 	var password string
-	err := huh.NewInput().Title(message).EchoMode(huh.EchoModePassword).Value(&password).Run()
+	err := huh.NewInput().Title(message).EchoMode(huh.EchoModePassword).Value(&password).WithTheme(huh.ThemeCatppuccin()).Run()
 	if err != nil {
 		return "", fmt.Errorf("password prompt failed: %w", err)
 	}
@@ -130,7 +130,7 @@ func (p *promptInput) validatePassword(password string) error {
 // confirm presents a Yes/No choice and returns the boolean value.
 func (p *promptInput) confirm(message string) (bool, error) {
 	var confirm bool
-	err := huh.NewConfirm().Title(message).Value(&confirm).Run()
+	err := huh.NewConfirm().Title(message).Value(&confirm).WithTheme(huh.ThemeCatppuccin()).Run()
 	if err != nil {
 		return false, fmt.Errorf("confirmation failed: %w", err)
 	}
@@ -148,7 +148,7 @@ func (p *promptInput) choose(title string, optionList []string) (string, error) 
 		options[i] = huh.NewOption(option, option)
 	}
 
-	err := huh.NewSelect[string]().Title(title).Options(options...).Value(&selected).Run()
+	err := huh.NewSelect[string]().Title(title).Options(options...).Value(&selected).WithTheme(huh.ThemeCatppuccin()).Run()
 	if err != nil {
 		return "", fmt.Errorf("selection failed: %w", err)
 	}
