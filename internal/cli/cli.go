@@ -44,7 +44,7 @@ func (p *CLI) Encrypt(inputFile, outputFile, password string, deleteSource, secu
 	// Encrypt the file.
 	fmt.Printf("Encrypting: %s -> %s\n", inputFile, outputFile)
 	if err := p.fileOperations.Encrypt(inputFile, outputFile, password); err != nil {
-		return fmt.Errorf("failed to encrypt '%s': %w", inputFile, err)
+		return fmt.Errorf("failed to encrypt %s: %w", inputFile, err)
 	}
 
 	fmt.Printf("✓ File encrypted successfully: %s\n", outputFile)
@@ -80,7 +80,7 @@ func (p *CLI) Decrypt(inputFile, outputFile, password string, deleteSource, secu
 	// Decrypt the file.
 	fmt.Printf("Decrypting: %s -> %s\n", inputFile, outputFile)
 	if err := p.fileOperations.Decrypt(inputFile, outputFile, password); err != nil {
-		return fmt.Errorf("failed to decrypt '%s': %w", inputFile, err)
+		return fmt.Errorf("failed to decrypt %s: %w", inputFile, err)
 	}
 
 	fmt.Printf("✓ File decrypted successfully: %s\n", outputFile)

@@ -158,7 +158,7 @@ func (a *Interactive) encryptFile(srcPath, destPath string) error {
 
 	// Encrypt the file.
 	if err := a.fileOperations.Encrypt(srcPath, destPath, password); err != nil {
-		return fmt.Errorf("failed to encrypt '%s': %w", srcPath, err)
+		return fmt.Errorf("failed to encrypt %s: %w", srcPath, err)
 	}
 
 	return nil
@@ -174,7 +174,7 @@ func (a *Interactive) decryptFile(srcPath, destPath string) error {
 
 	// Decrypt the file.
 	if err := a.fileOperations.Decrypt(srcPath, destPath, password); err != nil {
-		return fmt.Errorf("failed to decrypt '%s': %w", srcPath, err)
+		return fmt.Errorf("failed to decrypt %s: %w", srcPath, err)
 	}
 
 	return nil
