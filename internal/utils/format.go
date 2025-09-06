@@ -1,9 +1,11 @@
+// Package utils provides utility functions.
 package utils
 
 import (
 	"fmt"
 )
 
+// FormatBytes formats a byte count into a human-readable string.
 func FormatBytes(bytes int64) string {
 	if bytes == 0 {
 		return "0 B"

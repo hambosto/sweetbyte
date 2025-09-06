@@ -1,9 +1,11 @@
+// Package utils provides utility functions.
 package utils
 
 import (
 	"encoding/binary"
 )
 
+// ToBytes converts a uint16, uint32, or uint64 to a byte slice.
 func ToBytes(v any) []byte {
 	switch val := v.(type) {
 	case uint16:
@@ -22,6 +24,7 @@ func ToBytes(v any) []byte {
 	return nil
 }
 
+// FromBytes converts a byte slice to a uint16, uint32, or uint64.
 func FromBytes[T ~uint16 | ~uint32 | ~uint64](b []byte) T {
 	var zero T
 	switch any(zero).(type) {

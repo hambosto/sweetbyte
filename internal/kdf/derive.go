@@ -1,3 +1,4 @@
+// Package kdf provides key derivation functionalities.
 package kdf
 
 import (
@@ -10,20 +11,27 @@ import (
 )
 
 const (
-	ArgonTime    uint32 = 8
-	ArgonMemory  uint32 = 128 * 1024
-	ArgonThreads uint8  = 8
+	// ArgonTime is the number of iterations for Argon2id.
+	ArgonTime = 8
+	// ArgonMemory is the memory usage in KiB for Argon2id.
+	ArgonMemory = 128 * 1024
+	// ArgonThreads is the number of threads for Argon2id.
+	ArgonThreads = 8
 )
 
+// Hash derives a key from a password and salt using Argon2id.
 func Hash(password, salt []byte) ([]byte, error) {
+	// Ensure the password is not empty.
 	if len(password) == 0 {
 		return nil, fmt.Errorf("password cannot be empty")
 	}
 
+	// Ensure the salt has the correct size.
 	if len(salt) != config.SaltSize {
 		return nil, fmt.Errorf("expected %d bytes, got %d", config.SaltSize, len(salt))
 	}
 
+	// Derive the key using Argon2id.
 	key := argon2.IDKey(
 		password,
 		salt,
@@ -36,6 +44,7 @@ func Hash(password, salt []byte) ([]byte, error) {
 	return key, nil
 }
 
+// GetRandomSalt generates a random salt of the given size.
 func GetRandomSalt(size int) ([]byte, error) {
 	salt := make([]byte, size)
 	if _, err := io.ReadFull(rand.Reader, salt); err != nil {

@@ -1,3 +1,4 @@
+// Package operations provides file encryption and decryption functionalities.
 package operations
 
 import (
@@ -12,52 +13,65 @@ import (
 	"github.com/hambosto/sweetbyte/internal/streaming"
 )
 
+// FileOperations defines the interface for file operations.
 type FileOperations interface {
+	// Encrypt encrypts the source file and saves it to the destination file.
 	Encrypt(srcPath, destPath, password string) error
+	// Decrypt decrypts the source file and saves it to the destination file.
 	Decrypt(srcPath, destPath, password string) error
 }
 
+// fileOperations implements the FileOperations interface.
 type fileOperations struct {
 	fileManager files.FileManager
 }
 
+// NewFileOperations creates a new FileOperations instance.
 func NewFileOperations(fileManager files.FileManager) FileOperations {
 	return &fileOperations{fileManager: fileManager}
 }
 
+// Encrypt encrypts the source file and saves it to the destination file.
 func (o *fileOperations) Encrypt(srcPath, destPath, password string) error {
+	// Open the source file.
 	srcFile, srcInfo, err := o.fileManager.OpenFile(srcPath)
 	if err != nil {
 		return fmt.Errorf("failed to open source file: %w", err)
 	}
 	defer srcFile.Close()
 
+	// Create the destination file.
 	destFile, err := o.fileManager.CreateFile(destPath)
 	if err != nil {
 		return fmt.Errorf("failed to create destination file: %w", err)
 	}
 	defer destFile.Close()
 
+	// Generate a random salt.
 	salt, err := kdf.GetRandomSalt(config.SaltSize)
 	if err != nil {
 		return fmt.Errorf("failed to generate salt: %w", err)
 	}
 
+	// Derive the encryption key from the password and salt.
 	key, err := kdf.Hash([]byte(password), salt)
 	if err != nil {
 		return fmt.Errorf("failed to derive key: %w", err)
 	}
 
+	// Get the original file size.
 	originalSize := srcInfo.Size()
 	if originalSize < 0 {
 		return fmt.Errorf("invalid file size: %d", originalSize)
 	}
 
+	// Create a new header.
 	h, err := header.NewHeader(uint64(originalSize))
 	if err != nil {
 		return fmt.Errorf("failed to create header: %w", err)
 	}
 
+	// Marshal the header and write it to the destination file.
 	headerBytes, err := h.Marshal(salt, key)
 	if err != nil {
 		return fmt.Errorf("failed to marshal header: %w", err)
@@ -66,6 +80,7 @@ func (o *fileOperations) Encrypt(srcPath, destPath, password string) error {
 		return fmt.Errorf("failed to write header: %w", err)
 	}
 
+	// Create a new stream processor and process the file.
 	streamConfig := streaming.StreamConfig{
 		Key:        key,
 		Processing: options.Encryption,
@@ -84,13 +99,16 @@ func (o *fileOperations) Encrypt(srcPath, destPath, password string) error {
 	return nil
 }
 
+// Decrypt decrypts the source file and saves it to the destination file.
 func (o *fileOperations) Decrypt(srcPath, destPath, password string) error {
+	// Open the source file.
 	srcFile, _, err := o.fileManager.OpenFile(srcPath)
 	if err != nil {
 		return fmt.Errorf("failed to open source file: %w", err)
 	}
 	defer srcFile.Close()
 
+	// Read and verify the magic bytes.
 	magic, err := header.ReadMagic(srcFile)
 	if err != nil {
 		return fmt.Errorf("failed to read magic bytes: %w", err)
@@ -100,27 +118,32 @@ func (o *fileOperations) Decrypt(srcPath, destPath, password string) error {
 		return fmt.Errorf("invalid magic bytes: not a sweetbyte file")
 	}
 
+	// Read the salt.
 	salt, err := header.ReadSalt(srcFile)
 	if err != nil {
 		return fmt.Errorf("failed to read salt: %w", err)
 	}
 
+	// Derive the decryption key from the password and salt.
 	key, err := kdf.Hash([]byte(password), salt)
 	if err != nil {
 		return fmt.Errorf("failed to derive key: %w", err)
 	}
 
+	// Unmarshal the header.
 	h, err := header.Unmarshal(srcFile, key, magic, salt)
 	if err != nil {
 		return fmt.Errorf("decryption failed: incorrect password or corrupt file: %w", err)
 	}
 
+	// Create the destination file.
 	destFile, err := o.fileManager.CreateFile(destPath)
 	if err != nil {
 		return fmt.Errorf("failed to create destination file: %w", err)
 	}
 	defer destFile.Close()
 
+	// Create a new stream processor and process the file.
 	streamConfig := streaming.StreamConfig{
 		Key:        key,
 		Processing: options.Decryption,
