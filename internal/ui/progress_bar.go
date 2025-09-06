@@ -1,4 +1,4 @@
-// Package ui provides components for the user interface of the SweetByte application.
+// Package ui provides user interface functionalities.
 package ui
 
 import (
@@ -7,18 +7,19 @@ import (
 
 // ProgressBar defines the interface for a progress bar.
 type ProgressBar interface {
+	// Add adds the given size to the progress bar.
 	Add(size int64) error
 }
 
-// progressBar is a wrapper around the progressbar library.
+// progressBar implements the ProgressBar interface.
 type progressBar struct {
 	bar         *progressbar.ProgressBar
 	description string
 }
 
-// NewProgressBar creates a new ProgressBar instance.
+// NewProgressBar creates a new ProgressBar.
 func NewProgressBar(totalSize int64, description string) ProgressBar {
-	// Initialize a new progress bar with the given options.
+	// Create a new progress bar with the given options.
 	bar := progressbar.NewOptions64(
 		totalSize,
 		progressbar.OptionSetDescription(description),

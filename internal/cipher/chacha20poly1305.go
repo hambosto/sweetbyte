@@ -1,4 +1,4 @@
-// Package cipher provides cryptographic cipher implementations.
+// Package cipher provides cryptographic operations for encryption and decryption.
 package cipher
 
 import (
@@ -11,35 +11,45 @@ import (
 	"golang.org/x/crypto/chacha20poly1305"
 )
 
-// XChaCha20Cipher provides XChaCha20-Poly1305 encryption and decryption.
-type XChaCha20Cipher struct {
+// ChaCha20Cipher defines the interface for ChaCha20-Poly1305 encryption and decryption.
+type ChaCha20Cipher interface {
+	// Encrypt encrypts plaintext using XChaCha20-Poly1305.
+	Encrypt(plaintext []byte) ([]byte, error)
+	// Decrypt decrypts ciphertext using XChaCha20-Poly1305.
+	Decrypt(ciphertext []byte) ([]byte, error)
+}
+
+// chaCha20Cipher implements the ChaCha20Cipher interface.
+type chaCha20Cipher struct {
 	aead cipher.AEAD
 }
 
-// NewXChaCha20Cipher creates a new XChaCha20Cipher with the given key.
-func NewXChaCha20Cipher(key []byte) (*XChaCha20Cipher, error) {
-	// The key must be the correct size for XChaCha20-Poly1305.
+// NewChaCha20Cipher creates a new ChaCha20Cipher with the given key.
+// It initializes an XChaCha20-Poly1305 AEAD cipher.
+func NewChaCha20Cipher(key []byte) (ChaCha20Cipher, error) {
+	// Ensure the key has the required size.
 	if len(key) != config.EncryptionKeySize {
 		return nil, fmt.Errorf("key must be %d bytes, got %d", config.EncryptionKeySize, len(key))
 	}
 
-	// Create a new XChaCha20-Poly1305 AEAD.
+	// Create a new XChaCha20-Poly1305 AEAD cipher.
 	aead, err := chacha20poly1305.NewX(key)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create XChaCha20-Poly1305 cipher: %w", err)
 	}
 
-	return &XChaCha20Cipher{aead: aead}, nil
+	return &chaCha20Cipher{aead: aead}, nil
 }
 
 // Encrypt encrypts the given plaintext.
-func (c *XChaCha20Cipher) Encrypt(plaintext []byte) ([]byte, error) {
-	// Plaintext cannot be empty.
+// It generates a random nonce and seals the plaintext to produce the ciphertext.
+func (c *chaCha20Cipher) Encrypt(plaintext []byte) ([]byte, error) {
+	// Ensure plaintext is not empty.
 	if len(plaintext) == 0 {
 		return nil, fmt.Errorf("plaintext cannot be empty")
 	}
 
-	// Generate a random nonce.
+	// Generate a random nonce. The nonce is stored at the beginning of the ciphertext.
 	nonce := make([]byte, chacha20poly1305.NonceSizeX)
 	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
 		return nil, fmt.Errorf("failed to generate nonce: %w", err)
@@ -52,19 +62,19 @@ func (c *XChaCha20Cipher) Encrypt(plaintext []byte) ([]byte, error) {
 }
 
 // Decrypt decrypts the given ciphertext.
-func (c *XChaCha20Cipher) Decrypt(ciphertext []byte) ([]byte, error) {
-	// Ciphertext cannot be empty.
+// It extracts the nonce from the ciphertext and then opens it to get the plaintext.
+func (c *chaCha20Cipher) Decrypt(ciphertext []byte) ([]byte, error) {
+	// Ensure ciphertext is not empty.
 	if len(ciphertext) == 0 {
 		return nil, fmt.Errorf("ciphertext cannot be empty")
 	}
 
-	// The ciphertext must be at least the size of the nonce.
+	// Extract the nonce from the ciphertext.
 	nonceSize := chacha20poly1305.NonceSizeX
 	if len(ciphertext) < nonceSize {
 		return nil, fmt.Errorf("ciphertext too short, need at least %d bytes, got %d", nonceSize, len(ciphertext))
 	}
 
-	// Extract the nonce and the actual ciphertext.
 	nonce := ciphertext[:nonceSize]
 	ciphertext = ciphertext[nonceSize:]
 

@@ -1,19 +1,23 @@
-// Package encoding provides data encoding and decoding functionality using Reed-Solomon codes.
+// Package encoding provides Reed-Solomon encoding and decoding functionalities.
 package encoding
 
 import (
 	"fmt"
 )
 
-// Shards defines the interface for data combining and encoding.
+// Shards defines the interface for splitting and combining data shards.
 type Shards interface {
+	// Split splits the given data into data and parity shards.
 	Split(data []byte) [][]byte
+	// SplitEncoded splits the encoded data into shards.
 	SplitEncoded(data []byte) [][]byte
+	// Combine combines the shards into a single byte slice.
 	Combine(shards [][]byte) []byte
+	// Extract extracts the original data from the data shards.
 	Extract(shards [][]byte) ([]byte, error)
 }
 
-// shards handles splitting and combining data shards for Reed-Solomon encoding.
+// shards implements the Shards interface.
 type shards struct {
 	dataShards   int
 	parityShards int
@@ -29,18 +33,17 @@ func NewShards(dataShards, parityShards int) *shards {
 	}
 }
 
-// Split splits the data into shards.
+// Split splits the given data into data and parity shards.
 func (s *shards) Split(data []byte) [][]byte {
 	// Calculate the size of each shard.
 	shardSize := (len(data) + s.dataShards - 1) / s.dataShards
-
 	// Create the shards.
 	shards := make([][]byte, s.totalShards)
 	for i := range shards {
 		shards[i] = make([]byte, shardSize)
 	}
 
-	// Distribute the data among the shards.
+	// Distribute the data among the data shards.
 	for i, b := range data {
 		shardIndex := i / shardSize
 		posInShard := i % shardSize
@@ -54,9 +57,10 @@ func (s *shards) Split(data []byte) [][]byte {
 func (s *shards) SplitEncoded(data []byte) [][]byte {
 	// Calculate the size of each shard.
 	shardSize := len(data) / s.totalShards
+	// Create the shards.
 	shards := make([][]byte, s.totalShards)
 
-	// Create the shards from the encoded data.
+	// Copy the data into the shards.
 	for i := range shards {
 		start := i * shardSize
 		end := (i + 1) * shardSize
@@ -73,12 +77,13 @@ func (s *shards) Combine(shards [][]byte) []byte {
 		return nil
 	}
 
-	// Calculate the total size of the combined data.
+	// Get the size of each shard.
 	shardSize := len(shards[0])
+	// Calculate the total size of the combined data.
 	totalSize := shardSize * len(shards)
+	// Create a buffer for the combined data.
 	result := make([]byte, totalSize)
-
-	// Copy the data from each shard into the result.
+	// Copy the data from each shard into the buffer.
 	for i, shard := range shards {
 		start := i * shardSize
 		copy(result[start:start+shardSize], shard)
@@ -87,17 +92,18 @@ func (s *shards) Combine(shards [][]byte) []byte {
 	return result
 }
 
-// Extract extracts the original data from the shards.
+// Extract extracts the original data from the data shards.
 func (s *shards) Extract(shards [][]byte) ([]byte, error) {
-	// Check if there are enough shards to reconstruct the data.
+	// Ensure there are enough shards to reconstruct the data.
 	if len(shards) < s.dataShards {
 		return nil, fmt.Errorf("insufficient shards, have %d but need at least %d data shards", len(shards), s.dataShards)
 	}
 
-	// Combine the data shards to get the original data.
+	// Get the size of each shard.
 	shardSize := len(shards[0])
+	// Create a buffer for the combined data.
 	combined := make([]byte, 0, shardSize*s.dataShards)
-
+	// Append the data from each data shard to the buffer.
 	for i := 0; i < s.dataShards; i++ {
 		combined = append(combined, shards[i]...)
 	}

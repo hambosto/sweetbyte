@@ -1,4 +1,4 @@
-// Package cipher provides cryptographic cipher implementations.
+// Package cipher provides cryptographic operations for encryption and decryption.
 package cipher
 
 import (
@@ -11,14 +11,23 @@ import (
 	"github.com/hambosto/sweetbyte/internal/config"
 )
 
-// AESCipher provides AES-GCM encryption and decryption.
-type AESCipher struct {
+// AESCipher defines the interface for AES encryption and decryption.
+type AESCipher interface {
+	// Encrypt encrypts plaintext using AES-GCM.
+	Encrypt(plaintext []byte) ([]byte, error)
+	// Decrypt decrypts ciphertext using AES-GCM.
+	Decrypt(ciphertext []byte) ([]byte, error)
+}
+
+// aesCipher implements the AESCipher interface using AES-GCM.
+type aesCipher struct {
 	aead cipher.AEAD
 }
 
 // NewAESCipher creates a new AESCipher with the given key.
-func NewAESCipher(key []byte) (*AESCipher, error) {
-	// The key must be the correct size for AES-256.
+// It initializes an AES-GCM cipher with a key of a specific size.
+func NewAESCipher(key []byte) (AESCipher, error) {
+	// Ensure the key has the required size.
 	if len(key) != config.EncryptionKeySize {
 		return nil, fmt.Errorf("key must be %d bytes, got %d", config.EncryptionKeySize, len(key))
 	}
@@ -29,23 +38,24 @@ func NewAESCipher(key []byte) (*AESCipher, error) {
 		return nil, fmt.Errorf("failed to create cipher: %w", err)
 	}
 
-	// Create a new GCM AEAD.
+	// Create a new GCM AEAD cipher.
 	aead, err := cipher.NewGCM(block)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create AES-GCM cipher: %w", err)
 	}
 
-	return &AESCipher{aead: aead}, nil
+	return &aesCipher{aead: aead}, nil
 }
 
 // Encrypt encrypts the given plaintext.
-func (c *AESCipher) Encrypt(plaintext []byte) ([]byte, error) {
-	// Plaintext cannot be empty.
+// It generates a random nonce, and then seals the plaintext to produce the ciphertext.
+func (c *aesCipher) Encrypt(plaintext []byte) ([]byte, error) {
+	// Ensure plaintext is not empty.
 	if len(plaintext) == 0 {
 		return nil, fmt.Errorf("plaintext cannot be empty")
 	}
 
-	// Generate a random nonce.
+	// Generate a random nonce. The nonce is stored at the beginning of the ciphertext.
 	nonce := make([]byte, c.aead.NonceSize())
 	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
 		return nil, fmt.Errorf("failed to generate nonce: %w", err)
@@ -57,19 +67,19 @@ func (c *AESCipher) Encrypt(plaintext []byte) ([]byte, error) {
 }
 
 // Decrypt decrypts the given ciphertext.
-func (c *AESCipher) Decrypt(ciphertext []byte) ([]byte, error) {
-	// Ciphertext cannot be empty.
+// It extracts the nonce from the beginning of the ciphertext and then opens it to get the plaintext.
+func (c *aesCipher) Decrypt(ciphertext []byte) ([]byte, error) {
+	// Ensure ciphertext is not empty.
 	if len(ciphertext) == 0 {
 		return nil, fmt.Errorf("ciphertext cannot be empty")
 	}
 
-	// The ciphertext must be at least the size of the nonce.
+	// Extract the nonce from the ciphertext.
 	nonceSize := c.aead.NonceSize()
 	if len(ciphertext) < nonceSize {
 		return nil, fmt.Errorf("ciphertext too short, need at least %d bytes, got %d", nonceSize, len(ciphertext))
 	}
 
-	// Extract the nonce and the actual ciphertext.
 	nonce := ciphertext[:nonceSize]
 	ciphertext = ciphertext[nonceSize:]
 

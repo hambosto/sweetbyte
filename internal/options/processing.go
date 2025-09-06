@@ -1,18 +1,17 @@
-// Package options defines the different modes and options for the SweetByte application.
+// Package options provides the application's options.
 package options
 
-// Processing defines the type of processing to be performed.
-// It can be either encryption or decryption.
+// Processing defines the processing type.
 type Processing int
 
 const (
-	// Encryption represents the encryption processing type.
+	// Encryption is the encryption processing type.
 	Encryption Processing = iota
-	// Decryption represents the decryption processing type.
+	// Decryption is the decryption processing type.
 	Decryption
 )
 
-// String returns the string representation of the Processing type.
+// String returns the string representation of the processing type.
 func (p Processing) String() string {
 	switch p {
 	case Encryption:

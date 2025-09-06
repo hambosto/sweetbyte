@@ -1,54 +1,42 @@
-// Package config provides configuration constants for the SweetByte application.
+// Package config provides configuration constants for the application.
 package config
 
 const (
 	// AppName is the name of the application.
 	AppName = "SweetByte"
-
-	// AppVersion is the current version of the application.
+	// AppVersion is the version of the application.
 	AppVersion = "1.0"
-
-	// FileExtension is the file extension applied to encrypted files.
+	// FileExtension is the file extension for encrypted files.
 	FileExtension = ".swb"
 )
 
 const (
-	// DefaultChunkSize is the default size (in bytes) of chunks used
-	// during streaming read/write operations (e.g., encryption, decryption).
+	// DefaultChunkSize is the default size of chunks for streaming processing.
 	DefaultChunkSize = 1 * 1024 * 1024 // 1 MB
-
-	// OverwritePasses is the number of overwrite passes used when securely
-	// deleting files to reduce the chance of data recovery.
+	// OverwritePasses is the number of passes for secure file deletion.
 	OverwritePasses = 3
-
-	// PasswordMinLen defines the minimum required length for user passwords.
+	// PasswordMinLen is the minimum length of a password.
 	PasswordMinLen = 8
 )
 
 const (
-	// SaltSize is the number of random bytes used as a salt in key derivation.
+	// SaltSize is the size of the salt used for key derivation.
 	SaltSize = 32
-
-	// MasterKeySize is the size (in bytes) of the master key derived from the password.
+	// MasterKeySize is the size of the master key.
 	MasterKeySize = 64
-
-	// EncryptionKeySize is the size (in bytes) of the encryption key used for symmetric encryption.
+	// EncryptionKeySize is the size of the encryption key.
 	EncryptionKeySize = 32
 )
 
 var (
-	// ExcludedDirs lists directories that should be skipped when scanning
-	// for files to encrypt or process. These are typically system, cache,
-	// or development-related directories.
+	// ExcludedDirs is a list of directories to exclude when searching for files.
 	ExcludedDirs = []string{
 		"vendor/", "node_modules/", ".git", ".github",
 		".vscode/", "build/", "dist/", "target/",
 		".config", ".local", ".cache", ".ssh",
 	}
 
-	// ExcludedExts lists file extensions that should be skipped when scanning
-	// for files to encrypt. This avoids encrypting executables, system files,
-	// or project configuration files.
+	// ExcludedExts is a list of file extensions to exclude when searching for files.
 	ExcludedExts = []string{
 		".go", "go.mod", "go.sum", ".nix", ".gitignore",
 		".exe", ".dll", ".so", ".dylib",
@@ -56,17 +44,13 @@ var (
 )
 
 const (
-	// DataShards is the number of data shards used in Reed-Solomon
-	// erasure coding for redundancy and reliability.
+	// DataShards is the number of data shards for Reed-Solomon encoding.
 	DataShards = 4
-
-	// ParityShards is the number of parity shards used in Reed-Solomon
-	// erasure coding to allow data recovery in case of corruption or loss.
+	// ParityShards is the number of parity shards for Reed-Solomon encoding.
 	ParityShards = 10
 )
 
 const (
-	// PaddingSize is the fixed number of padding bytes applied to the file
-	// header to ensure alignment and obscure actual header size.
+	// PaddingSize is the block size for PKCS#7 padding.
 	PaddingSize = 16
 )

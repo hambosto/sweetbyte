@@ -1,4 +1,4 @@
-// Package streaming provides the core functionality for streaming encryption and decryption.
+// Package streaming provides functionalities for streaming data processing.
 package streaming
 
 import (
@@ -24,12 +24,13 @@ type TaskResult struct {
 	Err   error
 }
 
-// StreamProcessor handles the entire streaming process.
+// StreamProcessor defines the interface for a stream processor.
 type StreamProcessor interface {
+	// Process processes the data from the input stream and writes the result to the output stream.
 	Process(ctx context.Context, input io.Reader, output io.Writer, totalSize int64) error
 }
 
-// streamProcessor handles the entire streaming process.
+// streamProcessor implements the StreamProcessor interface.
 type streamProcessor struct {
 	streamConfig  StreamConfig
 	taskProcessor TaskProcessor
@@ -38,13 +39,12 @@ type streamProcessor struct {
 	pool          WorkerPool
 }
 
-// NewStreamProcessor creates a new streamProcessor with the given configuration.
+// NewStreamProcessor creates a new StreamProcessor.
 func NewStreamProcessor(config StreamConfig) (StreamProcessor, error) {
-	// Validate the configuration.
+	// Validate and apply defaults to the configuration.
 	if err := config.Validate(); err != nil {
 		return nil, err
 	}
-	// Apply default values to the configuration.
 	config.ApplyDefaults()
 
 	// Create a new task processor.
@@ -61,45 +61,42 @@ func NewStreamProcessor(config StreamConfig) (StreamProcessor, error) {
 	}, nil
 }
 
-// Process starts the streaming process for the given input and output streams.
+// Process processes the data from the input stream and writes the result to the output stream.
 func (s *streamProcessor) Process(ctx context.Context, input io.Reader, output io.Writer, totalSize int64) error {
-	// Ensure input and output streams are not nil.
+	// Ensure the input and output streams are not nil.
 	if input == nil || output == nil {
 		return fmt.Errorf("input and output streams must not be nil")
 	}
 
-	// Create a new progress bar.
+	// Create a new progress bar and chunk writer.
 	bar := ui.NewProgressBar(totalSize, s.streamConfig.Processing.String())
-	// Create a new chunk writer with the progress bar.
 	s.writer = NewChunkWriter(s.streamConfig.Processing, bar)
 	// Run the processing pipeline.
 	return s.runPipeline(ctx, input, output)
 }
 
-// runPipeline sets up and runs the streaming pipeline.
+// runPipeline runs the processing pipeline.
 func (s *streamProcessor) runPipeline(ctx context.Context, input io.Reader, output io.Writer) error {
-	// Create a new context for the pipeline.
 	pipelineCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
 	// Read chunks from the input stream.
 	tasks, readerErr := s.reader.ReadChunks(pipelineCtx, input)
-	// Process the tasks using the worker pool.
+	// Process the chunks in a worker pool.
 	results := s.pool.Process(pipelineCtx, tasks)
 
 	var writerErr error
 	var wg sync.WaitGroup
 
-	// Start a goroutine to write the results to the output stream.
+	// Write the results to the output stream.
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		writerErr = s.writer.WriteChunks(pipelineCtx, output, results)
 	}()
-	// Wait for the writer to finish.
-	wg.Wait()
 
-	// Check for reader errors.
+	wg.Wait()
+	// Check for any errors from the reader.
 	select {
 	case err := <-readerErr:
 		if err != nil {
@@ -109,13 +106,13 @@ func (s *streamProcessor) runPipeline(ctx context.Context, input io.Reader, outp
 	default:
 	}
 
-	// Check for writer errors.
+	// Check for any errors from the writer.
 	if writerErr != nil {
 		cancel()
 		return fmt.Errorf("writer error: %w", writerErr)
 	}
 
-	// Check if the context was canceled.
+	// Check if the operation was canceled.
 	if pipelineCtx.Err() != nil {
 		return fmt.Errorf("operation was canceled: %w", pipelineCtx.Err())
 	}

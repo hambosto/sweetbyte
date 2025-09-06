@@ -1,4 +1,4 @@
-// Package encoding provides data encoding and decoding functionality using Reed-Solomon codes.
+// Package encoding provides Reed-Solomon encoding and decoding functionalities.
 package encoding
 
 import (
@@ -8,17 +8,19 @@ import (
 )
 
 const (
-	// MaxDataLen is the maximum length of data that can be encoded.
+	// MaxDataLen is the maximum data length that can be encoded.
 	MaxDataLen = 1 << 30
 )
 
-// Encoder defines the interface for data encoding and decoding.
+// Encoder defines the interface for Reed-Solomon encoding and decoding.
 type Encoder interface {
+	// Encode encodes the given data using Reed-Solomon.
 	Encode(data []byte) ([]byte, error)
+	// Decode decodes the given data using Reed-Solomon.
 	Decode(encoded []byte) ([]byte, error)
 }
 
-// reedSolomonEncoder handles Reed-Solomon encoding and decoding.
+// encoder implements the Encoder interface.
 type encoder struct {
 	dataShards   int
 	parityShards int
@@ -26,7 +28,7 @@ type encoder struct {
 	shards       Shards
 }
 
-// NewEncoder creates a new Encoder with the specified number of data and parity shards.
+// NewEncoder creates a new Encoder with the given number of data and parity shards.
 func NewEncoder(dataShards, parityShards int) (Encoder, error) {
 	// Validate the number of shards.
 	if dataShards <= 0 {
@@ -53,7 +55,7 @@ func NewEncoder(dataShards, parityShards int) (Encoder, error) {
 	}, nil
 }
 
-// Encode encodes the given data using Reed-Solomon codes.
+// Encode encodes the given data using Reed-Solomon.
 func (e *encoder) Encode(data []byte) ([]byte, error) {
 	// Validate the data length.
 	if len(data) == 0 {
@@ -74,10 +76,9 @@ func (e *encoder) Encode(data []byte) ([]byte, error) {
 	return e.shards.Combine(shards), nil
 }
 
-// Decode decodes the given encoded data.
+// Decode decodes the given data using Reed-Solomon.
 func (e *encoder) Decode(encoded []byte) ([]byte, error) {
 	totalShards := e.dataShards + e.parityShards
-
 	// Validate the encoded data length.
 	if len(encoded) == 0 {
 		return nil, fmt.Errorf("encoded data cannot be empty")
@@ -88,7 +89,7 @@ func (e *encoder) Decode(encoded []byte) ([]byte, error) {
 
 	// Split the encoded data into shards.
 	shards := e.shards.SplitEncoded(encoded)
-	// Reconstruct the shards.
+	// Reconstruct the data from the shards.
 	if err := e.encoder.Reconstruct(shards); err != nil {
 		return nil, fmt.Errorf("reconstruction failed: %w", err)
 	}

@@ -1,4 +1,4 @@
-// Package processor provides the core processing logic for encryption and decryption.
+// Package processor provides the core data processing functionalities.
 package processor
 
 import (
@@ -11,16 +11,18 @@ import (
 	"github.com/hambosto/sweetbyte/internal/padding"
 )
 
-// Processor defines the interface for the core processing logic.
+// Processor defines the interface for data processing.
 type Processor interface {
+	// Encrypt encrypts the given data.
 	Encrypt(data []byte) ([]byte, error)
+	// Decrypt decrypts the given data.
 	Decrypt(data []byte) ([]byte, error)
 }
 
-// processor handles the multi-layered encryption and decryption process.
+// processor implements the Processor interface.
 type processor struct {
-	firstCipher  cipher.Cipher
-	secondCipher cipher.Cipher
+	firstCipher  cipher.AESCipher
+	secondCipher cipher.ChaCha20Cipher
 	encoder      encoding.Encoder
 	compressor   compression.Compressor
 	padding      padding.Padding
@@ -28,7 +30,7 @@ type processor struct {
 
 // NewProcessor creates a new Processor with the given key.
 func NewProcessor(key []byte) (Processor, error) {
-	// The key must be the correct size.
+	// Ensure the key has the required size.
 	if len(key) < config.MasterKeySize {
 		return nil, fmt.Errorf("encryption key must be at least %d bytes long, got %d bytes", config.MasterKeySize, len(key))
 	}
@@ -40,7 +42,7 @@ func NewProcessor(key []byte) (Processor, error) {
 	}
 
 	// Initialize the second cipher (XChaCha20-Poly1305).
-	secondCipher, err := cipher.NewXChaCha20Cipher(key[32:64])
+	secondCipher, err := cipher.NewChaCha20Cipher(key[32:64])
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize XChaCha20-Poly1305 cipher: %w", err)
 	}
@@ -57,7 +59,7 @@ func NewProcessor(key []byte) (Processor, error) {
 		return nil, fmt.Errorf("failed to initialize compressor: %w", err)
 	}
 
-	// Initialize the padding.
+	// Initialize the PKCS#7 padding.
 	padder, err := padding.NewPadding(config.PaddingSize)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize PKCS#7 padding: %w", err)
@@ -98,7 +100,7 @@ func (p *processor) Encrypt(data []byte) ([]byte, error) {
 		return nil, fmt.Errorf("second encryption (XChaCha20-Poly1305) failed: %w", err)
 	}
 
-	// Encode the result with Reed-Solomon codes.
+	// Encode the result with Reed-Solomon.
 	encoded, err := p.encoder.Encode(secondEncrypted)
 	if err != nil {
 		return nil, fmt.Errorf("Reed-Solomon encoding failed: %w", err)
@@ -109,7 +111,7 @@ func (p *processor) Encrypt(data []byte) ([]byte, error) {
 
 // Decrypt decrypts the given data.
 func (p *processor) Decrypt(data []byte) ([]byte, error) {
-	// Decode the data with Reed-Solomon codes.
+	// Decode the data with Reed-Solomon.
 	decoded, err := p.encoder.Decode(data)
 	if err != nil {
 		return nil, fmt.Errorf("Reed-Solomon decoding failed (data may be corrupted): %w", err)

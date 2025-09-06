@@ -1,4 +1,4 @@
-// Package streaming provides the core functionality for streaming encryption and decryption.
+// Package streaming provides functionalities for streaming data processing.
 package streaming
 
 import (
@@ -9,20 +9,21 @@ import (
 	"github.com/hambosto/sweetbyte/internal/processor"
 )
 
-// TaskProcessor processes individual tasks (chunks of data).
+// TaskProcessor defines the interface for processing a task.
 type TaskProcessor interface {
+	// Process processes a single task.
 	Process(ctx context.Context, task Task) TaskResult
 }
 
-// taskProcessor processes individual tasks (chunks of data).
+// taskProcessor implements the TaskProcessor interface.
 type taskProcessor struct {
 	processor  processor.Processor
 	processing options.Processing
 }
 
-// NewTaskProcessor creates a new TaskProcessor with the given key and processing type.
+// NewTaskProcessor creates a new TaskProcessor.
 func NewTaskProcessor(key []byte, processing options.Processing) (TaskProcessor, error) {
-	// Create a new processor.
+	// Create a new data processor.
 	proc, err := processor.NewProcessor(key)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create processor: %w", err)
@@ -36,7 +37,7 @@ func NewTaskProcessor(key []byte, processing options.Processing) (TaskProcessor,
 
 // Process processes a single task.
 func (tp *taskProcessor) Process(ctx context.Context, task Task) TaskResult {
-	// Check if the context has been canceled.
+	// Check for cancellation.
 	select {
 	case <-ctx.Done():
 		return TaskResult{
@@ -49,7 +50,7 @@ func (tp *taskProcessor) Process(ctx context.Context, task Task) TaskResult {
 	var output []byte
 	var err error
 
-	// Perform the appropriate action based on the processing type.
+	// Process the task based on the processing type.
 	switch tp.processing {
 	case options.Encryption:
 		output, err = tp.processor.Encrypt(task.Data)
@@ -59,7 +60,7 @@ func (tp *taskProcessor) Process(ctx context.Context, task Task) TaskResult {
 		err = fmt.Errorf("unknown processing type: %d", tp.processing)
 	}
 
-	// Calculate the size for progress reporting.
+	// Calculate the size for the progress bar.
 	size := tp.calculateProgressSize(task.Data, output)
 	return TaskResult{
 		Index: task.Index,
@@ -69,8 +70,7 @@ func (tp *taskProcessor) Process(ctx context.Context, task Task) TaskResult {
 	}
 }
 
-// calculateProgressSize calculates the size of the data to be reported for progress.
-// For encryption, it's the input size; for decryption, it's the output size.
+// calculateProgressSize calculates the size for the progress bar.
 func (tp *taskProcessor) calculateProgressSize(input, output []byte) int {
 	if tp.processing == options.Encryption {
 		return len(input)

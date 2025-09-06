@@ -1,4 +1,4 @@
-// Package cli provides the command-line interface functionality for SweetByte.
+// Package cli provides the command-line interface for the application.
 package cli
 
 import (
@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// Commands represents the command-line interface of the application.
+// Commands manages the application's command-line commands.
 type Commands struct {
 	rootCmd *cobra.Command
 }
@@ -22,12 +22,12 @@ func NewCommands() *Commands {
 	return cli
 }
 
-// Execute runs the root command of the Commands.
+// Execute runs the root command.
 func (c *Commands) Execute() error {
 	return c.rootCmd.Execute()
 }
 
-// setupCommands sets up the root command and all subcommands.
+// setupCommands initializes the root command and its subcommands.
 func (c *Commands) setupCommands() {
 	c.rootCmd = &cobra.Command{
 		Use:   "sweetbyte",
@@ -39,19 +39,19 @@ correction codes. This ensures both confidentiality and resilience against data 
 SweetByte can be run in a user-friendly interactive mode or via the command line for automation.`,
 		Version: config.AppVersion,
 		Run: func(cmd *cobra.Command, args []string) {
-			// If no command is specified, run the interactive mode.
+			// If no subcommand is provided, run the interactive mode.
 			interactiveApp := interactive.NewInteractive()
 			interactiveApp.Run()
 		},
 	}
 
-	// Add the encrypt, decrypt, and interactive commands.
+	// Add subcommands to the root command.
 	c.rootCmd.AddCommand(c.createEncryptCommand())
 	c.rootCmd.AddCommand(c.createDecryptCommand())
 	c.rootCmd.AddCommand(c.createInteractiveCommand())
 }
 
-// createEncryptCommand creates the encrypt command.
+// createEncryptCommand creates the 'encrypt' command.
 func (c *Commands) createEncryptCommand() *cobra.Command {
 	var (
 		inputFile    string
@@ -76,14 +76,14 @@ corruption. A strong encryption key is derived from your password using Argon2id
 		},
 	}
 
-	// Add flags for the encrypt command.
+	// Define flags for the 'encrypt' command.
 	cmd.Flags().StringVarP(&inputFile, "input", "i", "", "Input file to encrypt (required)")
 	cmd.Flags().StringVarP(&outputFile, "output", "o", "", "Output encrypted file (default: input + .swb)")
 	cmd.Flags().StringVarP(&password, "password", "p", "", "Encryption password (will prompt if not provided)")
 	cmd.Flags().BoolVar(&deleteSource, "delete-source", false, "Delete source file after encryption")
 	cmd.Flags().BoolVar(&secureDelete, "secure-delete", false, "Use secure deletion (slower but unrecoverable)")
 
-	// Mark the input flag as required.
+	// Mark the 'input' flag as required.
 	if err := cmd.MarkFlagRequired("input"); err != nil {
 		panic(fmt.Sprintf("failed to mark input flag as required: %v", err))
 	}
@@ -91,7 +91,7 @@ corruption. A strong encryption key is derived from your password using Argon2id
 	return cmd
 }
 
-// createDecryptCommand creates the decrypt command.
+// createDecryptCommand creates the 'decrypt' command.
 func (c *Commands) createDecryptCommand() *cobra.Command {
 	var (
 		inputFile    string
@@ -116,14 +116,14 @@ file. The correct password is required to derive the necessary decryption key.`,
 		},
 	}
 
-	// Add flags for the decrypt command.
+	// Define flags for the 'decrypt' command.
 	cmd.Flags().StringVarP(&inputFile, "input", "i", "", "Input file to decrypt (required)")
 	cmd.Flags().StringVarP(&outputFile, "output", "o", "", "Output decrypted file (default: remove .swb extension)")
 	cmd.Flags().StringVarP(&password, "password", "p", "", "Decryption password (will prompt if not provided)")
 	cmd.Flags().BoolVar(&deleteSource, "delete-source", false, "Delete source file after decryption")
 	cmd.Flags().BoolVar(&secureDelete, "secure-delete", false, "Use secure deletion (slower but unrecoverable)")
 
-	// Mark the input flag as required.
+	// Mark the 'input' flag as required.
 	if err := cmd.MarkFlagRequired("input"); err != nil {
 		panic(fmt.Sprintf("failed to mark input flag as required: %v", err))
 	}
@@ -131,7 +131,7 @@ file. The correct password is required to derive the necessary decryption key.`,
 	return cmd
 }
 
-// createInteractiveCommand creates the interactive command.
+// createInteractiveCommand creates the 'interactive' command.
 func (c *Commands) createInteractiveCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "interactive",
@@ -147,7 +147,7 @@ This is ideal for users who prefer a more intuitive and user-friendly interface.
 	}
 }
 
-// runEncrypt runs the encryption process.
+// runEncrypt performs the encryption based on the provided flags.
 func (c *Commands) runEncrypt(inputFile, outputFile, password string, deleteSource, secureDelete bool) error {
 	// Check if the input file exists.
 	if _, err := os.Stat(inputFile); err != nil {
@@ -157,7 +157,7 @@ func (c *Commands) runEncrypt(inputFile, outputFile, password string, deleteSour
 		return fmt.Errorf("failed to access input file %s: %w", inputFile, err)
 	}
 
-	// If the output file is not specified, create a default name.
+	// If no output file is specified, create one with the default extension.
 	if len(outputFile) == 0 {
 		outputFile = inputFile + config.FileExtension
 	}
@@ -169,12 +169,12 @@ func (c *Commands) runEncrypt(inputFile, outputFile, password string, deleteSour
 		return fmt.Errorf("failed to access output file %s: %w", outputFile, err)
 	}
 
-	// Create a new Commands processor and run the encryption.
+	// Create a new CLI processor and run the encryption.
 	processor := NewCLI()
 	return processor.Encrypt(inputFile, outputFile, password, deleteSource, secureDelete)
 }
 
-// runDecrypt runs the decryption process.
+// runDecrypt performs the decryption based on the provided flags.
 func (c *Commands) runDecrypt(inputFile, outputFile, password string, deleteSource, secureDelete bool) error {
 	// Check if the input file exists.
 	if _, err := os.Stat(inputFile); err != nil {
@@ -184,7 +184,7 @@ func (c *Commands) runDecrypt(inputFile, outputFile, password string, deleteSour
 		return fmt.Errorf("failed to access input file %s: %w", inputFile, err)
 	}
 
-	// If the output file is not specified, create a default name.
+	// If no output file is specified, derive it from the input file name.
 	if len(outputFile) == 0 {
 		if len(inputFile) > len(config.FileExtension) &&
 			inputFile[len(inputFile)-len(config.FileExtension):] == config.FileExtension {
@@ -201,7 +201,7 @@ func (c *Commands) runDecrypt(inputFile, outputFile, password string, deleteSour
 		return fmt.Errorf("failed to access output file %s: %w", outputFile, err)
 	}
 
-	// Create a new Commands processor and run the decryption.
+	// Create a new CLI processor and run the decryption.
 	processor := NewCLI()
 	return processor.Decrypt(inputFile, outputFile, password, deleteSource, secureDelete)
 }
