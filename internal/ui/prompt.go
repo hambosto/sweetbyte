@@ -7,16 +7,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/cqroot/prompt"
-	"github.com/cqroot/prompt/input"
+	"github.com/charmbracelet/huh"
 	"github.com/hambosto/sweetbyte/internal/options"
 )
-
-// confirmMap maps string responses to boolean values.
-var confirmMap = map[string]bool{
-	"Yes": true,
-	"No":  false,
-}
 
 // PromptInput defines the interface for user interactions via prompts.
 // This abstraction allows SweetByte to swap prompt libraries or mock user input in tests.
@@ -86,43 +79,41 @@ func (p *promptInput) ConfirmFileRemoval(path, fileType string) (bool, options.D
 		return false, "", nil
 	}
 
-	choice, err := p.choose("Select delete type:", []string{
+	deleteType, err := p.choose("Select delete type:", []string{
 		string(options.DeleteStandard),
 		string(options.DeleteSecure),
 	})
 	if err != nil {
 		return false, "", fmt.Errorf("delete option selection failed: %w", err)
 	}
-	return true, options.DeleteOption(choice), nil
+	return true, options.DeleteOption(deleteType), nil
 }
 
 // GetProcessingMode asks the user to select encryption or decryption.
 func (p *promptInput) GetProcessingMode() (options.ProcessorMode, error) {
-	choice, err := p.choose("Select operation:", []string{
+	mode, err := p.choose("Select operation:", []string{
 		string(options.ModeEncrypt),
 		string(options.ModeDecrypt),
 	})
 	if err != nil {
 		return "", fmt.Errorf("operation selection failed: %w", err)
 	}
-	return options.ProcessorMode(choice), nil
+	return options.ProcessorMode(mode), nil
 }
 
 // ChooseFile asks the user to pick a file from a list.
 func (p *promptInput) ChooseFile(fileList []string) (string, error) {
-	if len(fileList) == 0 {
-		return "", fmt.Errorf("no files available for selection")
-	}
 	return p.choose("Select file:", fileList)
 }
 
 // getPassword securely prompts for a password (hidden input).
 func (p *promptInput) getPassword(message string) (string, error) {
-	pass, err := prompt.New().Ask(message).Input("", input.WithEchoMode(input.EchoPassword))
+	var password string
+	err := huh.NewInput().Title(message).EchoMode(huh.EchoModePassword).Value(&password).Run()
 	if err != nil {
 		return "", fmt.Errorf("password prompt failed: %w", err)
 	}
-	return pass, nil
+	return password, nil
 }
 
 // validatePassword checks minimum length and non-empty requirements.
@@ -136,20 +127,30 @@ func (p *promptInput) validatePassword(password string) error {
 	return nil
 }
 
-// askYesNo presents a Yes/No choice and returns the boolean value.
+// confirm presents a Yes/No choice and returns the boolean value.
 func (p *promptInput) confirm(message string) (bool, error) {
-	choice, err := p.choose(message, []string{"Yes", "No"})
+	var confirm bool
+	err := huh.NewConfirm().Title(message).Value(&confirm).Run()
 	if err != nil {
 		return false, fmt.Errorf("confirmation failed: %w", err)
 	}
-	return confirmMap[choice], nil
+	return confirm, nil
 }
 
-// choose presents a list of options and returns the selected value.
-func (p *promptInput) choose(message string, options []string) (string, error) {
-	choice, err := prompt.New().Ask(message).Choose(options)
-	if err != nil {
-		return "", err
+func (p *promptInput) choose(title string, optionList []string) (string, error) {
+	if len(optionList) == 0 {
+		return "", fmt.Errorf("no options available for selection")
 	}
-	return choice, nil
+
+	var selected string
+	options := make([]huh.Option[string], len(optionList))
+	for i, option := range optionList {
+		options[i] = huh.NewOption(option, option)
+	}
+
+	err := huh.NewSelect[string]().Title(title).Options(options...).Value(&selected).Run()
+	if err != nil {
+		return "", fmt.Errorf("selection failed: %w", err)
+	}
+	return selected, nil
 }
