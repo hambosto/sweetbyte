@@ -5,7 +5,7 @@ import (
 	"github.com/hambosto/sweetbyte/internal/interactive"
 )
 
-// NewInteractiveApp creates a new interactive application instance.
+// NewInteractive creates a new interactive application instance.
 func NewInteractive() *interactive.Interactive {
 	return interactive.NewInteractive()
 }

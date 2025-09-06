@@ -12,18 +12,18 @@ import (
 // main is the entry point of the application.
 // It checks for command-line arguments to decide which mode to run.
 func main() {
-	// If there are more than one arguments, it means the user wants to run the CLI mode.
+	// If there are more than one argument, it means the user wants to run the CLI mode.
 	if len(os.Args) > 1 {
 		// Create a new CLI application instance.
-		cli := cli.NewCLI()
+		cliApp := cli.NewCLI()
 		// Execute the CLI application and exit with an error code if something goes wrong.
-		if err := cli.Execute(); err != nil {
+		if err := cliApp.Execute(); err != nil {
 			os.Exit(1)
 		}
 	} else {
-		// If there are no arguments, run the application in interactive mode.
-		interactive := interactive.NewInteractive()
-		// Run the interactive application.
-		interactive.Run()
+		// If there are no arguments, run the application in interactiveApp mode.
+		interactiveApp := interactive.NewInteractive()
+		// Run the interactiveApp application.
+		interactiveApp.Run()
 	}
 }

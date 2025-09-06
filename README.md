@@ -181,8 +181,8 @@ SweetByte uses strong, modern cryptographic parameters for key derivation and en
 
 - **Argon2id Parameters:**
     - **Time Cost:** 8
-    - **Memory Cost:** 256 MB
-    - **Parallelism:** 4 threads
+    - **Memory Cost:** 128 MB
+    - **Parallelism:** 8 threads
 - **Reed-Solomon Parameters:**
     - **Data Shards:** 10
     - **Parity Shards:** 4 (Provides high redundancy)

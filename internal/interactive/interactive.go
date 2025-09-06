@@ -126,7 +126,9 @@ func (a *Interactive) processFile(inputPath string, mode options.ProcessorMode) 
 		return err
 	}
 
-	fmt.Printf("\nFile processed successfully: %s\n", outputPath)
+	fmt.Println()
+	fmt.Printf("File encrypted successfully: %s\n", outputPath)
+	fmt.Println()
 
 	// Ask the user if they want to delete the source file.
 	var fileType string

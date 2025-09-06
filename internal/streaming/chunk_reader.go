@@ -3,6 +3,7 @@ package streaming
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 
@@ -54,7 +55,7 @@ func (r *chunkReader) ReadChunks(ctx context.Context, input io.Reader) (<-chan T
 		}
 
 		// If an error occurs (and it's not a context cancellation), send it to the error channel.
-		if err != nil && err != context.Canceled {
+		if err != nil && !errors.Is(err, context.Canceled) {
 			select {
 			case errChan <- err:
 			case <-ctx.Done():

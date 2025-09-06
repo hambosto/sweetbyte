@@ -5,7 +5,7 @@ import (
 	"github.com/hambosto/sweetbyte/internal/cli"
 )
 
-// NewCLI creates a new CLI application instance.
-func NewCLI() *cli.CLI {
-	return cli.NewCLI()
+// NewCLI creates a new Commands application instance.
+func NewCLI() *cli.Commands {
+	return cli.NewCommands()
 }

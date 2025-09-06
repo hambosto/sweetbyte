@@ -78,13 +78,13 @@ func (o *fileOperations) Encrypt(srcPath, destPath, password string) error {
 	}
 
 	// Create a new stream processor for encryption.
-	config := streaming.StreamConfig{
+	streamConfig := streaming.StreamConfig{
 		Key:        key,
 		Processing: options.Encryption,
 		ChunkSize:  config.DefaultChunkSize,
 	}
 
-	processor, err := streaming.NewStreamProcessor(config)
+	processor, err := streaming.NewStreamProcessor(streamConfig)
 	if err != nil {
 		return fmt.Errorf("failed to create stream processor: %w", err)
 	}
@@ -131,10 +131,6 @@ func (o *fileOperations) Decrypt(srcPath, destPath, password string) error {
 		return fmt.Errorf("decryption failed: incorrect password or corrupt file: %w", err)
 	}
 
-	// Get the original size of the file from the header.
-	// #nosec G115
-	originalSize := int64(h.OriginalSize)
-
 	// Create the destination file.
 	destFile, err := o.fileManager.CreateFile(destPath)
 	if err != nil {
@@ -143,19 +139,20 @@ func (o *fileOperations) Decrypt(srcPath, destPath, password string) error {
 	defer destFile.Close() //nolint:errcheck
 
 	// Create a new stream processor for decryption.
-	config := streaming.StreamConfig{
+	streamConfig := streaming.StreamConfig{
 		Key:        key,
 		Processing: options.Decryption,
 		ChunkSize:  config.DefaultChunkSize,
 	}
 
-	processor, err := streaming.NewStreamProcessor(config)
+	processor, err := streaming.NewStreamProcessor(streamConfig)
 	if err != nil {
 		return fmt.Errorf("failed to create stream processor: %w", err)
 	}
 
 	// Process the file.
-	if err := processor.Process(context.Background(), srcFile, destFile, originalSize); err != nil {
+	// #nosec G115
+	if err := processor.Process(context.Background(), srcFile, destFile, int64(h.OriginalSize)); err != nil {
 		return fmt.Errorf("failed to process file: %w", err)
 	}
 

@@ -11,19 +11,19 @@ import (
 	"github.com/hambosto/sweetbyte/internal/ui"
 )
 
-// CLIProcessor handles the command-line interface operations.
-type CLIProcessor struct {
+// CLI handles the command-line interface operations.
+type CLI struct {
 	fileManager    files.FileManager
 	fileOperations operations.FileOperations
 	prompt         ui.Prompt
 }
 
-// NewCLIProcessor creates a new CLIProcessor.
-func NewCLIProcessor() *CLIProcessor {
+// NewCLI creates a new CLI.
+func NewCLI() *CLI {
 	fileManager := files.NewFileManager(config.OverwritePasses)
 	fileOperations := operations.NewFileOperations(fileManager)
 	prompt := ui.NewPrompt(config.PasswordMinLen)
-	return &CLIProcessor{
+	return &CLI{
 		fileManager:    fileManager,
 		fileOperations: fileOperations,
 		prompt:         prompt,
@@ -31,7 +31,7 @@ func NewCLIProcessor() *CLIProcessor {
 }
 
 // Encrypt encrypts a file using the command-line interface.
-func (p *CLIProcessor) Encrypt(inputFile, outputFile, password string, deleteSource, secureDelete bool) error {
+func (p *CLI) Encrypt(inputFile, outputFile, password string, deleteSource, secureDelete bool) error {
 	// If no password is provided, prompt the user for one.
 	if len(password) == 0 {
 		var err error
@@ -67,7 +67,7 @@ func (p *CLIProcessor) Encrypt(inputFile, outputFile, password string, deleteSou
 }
 
 // Decrypt decrypts a file using the command-line interface.
-func (p *CLIProcessor) Decrypt(inputFile, outputFile, password string, deleteSource, secureDelete bool) error {
+func (p *CLI) Decrypt(inputFile, outputFile, password string, deleteSource, secureDelete bool) error {
 	// If no password is provided, prompt the user for one.
 	if len(password) == 0 {
 		var err error

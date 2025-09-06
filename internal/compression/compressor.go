@@ -8,12 +8,12 @@ import (
 	"io"
 )
 
-// CompressionLevel defines the level of compression to be used.
-type CompressionLevel int
+// Level CompressionLevel defines the level of compression to be used.
+type Level int
 
 const (
 	// LevelNoCompression disables compression.
-	LevelNoCompression CompressionLevel = iota
+	LevelNoCompression Level = iota
 	// LevelBestSpeed provides the fastest compression.
 	LevelBestSpeed
 	// LevelDefaultCompression provides the default compression level.
@@ -34,7 +34,7 @@ type compressor struct {
 }
 
 // NewCompressor creates a new Compressor with the specified compression level.
-func NewCompressor(level CompressionLevel) (Compressor, error) {
+func NewCompressor(level Level) (Compressor, error) {
 	var zlibLevel int
 
 	// Map the custom compression level to the zlib compression level.
