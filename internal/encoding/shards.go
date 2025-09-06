@@ -5,16 +5,24 @@ import (
 	"fmt"
 )
 
-// Shards handles splitting and combining data shards for Reed-Solomon encoding.
-type Shards struct {
+// Shards defines the interface for data combining and encoding.
+type Shards interface {
+	Split(data []byte) [][]byte
+	SplitEncoded(data []byte) [][]byte
+	Combine(shards [][]byte) []byte
+	Extract(shards [][]byte) ([]byte, error)
+}
+
+// shards handles splitting and combining data shards for Reed-Solomon encoding.
+type shards struct {
 	dataShards   int
 	parityShards int
 	totalShards  int
 }
 
 // NewShards creates a new Shards instance.
-func NewShards(dataShards, parityShards int) *Shards {
-	return &Shards{
+func NewShards(dataShards, parityShards int) *shards {
+	return &shards{
 		dataShards:   dataShards,
 		parityShards: parityShards,
 		totalShards:  dataShards + parityShards,
@@ -22,7 +30,7 @@ func NewShards(dataShards, parityShards int) *Shards {
 }
 
 // Split splits the data into shards.
-func (s *Shards) Split(data []byte) [][]byte {
+func (s *shards) Split(data []byte) [][]byte {
 	// Calculate the size of each shard.
 	shardSize := (len(data) + s.dataShards - 1) / s.dataShards
 
@@ -43,7 +51,7 @@ func (s *Shards) Split(data []byte) [][]byte {
 }
 
 // SplitEncoded splits the encoded data into shards.
-func (s *Shards) SplitEncoded(data []byte) [][]byte {
+func (s *shards) SplitEncoded(data []byte) [][]byte {
 	// Calculate the size of each shard.
 	shardSize := len(data) / s.totalShards
 	shards := make([][]byte, s.totalShards)
@@ -60,7 +68,7 @@ func (s *Shards) SplitEncoded(data []byte) [][]byte {
 }
 
 // Combine combines the shards into a single byte slice.
-func (s *Shards) Combine(shards [][]byte) []byte {
+func (s *shards) Combine(shards [][]byte) []byte {
 	if len(shards) == 0 {
 		return nil
 	}
@@ -80,7 +88,7 @@ func (s *Shards) Combine(shards [][]byte) []byte {
 }
 
 // Extract extracts the original data from the shards.
-func (s *Shards) Extract(shards [][]byte) ([]byte, error) {
+func (s *shards) Extract(shards [][]byte) ([]byte, error) {
 	// Check if there are enough shards to reconstruct the data.
 	if len(shards) < s.dataShards {
 		return nil, fmt.Errorf("insufficient shards, have %d but need at least %d data shards", len(shards), s.dataShards)

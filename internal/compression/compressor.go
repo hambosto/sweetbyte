@@ -8,7 +8,7 @@ import (
 	"io"
 )
 
-// Level CompressionLevel defines the level of compression to be used.
+// Level defines the level of compression to be used.
 type Level int
 
 const (
@@ -28,7 +28,7 @@ type Compressor interface {
 	Decompress(data []byte) ([]byte, error)
 }
 
-// zlibCompressor handles data compression and decompression using zlib.
+// compressor handles data compression and decompression using zlib.
 type compressor struct {
 	level int
 }

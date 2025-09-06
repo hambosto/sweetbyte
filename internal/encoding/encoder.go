@@ -23,7 +23,7 @@ type encoder struct {
 	dataShards   int
 	parityShards int
 	encoder      reedsolomon.Encoder
-	shards       *Shards
+	shards       Shards
 }
 
 // NewEncoder creates a new Encoder with the specified number of data and parity shards.
