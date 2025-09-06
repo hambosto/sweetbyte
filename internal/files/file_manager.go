@@ -204,7 +204,7 @@ func (fm *fileManager) secureDelete(path string) error {
 	if err != nil {
 		return fmt.Errorf("secure open failed: %w", err)
 	}
-	defer f.Close()
+	defer f.Close() //nolint:errcheck
 
 	stat, err := f.Stat()
 	if err != nil {
@@ -279,7 +279,7 @@ func (fm *fileManager) ShowProcessingInfo(mode options.ProcessorMode, file strin
 	if mode == options.ModeDecrypt {
 		action = "Decrypting"
 	}
-	fmt.Printf("\n%s file: %s\n\n", action, file)
+	fmt.Printf("\n%s file: %s\n", action, file)
 }
 
 // ensureParentDir creates parent directories if needed.
