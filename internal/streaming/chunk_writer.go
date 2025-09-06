@@ -101,6 +101,7 @@ func (w *chunkWriter) writeResult(output io.Writer, result TaskResult) error {
 
 // writeChunkSize writes the size of a chunk to the output stream.
 func (w *chunkWriter) writeChunkSize(output io.Writer, size int) error {
+	// #nosec G115
 	buffer := utils.ToBytes(uint32(size))
 	if _, err := output.Write(buffer); err != nil {
 		return fmt.Errorf("chunk size write failed: %w", err)

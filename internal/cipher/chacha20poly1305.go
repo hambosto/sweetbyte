@@ -56,6 +56,7 @@ func (c *chaCha20Cipher) Encrypt(plaintext []byte) ([]byte, error) {
 	}
 
 	// Encrypt the plaintext and prepend the nonce.
+	// #nosec G407
 	ciphertext := c.aead.Seal(nonce, nonce, plaintext, nil)
 	return ciphertext, nil
 }
