@@ -20,5 +20,5 @@ func PrintBanner() {
 /____/|__/|__/\___/\___/\__/_.___/\__, /\__/\___/ 
                                  /____/           
 `
-	clime.Success.Print(banner)
+	clime.BoldColor.Print(banner)
 }

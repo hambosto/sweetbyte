@@ -19,7 +19,7 @@ func ShowFileInfo(files []files.FileInfo) {
 	}
 
 	fmt.Println()
-	fmt.Print(clime.Success.Sprintf("Found %d file(s):", len(files)))
+	fmt.Printf("%s %s ", clime.Success.Sprint("✓"), clime.BoldColor.Sprintf("Found %d file(s):", len(files)))
 	fmt.Println()
 
 	table := clime.NewTable().
@@ -27,7 +27,11 @@ func ShowFileInfo(files []files.FileInfo) {
 		AddColumn("Name").
 		AddColumn("Size").
 		AddColumn("Status").
-		SetColumnColor(1, clime.Success)
+		SetColumnColor(0, clime.BoldColor).
+		SetColumnColor(1, clime.Success).
+		SetColumnColor(2, clime.BoldColor).
+		SetColumnColor(3, clime.BoldColor).
+		WithBorderColor(clime.BoldColor)
 
 	for i, fi := range files {
 		status := "unencrypted"
@@ -55,7 +59,8 @@ func ShowProcessingInfo(mode options.ProcessorMode, file string) {
 		action = "Decrypting"
 	}
 	fmt.Println()
-	clime.SuccessLine(fmt.Sprintf("%s file: %s", action, file))
+	fmt.Printf("%s %s ", clime.Success.Sprint("✓"), clime.BoldColor.Sprintf("%s file: %s", action, file))
+	fmt.Println()
 }
 
 // ShowSuccessInfo displays a success message for encryption or decryption.
@@ -66,10 +71,12 @@ func ShowSuccessInfo(mode options.ProcessorMode, destPath string) {
 	}
 
 	fmt.Println()
-	clime.SuccessLine(fmt.Sprintf("File %s successfully: %s", action, destPath))
+	fmt.Printf("%s %s ", clime.Success.Sprint("✓"), clime.BoldColor.Sprintf("File %s successfully: %s", action, destPath))
+	fmt.Println()
 }
 
 // ShowSourceDeleted displays a message indicating that the source file was deleted.
 func ShowSourceDeleted(inputPath string) {
-	clime.SuccessLine(fmt.Sprintf("Source file deleted: %s", inputPath))
+	fmt.Printf("%s %s ", clime.Success.Sprint("✓"), clime.BoldColor.Sprintf("Source file deleted: %s", inputPath))
+	fmt.Println()
 }
