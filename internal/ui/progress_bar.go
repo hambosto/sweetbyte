@@ -28,7 +28,12 @@ func NewProgressBar(totalSize int64, description string) ProgressBar {
 		progressbar.OptionClearOnFinish(),
 		progressbar.OptionShowCount(),
 		progressbar.OptionFullWidth(),
-		progressbar.OptionSetTheme(progressbar.ThemeUnicode),
+		progressbar.OptionSetTheme(progressbar.Theme{
+			BarStart:      "[",
+			BarEnd:        "]",
+			Saucer:        "●",
+			SaucerPadding: "○",
+		}),
 	)
 
 	return &progressBar{
