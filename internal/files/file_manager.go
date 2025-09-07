@@ -294,8 +294,6 @@ func (fm *fileManager) ShowFileInfo(files []FileInfo) {
 		return
 	}
 
-	// fmt.Printf("\nFound %d file(s):\n\n", len(files))
-
 	fmt.Println()
 	fmt.Printf("Found %d file(s):", len(files))
 	fmt.Println()
@@ -305,7 +303,8 @@ func (fm *fileManager) ShowFileInfo(files []FileInfo) {
 		if fi.IsEncrypted {
 			status = "encrypted"
 		}
-		fmt.Printf("%d. %s (%s, %s)\n", i+1, fi.Path, utils.FormatBytes(fi.Size), status)
+		fmt.Printf("%d. %s (%s, %s)", i+1, fi.Path, utils.FormatBytes(fi.Size), status)
+		fmt.Println()
 	}
 	fmt.Println()
 }
