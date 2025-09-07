@@ -10,7 +10,6 @@ import (
 
 	"github.com/hambosto/sweetbyte/internal/config"
 	"github.com/hambosto/sweetbyte/internal/options"
-	"github.com/hambosto/sweetbyte/internal/utils"
 )
 
 // FileInfo represents information about a file.
@@ -41,10 +40,6 @@ type FileManager interface {
 	GetFileInfo(path string) (os.FileInfo, error)
 	// ValidatePath validates a file path.
 	ValidatePath(path string, mustExist bool) error
-	// ShowFileInfo displays information about a list of files.
-	ShowFileInfo(fileList []FileInfo)
-	// ShowProcessingInfo displays information about the file being processed.
-	ShowProcessingInfo(mode options.ProcessorMode, filePath string)
 }
 
 // fileManager implements the FileManager interface.
@@ -285,39 +280,6 @@ func (fm *fileManager) requireExists(path string) error {
 		return fmt.Errorf("access failed: %w", err)
 	}
 	return nil
-}
-
-// ShowFileInfo displays information about a list of files.
-func (fm *fileManager) ShowFileInfo(files []FileInfo) {
-	if len(files) == 0 {
-		fmt.Println("No files found.")
-		return
-	}
-
-	fmt.Println()
-	fmt.Printf("Found %d file(s):", len(files))
-	fmt.Println()
-
-	for i, fi := range files {
-		status := "unencrypted"
-		if fi.IsEncrypted {
-			status = "encrypted"
-		}
-		fmt.Printf("%d. %s (%s, %s)", i+1, fi.Path, utils.FormatBytes(fi.Size), status)
-		fmt.Println()
-	}
-	fmt.Println()
-}
-
-// ShowProcessingInfo displays information about the file being processed.
-func (fm *fileManager) ShowProcessingInfo(mode options.ProcessorMode, file string) {
-	action := "Encrypting"
-	if mode == options.ModeDecrypt {
-		action = "Decrypting"
-	}
-	fmt.Println()
-	fmt.Printf("%s file: %s", action, file)
-	fmt.Println()
 }
 
 // ensureParentDir ensures that the parent directory of a file exists.

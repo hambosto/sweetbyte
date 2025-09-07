@@ -2,19 +2,12 @@
 package ui
 
 import (
-	"fmt"
-
-	"github.com/inancgumus/screen"
+	"github.com/alperdrsnn/clime"
 )
 
 // Clear clears the terminal screen.
 func Clear() {
-	screen.Clear()
-}
-
-// MoveTopLeft moves the cursor to the top-left corner of the terminal.
-func MoveTopLeft() {
-	screen.MoveTopLeft()
+	clime.Clear()
 }
 
 // PrintBanner prints the application banner to the terminal.
@@ -27,5 +20,5 @@ func PrintBanner() {
 /____/|__/|__/\___/\___/\__/_.___/\__, /\__/\___/ 
                                  /____/           
 `
-	fmt.Print(banner)
+	clime.Success.Print(banner)
 }

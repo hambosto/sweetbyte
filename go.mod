@@ -3,8 +3,8 @@ module github.com/hambosto/sweetbyte
 go 1.24.6
 
 require (
+	github.com/alperdrsnn/clime v1.1.1
 	github.com/charmbracelet/huh v0.7.0
-	github.com/inancgumus/screen v0.0.0-20190314163918-06e984b86ed3
 	github.com/klauspost/reedsolomon v1.12.5
 	github.com/schollz/progressbar/v3 v3.18.0
 	github.com/spf13/cobra v1.10.1

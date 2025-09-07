@@ -34,9 +34,8 @@ func NewInteractive() *Interactive {
 
 // Run starts the interactive mode.
 func (a *Interactive) Run() {
-	// Clear the screen, move the cursor to the top left, and print the banner.
+	// Clear the screen and print the banner.
 	ui.Clear()
-	ui.MoveTopLeft()
 	ui.PrintBanner()
 
 	// Run the interactive loop.
@@ -65,7 +64,7 @@ func (a *Interactive) runInteractiveLoop() error {
 	if err != nil {
 		return fmt.Errorf("failed to get file information: %w", err)
 	}
-	a.fileManager.ShowFileInfo(fileInfos)
+	ui.ShowFileInfo(fileInfos)
 
 	// Let the user choose a file to process.
 	selectedFile, err := a.prompt.ChooseFile(eligibleFiles)
@@ -74,7 +73,7 @@ func (a *Interactive) runInteractiveLoop() error {
 	}
 
 	// Show processing information.
-	a.fileManager.ShowProcessingInfo(operation, selectedFile)
+	ui.ShowProcessingInfo(operation, selectedFile)
 
 	// Process the selected file.
 	if err := a.processFile(selectedFile, operation); err != nil {
