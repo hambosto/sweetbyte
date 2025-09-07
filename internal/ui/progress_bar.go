@@ -25,7 +25,6 @@ func NewProgressBar(totalSize int64, description string) ProgressBar {
 		progressbar.OptionSetDescription(description),
 		progressbar.OptionEnableColorCodes(true),
 		progressbar.OptionShowBytes(true),
-		progressbar.OptionClearOnFinish(),
 		progressbar.OptionShowCount(),
 		progressbar.OptionFullWidth(),
 		progressbar.OptionSetTheme(progressbar.Theme{

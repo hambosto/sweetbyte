@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/charmbracelet/huh"
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/hambosto/sweetbyte/internal/options"
 )
 
@@ -120,7 +120,10 @@ func (p *promptInput) ChooseFile(fileList []string) (string, error) {
 // getPassword prompts the user for a password.
 func (p *promptInput) getPassword(message string) (string, error) {
 	var password string
-	err := huh.NewInput().Title(message).EchoMode(huh.EchoModePassword).Value(&password).WithTheme(huh.ThemeCatppuccin()).Run()
+	prompt := &survey.Password{
+		Message: message,
+	}
+	err := survey.AskOne(prompt, &password)
 	if err != nil {
 		return "", fmt.Errorf("password prompt failed: %w", err)
 	}
@@ -143,7 +146,10 @@ func (p *promptInput) validatePassword(password string) error {
 // confirm displays a confirmation prompt to the user.
 func (p *promptInput) confirm(message string) (bool, error) {
 	var confirm bool
-	err := huh.NewConfirm().Title(message).Value(&confirm).WithTheme(huh.ThemeCatppuccin()).Run()
+	prompt := &survey.Confirm{
+		Message: message,
+	}
+	err := survey.AskOne(prompt, &confirm)
 	if err != nil {
 		return false, fmt.Errorf("confirmation failed: %w", err)
 	}
@@ -157,15 +163,13 @@ func (p *promptInput) choose(title string, optionList []string) (string, error) 
 		return "", fmt.Errorf("no options available for selection")
 	}
 
-	// Create the options for the select prompt.
-	var selected string
-	options := make([]huh.Option[string], len(optionList))
-	for i, option := range optionList {
-		options[i] = huh.NewOption(option, option)
-	}
-
 	// Run the select prompt.
-	err := huh.NewSelect[string]().Title(title).Options(options...).Value(&selected).WithTheme(huh.ThemeCatppuccin()).Run()
+	var selected string
+	prompt := &survey.Select{
+		Message: title,
+		Options: optionList,
+	}
+	err := survey.AskOne(prompt, &selected)
 	if err != nil {
 		return "", fmt.Errorf("selection failed: %w", err)
 	}

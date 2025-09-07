@@ -1,3 +1,4 @@
+// Package ui provides user interface functionalities.
 package ui
 
 import (
@@ -55,4 +56,20 @@ func ShowProcessingInfo(mode options.ProcessorMode, file string) {
 	}
 	fmt.Println()
 	clime.SuccessLine(fmt.Sprintf("%s file: %s", action, file))
+}
+
+// ShowSuccessInfo displays a success message for encryption or decryption.
+func ShowSuccessInfo(mode options.ProcessorMode, destPath string) {
+	action := "encrypted"
+	if mode == options.ModeDecrypt {
+		action = "decrypted"
+	}
+
+	fmt.Println()
+	clime.SuccessLine(fmt.Sprintf("File %s successfully: %s", action, destPath))
+}
+
+// ShowSourceDeleted displays a message indicating that the source file was deleted.
+func ShowSourceDeleted(inputPath string) {
+	clime.SuccessLine(fmt.Sprintf("Source file deleted: %s", inputPath))
 }

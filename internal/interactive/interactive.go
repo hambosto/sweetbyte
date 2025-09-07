@@ -131,6 +131,8 @@ func (a *Interactive) processFile(inputPath string, mode options.ProcessorMode) 
 		return err
 	}
 
+	ui.ShowSuccessInfo(mode, outputPath)
+
 	// Ask the user if they want to delete the source file.
 	var fileType string
 	if mode == options.ModeEncrypt {
@@ -143,8 +145,7 @@ func (a *Interactive) processFile(inputPath string, mode options.ProcessorMode) 
 		if err := a.fileManager.Remove(inputPath, deleteType); err != nil {
 			return fmt.Errorf("failed to delete source file: %w", err)
 		}
-		fmt.Printf("Source file deleted: %s", inputPath)
-		fmt.Println()
+		ui.ShowSourceDeleted(inputPath)
 	}
 
 	return nil
@@ -163,9 +164,6 @@ func (a *Interactive) encryptFile(srcPath, destPath string) error {
 		return fmt.Errorf("failed to encrypt %s: %w", srcPath, err)
 	}
 
-	fmt.Printf("File encrypted successfully: %s", destPath)
-	fmt.Println()
-
 	return nil
 }
 
@@ -181,9 +179,6 @@ func (a *Interactive) decryptFile(srcPath, destPath string) error {
 	if err := a.fileOperations.Decrypt(srcPath, destPath, password); err != nil {
 		return fmt.Errorf("failed to decrypt %s: %w", srcPath, err)
 	}
-
-	fmt.Printf("File decrypted successfully: %s", destPath)
-	fmt.Println()
 
 	return nil
 }
