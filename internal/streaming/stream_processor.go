@@ -46,18 +46,10 @@ type streamProcessor struct {
 }
 
 // NewStreamProcessor creates a new StreamProcessor.
-func NewStreamProcessor(key []byte, processing options.Processing, concurrency int, chunkSize int) (StreamProcessor, error) {
-	// Apply defaults if necessary.
-	if concurrency <= 0 {
-		concurrency = runtime.GOMAXPROCS(0)
-	}
-	if chunkSize <= 0 {
-		chunkSize = config.DefaultChunkSize
-	}
-
+func NewStreamProcessor(key []byte, processing options.Processing) (StreamProcessor, error) {
 	// Validate the key.
 	if len(key) != config.MasterKeySize {
-		return nil, fmt.Errorf("key must be 64 bytes long")
+		return nil, fmt.Errorf("key must be %d bytes long", config.MasterKeySize)
 	}
 
 	// Create a new task processor.
@@ -65,6 +57,9 @@ func NewStreamProcessor(key []byte, processing options.Processing, concurrency i
 	if err != nil {
 		return nil, fmt.Errorf("failed to create task processor: %w", err)
 	}
+
+	concurrency := runtime.GOMAXPROCS(0)
+	chunkSize := config.DefaultChunkSize
 
 	return &streamProcessor{
 		key:           key,
