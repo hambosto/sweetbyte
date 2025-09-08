@@ -90,10 +90,8 @@ func (w *chunkWriter) writeResult(output io.Writer, result TaskResult) error {
 	}
 
 	// Update the progress bar.
-	if w.bar != nil {
-		if err := w.bar.Add(int64(result.Size)); err != nil {
-			return fmt.Errorf("updating progress: %w", err)
-		}
+	if err := w.bar.Add(int64(result.Size)); err != nil {
+		return fmt.Errorf("updating progress: %w", err)
 	}
 
 	return nil
