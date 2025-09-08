@@ -81,13 +81,7 @@ func (o *fileOperations) Encrypt(srcPath, destPath, password string) error {
 	}
 
 	// Create a new stream processor and process the file.
-	streamConfig := streaming.StreamConfig{
-		Key:        key,
-		Processing: options.Encryption,
-		ChunkSize:  config.DefaultChunkSize,
-	}
-
-	processor, err := streaming.NewStreamProcessor(streamConfig)
+	processor, err := streaming.NewStreamProcessor(key, options.Encryption, 0, config.DefaultChunkSize)
 	if err != nil {
 		return fmt.Errorf("failed to create stream processor: %w", err)
 	}
@@ -144,13 +138,7 @@ func (o *fileOperations) Decrypt(srcPath, destPath, password string) error {
 	defer destFile.Close()
 
 	// Create a new stream processor and process the file.
-	streamConfig := streaming.StreamConfig{
-		Key:        key,
-		Processing: options.Decryption,
-		ChunkSize:  config.DefaultChunkSize,
-	}
-
-	processor, err := streaming.NewStreamProcessor(streamConfig)
+	processor, err := streaming.NewStreamProcessor(key, options.Decryption, 0, config.DefaultChunkSize)
 	if err != nil {
 		return fmt.Errorf("failed to create stream processor: %w", err)
 	}

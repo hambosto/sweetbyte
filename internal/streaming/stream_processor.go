@@ -5,8 +5,11 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"runtime"
 	"sync"
 
+	"github.com/hambosto/sweetbyte/internal/config"
+	"github.com/hambosto/sweetbyte/internal/options"
 	"github.com/hambosto/sweetbyte/internal/ui"
 )
 
@@ -32,7 +35,10 @@ type StreamProcessor interface {
 
 // streamProcessor implements the StreamProcessor interface.
 type streamProcessor struct {
-	streamConfig  StreamConfig
+	key           []byte
+	processing    options.Processing
+	concurrency   int
+	chunkSize     int
 	taskProcessor TaskProcessor
 	reader        ChunkReader
 	writer        ChunkWriter
@@ -40,24 +46,34 @@ type streamProcessor struct {
 }
 
 // NewStreamProcessor creates a new StreamProcessor.
-func NewStreamProcessor(config StreamConfig) (StreamProcessor, error) {
-	// Validate and apply defaults to the configuration.
-	if err := config.Validate(); err != nil {
-		return nil, err
+func NewStreamProcessor(key []byte, processing options.Processing, concurrency int, chunkSize int) (StreamProcessor, error) {
+	// Apply defaults if necessary.
+	if concurrency <= 0 {
+		concurrency = runtime.GOMAXPROCS(0)
 	}
-	config.ApplyDefaults()
+	if chunkSize <= 0 {
+		chunkSize = config.DefaultChunkSize
+	}
+
+	// Validate the key.
+	if len(key) != config.MasterKeySize {
+		return nil, fmt.Errorf("key must be 64 bytes long")
+	}
 
 	// Create a new task processor.
-	taskProcessor, err := NewTaskProcessor(config.Key, config.Processing)
+	taskProcessor, err := NewTaskProcessor(key, processing)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create task processor: %w", err)
 	}
 
 	return &streamProcessor{
-		streamConfig:  config,
+		key:           key,
+		processing:    processing,
+		concurrency:   concurrency,
+		chunkSize:     chunkSize,
 		taskProcessor: taskProcessor,
-		reader:        NewChunkReader(config.Processing, config.ChunkSize, config.Concurrency),
-		pool:          NewWorkerPool(taskProcessor, config.Concurrency),
+		reader:        NewChunkReader(processing, chunkSize, concurrency),
+		pool:          NewWorkerPool(taskProcessor, concurrency),
 	}, nil
 }
 
@@ -69,8 +85,8 @@ func (s *streamProcessor) Process(ctx context.Context, input io.Reader, output i
 	}
 
 	// Create a new progress bar and chunk writer.
-	bar := ui.NewProgressBar(totalSize, s.streamConfig.Processing.String())
-	s.writer = NewChunkWriter(s.streamConfig.Processing, bar)
+	bar := ui.NewProgressBar(totalSize, s.processing.String())
+	s.writer = NewChunkWriter(s.processing, bar)
 	// Run the processing pipeline.
 	return s.runPipeline(ctx, input, output)
 }
