@@ -54,7 +54,7 @@ func NewProcessor(key []byte) (Processor, error) {
 	}
 
 	// Initialize the compressor.
-	compressor, err := compression.NewCompressor(compression.LevelBestCompression)
+	compressor, err := compression.NewCompressor(compression.LevelBestSpeed)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize compressor: %w", err)
 	}

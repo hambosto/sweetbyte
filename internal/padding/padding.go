@@ -2,6 +2,7 @@
 package padding
 
 import (
+	"bytes"
 	"fmt"
 )
 
@@ -36,48 +37,47 @@ func (p *padding) Pad(data []byte) ([]byte, error) {
 		return nil, fmt.Errorf("data cannot be nil")
 	}
 
-	// Calculate the number of bytes to pad.
-	padding := p.blockSize - (len(data) % p.blockSize)
-	// Create the padding text.
-	padText := make([]byte, padding)
-	for i := range padText {
-		padText[i] = byte(padding)
-	}
+	// Calculate padding length (1 to blockSize)
+	paddingLen := p.blockSize - (len(data) % p.blockSize)
 
-	// Append the padding text to the data.
-	return append(data, padText...), nil
+	// Create padding bytes - all bytes have the value of padding length
+	padding := bytes.Repeat([]byte{byte(paddingLen)}, paddingLen)
+
+	return append(data, padding...), nil
 }
 
 // Unpad removes PKCS#7 padding from the data.
 func (p *padding) Unpad(data []byte) ([]byte, error) {
-	// Ensure the data is not empty.
-	if len(data) == 0 {
-		return nil, fmt.Errorf("data cannot be empty")
+	dataLen := len(data)
+
+	if dataLen == 0 {
+		return nil, fmt.Errorf("cannot unpad empty data")
 	}
 
-	// Ensure the data length is a multiple of the block size.
-	if len(data)%p.blockSize != 0 {
-		return nil, fmt.Errorf("data length must be multiple of block size %d, got %d", p.blockSize, len(data))
+	if dataLen%p.blockSize != 0 {
+		return nil, fmt.Errorf("data length %d is not a multiple of block size %d", dataLen, p.blockSize)
 	}
 
-	// Get the padding length from the last byte.
-	padding := int(data[len(data)-1])
-	// Ensure the padding length is valid.
-	if padding == 0 || padding > p.blockSize {
-		return nil, fmt.Errorf("padding value must be between 1 and %d, got %d", p.blockSize, padding)
+	// Get padding length from last byte
+	paddingLen := int(data[dataLen-1])
+
+	// Validate padding length
+	if paddingLen == 0 || paddingLen > p.blockSize {
+		return nil, fmt.Errorf("invalid padding length %d, must be between 1 and %d", paddingLen, p.blockSize)
 	}
 
-	if padding > len(data) {
-		return nil, fmt.Errorf("padding value %d exceeds data length %d", padding, len(data))
+	if paddingLen > dataLen {
+		return nil, fmt.Errorf("padding length %d exceeds data length %d", paddingLen, dataLen)
 	}
 
-	// Verify the padding bytes.
-	for i := len(data) - padding; i < len(data); i++ {
-		if data[i] != byte(padding) {
-			return nil, fmt.Errorf("invalid padding byte at position %d, expected %d got %d", i, padding, data[i])
-		}
+	// Verify all padding bytes have the correct value
+	paddingStart := dataLen - paddingLen
+	paddingBytes := data[paddingStart:]
+	expectedPadding := bytes.Repeat([]byte{byte(paddingLen)}, paddingLen)
+
+	if !bytes.Equal(paddingBytes, expectedPadding) {
+		return nil, fmt.Errorf("invalid padding bytes")
 	}
 
-	// Return the unpadded data.
-	return data[:len(data)-padding], nil
+	return data[:paddingStart], nil
 }
