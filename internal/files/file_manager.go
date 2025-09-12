@@ -225,7 +225,7 @@ func (fm *fileManager) secureDelete(path string) error {
 	if err != nil {
 		return fmt.Errorf("secure open failed: %w", err)
 	}
-	defer f.Close()
+	defer f.Close() //nolint:errcheck
 
 	// Get file information.
 	stat, err := f.Stat()

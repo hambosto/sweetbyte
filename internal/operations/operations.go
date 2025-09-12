@@ -38,14 +38,14 @@ func (o *fileOperations) Encrypt(srcPath, destPath, password string) error {
 	if err != nil {
 		return fmt.Errorf("failed to open source file: %w", err)
 	}
-	defer srcFile.Close()
+	defer srcFile.Close() //nolint:errcheck
 
 	// Create the destination file.
 	destFile, err := o.fileManager.CreateFile(destPath)
 	if err != nil {
 		return fmt.Errorf("failed to create destination file: %w", err)
 	}
-	defer destFile.Close()
+	defer destFile.Close() //nolint:errcheck
 
 	// Generate a random salt.
 	salt, err := kdf.GetRandomSalt(config.SaltSize)
@@ -100,7 +100,7 @@ func (o *fileOperations) Decrypt(srcPath, destPath, password string) error {
 	if err != nil {
 		return fmt.Errorf("failed to open source file: %w", err)
 	}
-	defer srcFile.Close()
+	defer srcFile.Close() //nolint:errcheck
 
 	// Read and verify the magic bytes.
 	magic, err := header.ReadMagic(srcFile)
@@ -135,7 +135,7 @@ func (o *fileOperations) Decrypt(srcPath, destPath, password string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create destination file: %w", err)
 	}
-	defer destFile.Close()
+	defer destFile.Close() //nolint:errcheck
 
 	// Create a new stream processor and process the file.
 	processor, err := streaming.NewStreamProcessor(key, options.Decryption)
