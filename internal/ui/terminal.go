@@ -11,7 +11,7 @@ import (
 )
 
 // Clear clears the terminal screen.
-func Clear() {
+func Clear() error {
 	var cmd *exec.Cmd
 	switch runtime.GOOS {
 	case "windows":
@@ -20,7 +20,7 @@ func Clear() {
 		cmd = exec.Command("clear")
 	}
 	cmd.Stdout = os.Stdout
-	cmd.Run() //nolint:errcheck
+	return cmd.Run() //nolint:errcheck
 }
 
 // PrintBanner prints the application banner to the terminal.
