@@ -35,7 +35,10 @@ func NewInteractive() *Interactive {
 // Run starts the interactive mode.
 func (a *Interactive) Run() {
 	// Clear the screen and print the banner.
-	ui.Clear()
+	if err := ui.Clear(); err != nil {
+		fmt.Printf("Failed to clear screen: %v\n", err)
+		os.Exit(1)
+	}
 	ui.PrintBanner()
 
 	// Run the interactive loop.
