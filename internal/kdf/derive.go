@@ -14,7 +14,7 @@ const (
 	// ArgonTime is the number of iterations for Argon2id.
 	ArgonTime = 8
 	// ArgonMemory is the memory usage in KiB for Argon2id.
-	ArgonMemory = 128 * 1024
+	ArgonMemory = 1 << 20
 	// ArgonThreads is the number of threads for Argon2id.
 	ArgonThreads = 8
 )
