@@ -42,7 +42,6 @@ type Header struct {
 func NewHeader() (*Header, error) {
 	return &Header{
 		Version:      CurrentVersion,
-		Flags:        FlagProtected,
 		OriginalSize: 0,
 	}, nil
 }
@@ -105,37 +104,61 @@ func (h *Header) Unmarshal(r io.Reader) error {
 // Salt returns the salt from the decoded header sections.
 // It returns an error if the header has not been unmarshalled yet.
 func (h *Header) Salt() ([]byte, error) {
-	if h.decodedSections == nil {
-		return nil, fmt.Errorf("header not unmarshalled yet")
-	}
-	return h.decodedSections[SectionSalt][:config.SaltSize], nil
+	return h.section(SectionSalt, config.SaltSize)
 }
 
 // Magic returns the magic bytes from the decoded header sections.
 // It returns an error if the header has not been unmarshalled yet.
 func (h *Header) Magic() ([]byte, error) {
-	if h.decodedSections == nil {
-		return nil, fmt.Errorf("header not unmarshalled yet")
-	}
-	return h.decodedSections[SectionMagic][:MagicSize], nil
+	return h.section(SectionMagic, MagicSize)
 }
 
 // Verify computes the MAC of the header sections using the provided key
 // and compares it with the MAC stored in the header.
 // It returns an error if the MACs do not match or if the header has not been unmarshalled.
 func (h *Header) Verify(key []byte) error {
-	if h.decodedSections == nil {
-		return fmt.Errorf("header not unmarshalled yet")
-	}
 	if len(key) == 0 {
 		return fmt.Errorf("key cannot be empty")
 	}
+
+	expectedMAC, err := h.section(SectionMAC, MACSize)
+	if err != nil {
+		return err
+	}
+	magic, err := h.section(SectionMagic, MagicSize)
+	if err != nil {
+		return err
+	}
+	salt, err := h.section(SectionSalt, config.SaltSize)
+	if err != nil {
+		return err
+	}
+	headerData, err := h.section(SectionHeaderData, HeaderDataSize)
+	if err != nil {
+		return err
+	}
+
 	// The MAC is computed over the magic, salt, and header data sections.
 	return VerifyMAC(
 		key,
-		h.decodedSections[SectionMAC][:MACSize],
-		h.decodedSections[SectionMagic][:MagicSize],
-		h.decodedSections[SectionSalt][:config.SaltSize],
-		h.decodedSections[SectionHeaderData][:HeaderDataSize],
+		expectedMAC,
+		magic,
+		salt,
+		headerData,
 	)
+}
+
+// section returns a decoded section, checking for presence and minimum length.
+func (h *Header) section(st SectionType, minLen int) ([]byte, error) {
+	if h.decodedSections == nil {
+		return nil, fmt.Errorf("header not unmarshalled yet")
+	}
+	data, ok := h.decodedSections[st]
+	if !ok {
+		return nil, fmt.Errorf("section %q not found", st)
+	}
+	if len(data) < minLen {
+		return nil, fmt.Errorf("section %q is too short: got %d, want at least %d", st, len(data), minLen)
+	}
+	return data[:minLen], nil
 }

@@ -135,7 +135,7 @@ func (m *Serializer) buildLengthsHeader(lengthSections map[SectionType]*EncodedS
 
 // assembleEncodedHeader concatenates all parts of the header into a single byte slice.
 // The order is critical for correct deserialization.
-func (m *Serializer) assembleEncodedHeader(
+func (s *Serializer) assembleEncodedHeader(
 	lengthsHeader []byte,
 	lengthSections map[SectionType]*EncodedSection,
 	sections map[SectionType]*EncodedSection,
@@ -143,16 +143,17 @@ func (m *Serializer) assembleEncodedHeader(
 	var result []byte
 	// 1. The header of lengths (16 bytes).
 	result = append(result, lengthsHeader...)
+
 	// 2. The encoded length prefixes for each section.
-	result = append(result, lengthSections[SectionMagic].Data...)
-	result = append(result, lengthSections[SectionSalt].Data...)
-	result = append(result, lengthSections[SectionHeaderData].Data...)
-	result = append(result, lengthSections[SectionMAC].Data...)
+	for _, sectionType := range SectionOrder {
+		result = append(result, lengthSections[sectionType].Data...)
+	}
+
 	// 3. The encoded data for each section.
-	result = append(result, sections[SectionMagic].Data...)
-	result = append(result, sections[SectionSalt].Data...)
-	result = append(result, sections[SectionHeaderData].Data...)
-	result = append(result, sections[SectionMAC].Data...)
+	for _, sectionType := range SectionOrder {
+		result = append(result, sections[sectionType].Data...)
+	}
+
 	return result
 }
 

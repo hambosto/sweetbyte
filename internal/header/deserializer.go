@@ -118,7 +118,7 @@ func (d *Deserializer) readAndDecodeLengths(r io.Reader, lengthSizes map[Section
 func (d *Deserializer) readAndDecodeData(r io.Reader, sectionLengths map[SectionType]uint32) (map[SectionType][]byte, error) {
 	decodedSections := make(map[SectionType][]byte)
 	// Iterate through the sections in their defined order.
-	for _, sectionType := range []SectionType{SectionMagic, SectionSalt, SectionHeaderData, SectionMAC} {
+	for _, sectionType := range SectionOrder {
 		// Read the encoded section data.
 		encodedData := make([]byte, sectionLengths[sectionType])
 		if _, err := io.ReadFull(r, encodedData); err != nil {

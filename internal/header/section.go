@@ -25,6 +25,10 @@ const (
 	SectionMAC SectionType = "mac"
 )
 
+// SectionOrder defines the fixed order in which header sections are processed.
+// This is crucial for consistent serialization and deserialization.
+var SectionOrder = []SectionType{SectionMagic, SectionSalt, SectionHeaderData, SectionMAC}
+
 // EncodedSection represents a Reed-Solomon encoded data section.
 // It holds the encoded data and its length.
 type EncodedSection struct {

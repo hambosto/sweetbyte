@@ -71,6 +71,7 @@ func (o *fileOperations) Encrypt(srcPath, destPath, password string) error {
 		return fmt.Errorf("failed to create header: %w", err)
 	}
 	h.SetOriginalSize(uint64(originalSize))
+	h.SetProtected(true)
 
 	// Marshal the header.
 	headerBytes, err := h.Marshal(salt, key)
