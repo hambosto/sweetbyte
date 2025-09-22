@@ -133,6 +133,10 @@ func (o *fileOperations) Decrypt(srcPath, destPath, password string) error {
 		return fmt.Errorf("decryption failed: incorrect password or corrupt file: %w", err)
 	}
 
+	if !h.IsProtected() {
+		return fmt.Errorf("file is not protected")
+	}
+
 	// Create the destination file.
 	destFile, err := o.fileManager.CreateFile(destPath)
 	if err != nil {

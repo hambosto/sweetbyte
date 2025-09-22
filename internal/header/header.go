@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	// MagicBytes is the constant string "SWX4" that identifies the file format.
-	MagicBytes = "SWX4"
+	// MagicBytes is a unique identifier for the file format.
+	MagicBytes = uint32(0xDEADBEEF)
 	// MagicSize is the size of the magic bytes (4 bytes).
 	MagicSize = 4
 	// MACSize is the size of the HMAC-SHA256 message authentication code (32 bytes).
@@ -21,12 +21,8 @@ const (
 	HeaderDataSize = 14
 	// CurrentVersion is the latest version of the header format.
 	CurrentVersion = 0x0001
-	// FlagCompressed indicates that the file content is compressed.
-	FlagCompressed = 1 << 0
-	// FlagEncrypted indicates that the file content is encrypted.
-	FlagEncrypted = 1 << 1
-	// DefaultFlags sets the default file processing options to compressed and encrypted.
-	DefaultFlags = FlagCompressed | FlagEncrypted
+	// FlagProtected indicates that the file content is protected (encrypted and compressed).
+	FlagProtected = 1 << 0
 )
 
 // Header represents the metadata at the beginning of a file.
@@ -46,7 +42,7 @@ type Header struct {
 func NewHeader() (*Header, error) {
 	return &Header{
 		Version:      CurrentVersion,
-		Flags:        DefaultFlags,
+		Flags:        FlagProtected,
 		OriginalSize: 0,
 	}, nil
 }
@@ -61,31 +57,17 @@ func (h *Header) SetOriginalSize(size uint64) {
 	h.OriginalSize = size
 }
 
-// IsCompressed checks if the compression flag is set.
-func (h *Header) IsCompressed() bool {
-	return h.Flags&FlagCompressed != 0
+// IsProtected checks if the protected flag is set.
+func (h *Header) IsProtected() bool {
+	return h.Flags&FlagProtected != 0
 }
 
-// IsEncrypted checks if the encryption flag is set.
-func (h *Header) IsEncrypted() bool {
-	return h.Flags&FlagEncrypted != 0
-}
-
-// SetCompressed sets or unsets the compression flag.
-func (h *Header) SetCompressed(compressed bool) {
-	if compressed {
-		h.Flags |= FlagCompressed
+// SetProtected sets or unsets the protected flag.
+func (h *Header) SetProtected(protected bool) {
+	if protected {
+		h.Flags |= FlagProtected
 	} else {
-		h.Flags &^= FlagCompressed
-	}
-}
-
-// SetEncrypted sets or unsets the encryption flag.
-func (h *Header) SetEncrypted(encrypted bool) {
-	if encrypted {
-		h.Flags |= FlagEncrypted
-	} else {
-		h.Flags &^= FlagEncrypted
+		h.Flags &^= FlagProtected
 	}
 }
 

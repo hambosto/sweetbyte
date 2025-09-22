@@ -105,5 +105,5 @@ func (se *SectionEncoder) DecodeLengthPrefix(section *EncodedSection) (uint32, e
 
 // VerifyMagic checks if the provided byte slice matches the expected magic bytes.
 func VerifyMagic(magic []byte) bool {
-	return bytes.Equal(magic, []byte(MagicBytes))
+	return bytes.Equal(magic, utils.ToBytes(MagicBytes))
 }

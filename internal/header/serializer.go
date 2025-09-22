@@ -42,7 +42,7 @@ func (s *Serializer) Marshal(salt, key []byte) ([]byte, error) {
 	}
 
 	// Prepare the raw data for each section.
-	magic := []byte(MagicBytes)
+	magic := utils.ToBytes(MagicBytes)
 	headerData := s.serialize(s.header)
 
 	// Compute the Message Authentication Code (MAC).
