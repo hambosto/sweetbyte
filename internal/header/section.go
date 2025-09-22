@@ -65,7 +65,7 @@ func (se *SectionEncoder) EncodeSection(data []byte) (*EncodedSection, error) {
 
 	return &EncodedSection{
 		Data:   encoded,
-		Length: uint32(len(encoded)),
+		Length: uint32(len(encoded)), // #nosec G115 -- len(encoded) is always non-negative and safe for uint32
 	}, nil
 }
 

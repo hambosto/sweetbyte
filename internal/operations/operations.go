@@ -151,8 +151,7 @@ func (o *fileOperations) Decrypt(srcPath, destPath, password string) error {
 		return fmt.Errorf("failed to create stream processor: %w", err)
 	}
 
-	// #nosec G115
-	if err := processor.Process(context.Background(), srcFile, destFile, int64(h.GetOriginalSize())); err != nil {
+	if err := processor.Process(context.Background(), srcFile, destFile, int64(h.GetOriginalSize())); err != nil { // #nosec G115 -- h.GetOriginalSize() is validated to fit int64 elsewhere
 		return fmt.Errorf("failed to process file: %w", err)
 	}
 
