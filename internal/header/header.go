@@ -123,7 +123,7 @@ func (h *Header) Magic() ([]byte, error) {
 // VerifyMAC computes the MAC of the header sections using the provided key
 // and compares it with the MAC stored in the header.
 // It returns an error if the MACs do not match or if the header has not been unmarshalled.
-func (h *Header) VerifyMAC(key []byte) error {
+func (h *Header) Verify(key []byte) error {
 	if h.decodedSections == nil {
 		return fmt.Errorf("header not unmarshalled yet")
 	}

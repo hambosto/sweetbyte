@@ -129,7 +129,7 @@ func (o *fileOperations) Decrypt(srcPath, destPath, password string) error {
 	}
 
 	// Verify the header integrity with the derived key.
-	if err := h.VerifyMAC(key); err != nil {
+	if err := h.Verify(key); err != nil {
 		return fmt.Errorf("decryption failed: incorrect password or corrupt file: %w", err)
 	}
 
