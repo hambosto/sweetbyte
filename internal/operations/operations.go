@@ -61,21 +61,25 @@ func (o *fileOperations) Encrypt(srcPath, destPath, password string) error {
 
 	// Get the original file size.
 	originalSize := srcInfo.Size()
-	if originalSize < 0 {
-		return fmt.Errorf("invalid file size: %d", originalSize)
+	if originalSize <= 0 {
+		return fmt.Errorf("cannot encrypt a file with zero or negative size")
 	}
 
 	// Create a new header.
-	h, err := header.NewHeader(uint64(originalSize))
+	h, err := header.NewHeader()
 	if err != nil {
 		return fmt.Errorf("failed to create header: %w", err)
 	}
+	h.SetOriginalSize(uint64(originalSize))
+	h.SetProtected(true)
 
-	// Marshal the header and write it to the destination file.
+	// Marshal the header.
 	headerBytes, err := h.Marshal(salt, key)
 	if err != nil {
 		return fmt.Errorf("failed to marshal header: %w", err)
 	}
+
+	// Write the marshalled header.
 	if _, err := destFile.Write(headerBytes); err != nil {
 		return fmt.Errorf("failed to write header: %w", err)
 	}
@@ -102,20 +106,21 @@ func (o *fileOperations) Decrypt(srcPath, destPath, password string) error {
 	}
 	defer srcFile.Close() //nolint:errcheck
 
-	// Read and verify the magic bytes.
-	magic, err := header.ReadMagic(srcFile)
+	// Create a new header object to handle unmarshalling.
+	h, err := header.NewHeader()
 	if err != nil {
-		return fmt.Errorf("failed to read magic bytes: %w", err)
+		return fmt.Errorf("failed to create header: %w", err)
 	}
 
-	if !header.VerifyMagic(magic) {
-		return fmt.Errorf("invalid magic bytes: not a sweetbyte file")
+	// Unmarshal the header to extract salt for key derivation.
+	if err := h.Unmarshal(srcFile); err != nil {
+		return fmt.Errorf("failed to unmarshal header: %w", err)
 	}
 
-	// Read the salt.
-	salt, err := header.ReadSalt(srcFile)
+	// Get salt from the unmarshalled header.
+	salt, err := h.Salt()
 	if err != nil {
-		return fmt.Errorf("failed to read salt: %w", err)
+		return fmt.Errorf("failed to get salt from header: %w", err)
 	}
 
 	// Derive the decryption key from the password and salt.
@@ -124,10 +129,13 @@ func (o *fileOperations) Decrypt(srcPath, destPath, password string) error {
 		return fmt.Errorf("failed to derive key: %w", err)
 	}
 
-	// Unmarshal the header.
-	h, err := header.Unmarshal(srcFile, key, magic, salt)
-	if err != nil {
+	// Verify the header integrity with the derived key.
+	if err := h.Verify(key); err != nil {
 		return fmt.Errorf("decryption failed: incorrect password or corrupt file: %w", err)
+	}
+
+	if !h.IsProtected() {
+		return fmt.Errorf("file is not protected")
 	}
 
 	// Create the destination file.
@@ -144,7 +152,7 @@ func (o *fileOperations) Decrypt(srcPath, destPath, password string) error {
 	}
 
 	// #nosec G115
-	if err := processor.Process(context.Background(), srcFile, destFile, int64(h.OriginalSize)); err != nil {
+	if err := processor.Process(context.Background(), srcFile, destFile, int64(h.GetOriginalSize())); err != nil {
 		return fmt.Errorf("failed to process file: %w", err)
 	}
 

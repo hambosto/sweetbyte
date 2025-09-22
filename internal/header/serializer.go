@@ -1,4 +1,5 @@
-// Package header provides functionalities for handling file headers.
+// Package header provides functionality for handling file headers,
+// including serialization and deserialization of metadata.
 package header
 
 import (
@@ -8,45 +9,158 @@ import (
 	"github.com/hambosto/sweetbyte/internal/utils"
 )
 
-// Marshal converts the header into a byte slice.
-func (h *Header) Marshal(salt, key []byte) ([]byte, error) {
-	// Validate the header.
-	if err := h.validate(); err != nil {
-		return nil, fmt.Errorf("header validation failed: %w", err)
-	}
-
-	// Ensure the salt has the correct size.
-	if len(salt) != config.SaltSize {
-		return nil, fmt.Errorf("invalid salt size: expected %d bytes, got %d", config.SaltSize, len(salt))
-	}
-
-	// Ensure the key is not empty.
-	if len(key) == 0 {
-		return nil, fmt.Errorf("key cannot be empty")
-	}
-
-	// Serialize the header data.
-	headerData := h.serialize()
-	// Compute the header MAC.
-	mac, err := computeMAC(key, []byte(MagicBytes), salt, headerData)
-	if err != nil {
-		return nil, fmt.Errorf("failed to compute header MAC: %w", err)
-	}
-
-	// Create the final header byte slice.
-	totalSize := MagicSize + len(salt) + len(headerData) + MACSize
-	result := make([]byte, 0, totalSize)
-	result = append(result, []byte(MagicBytes)...)
-	result = append(result, salt...)
-	result = append(result, headerData...)
-	result = append(result, mac...)
-
-	return result, nil
+// Serializer handles the process of converting a Header struct into a byte slice.
+// It manages the encoding of different header sections and assembles them into the final format.
+type Serializer struct {
+	header  *Header         // The Header struct containing the data to be serialized.
+	encoder *SectionEncoder // The encoder used for creating Reed-Solomon encoded sections.
 }
 
-// serialize converts the header fields into a byte slice.
-func (h *Header) serialize() []byte {
-	var data []byte
+// NewSerializer creates a new Serializer for a given Header.
+func NewSerializer(header *Header) (*Serializer, error) {
+	encoder, err := NewSectionEncoder()
+	if err != nil {
+		return nil, fmt.Errorf("failed to create section encoder: %w", err)
+	}
+	return &Serializer{
+		header:  header,
+		encoder: encoder,
+	}, nil
+}
+
+// Marshal converts the Header into its final byte slice representation.
+// The process involves several steps:
+// 1. Serialize the core header data (version, flags, size).
+// 2. Compute a MAC over the magic bytes, salt, and serialized header data.
+// 3. Reed-Solomon encode each section (magic, salt, header data, MAC).
+// 4. Reed-Solomon encode the lengths of the previously encoded sections.
+// 5. Assemble all parts into a final byte slice.
+func (s *Serializer) Marshal(salt, key []byte) ([]byte, error) {
+	// Validate header fields and inputs before proceeding.
+	if err := s.validateInputs(salt, key); err != nil {
+		return nil, err
+	}
+
+	// Prepare the raw data for each section.
+	magic := utils.ToBytes(MagicBytes)
+	headerData := s.serialize(s.header)
+
+	// Compute the Message Authentication Code (MAC).
+	mac, err := ComputeMAC(key, magic, salt, headerData)
+	if err != nil {
+		return nil, fmt.Errorf("failed to compute MAC: %w", err)
+	}
+
+	// Step 3: Encode the main data sections with Reed-Solomon error correction.
+	sections, err := s.encodeSections(magic, salt, headerData, mac)
+	if err != nil {
+		return nil, err
+	}
+
+	// Step 4: Encode the lengths of the data sections. This adds another layer of protection for metadata.
+	lengthSections, err := s.encodeLengthPrefixes(sections)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create the initial 16-byte header that contains the lengths of the *length sections*.
+	lengthsHeader := s.buildLengthsHeader(lengthSections)
+
+	// Step 5: Assemble all the encoded parts in the correct order.
+	return s.assembleEncodedHeader(lengthsHeader, lengthSections, sections), nil
+}
+
+// validateInputs checks the header and input parameters for validity.
+func (s *Serializer) validateInputs(salt, key []byte) error {
+	if err := s.header.Validate(); err != nil {
+		return fmt.Errorf("header validation failed: %w", err)
+	}
+	if len(salt) != config.SaltSize {
+		return fmt.Errorf("invalid salt size: expected %d, got %d", config.SaltSize, len(salt))
+	}
+	if len(key) == 0 {
+		return fmt.Errorf("key cannot be empty")
+	}
+	return nil
+}
+
+// encodeSections applies Reed-Solomon encoding to the primary header sections.
+func (s *Serializer) encodeSections(magic, salt, headerData, mac []byte) (map[SectionType]*EncodedSection, error) {
+	sections := make(map[SectionType]*EncodedSection)
+	var err error
+
+	// Encode each section and store it in the map.
+	if sections[SectionMagic], err = s.encoder.EncodeSection(magic); err != nil {
+		return nil, fmt.Errorf("failed to encode magic: %w", err)
+	}
+	if sections[SectionSalt], err = s.encoder.EncodeSection(salt); err != nil {
+		return nil, fmt.Errorf("failed to encode salt: %w", err)
+	}
+	if sections[SectionHeaderData], err = s.encoder.EncodeSection(headerData); err != nil {
+		return nil, fmt.Errorf("failed to encode header data: %w", err)
+	}
+	if sections[SectionMAC], err = s.encoder.EncodeSection(mac); err != nil {
+		return nil, fmt.Errorf("failed to encode MAC: %w", err)
+	}
+
+	return sections, nil
+}
+
+// encodeLengthPrefixes takes the lengths of the encoded data sections and encodes those lengths themselves.
+func (s *Serializer) encodeLengthPrefixes(sections map[SectionType]*EncodedSection) (map[SectionType]*EncodedSection, error) {
+	lengthSections := make(map[SectionType]*EncodedSection)
+	var err error
+
+	// For each section, encode its length.
+	for sectionType, section := range sections {
+		if lengthSections[sectionType], err = s.encoder.EncodeLengthPrefix(section.Length); err != nil {
+			return nil, fmt.Errorf("failed to encode length for %s: %w", sectionType, err)
+		}
+	}
+
+	return lengthSections, nil
+}
+
+// buildLengthsHeader creates the 16-byte header that stores the lengths of the encoded length prefixes.
+// This is the very first part of the serialized header.
+func (s *Serializer) buildLengthsHeader(lengthSections map[SectionType]*EncodedSection) []byte {
+	// This header is a fixed 16 bytes (4 sections * 4 bytes/length).
+	lengthsHeader := make([]byte, 0, 16)
+	lengthsHeader = append(lengthsHeader, utils.ToBytes(lengthSections[SectionMagic].Length)...)
+	lengthsHeader = append(lengthsHeader, utils.ToBytes(lengthSections[SectionSalt].Length)...)
+	lengthsHeader = append(lengthsHeader, utils.ToBytes(lengthSections[SectionHeaderData].Length)...)
+	lengthsHeader = append(lengthsHeader, utils.ToBytes(lengthSections[SectionMAC].Length)...)
+	return lengthsHeader
+}
+
+// assembleEncodedHeader concatenates all parts of the header into a single byte slice.
+// The order is critical for correct deserialization.
+func (s *Serializer) assembleEncodedHeader(
+	lengthsHeader []byte,
+	lengthSections map[SectionType]*EncodedSection,
+	sections map[SectionType]*EncodedSection,
+) []byte {
+	var result []byte
+	// 1. The header of lengths (16 bytes).
+	result = append(result, lengthsHeader...)
+
+	// 2. The encoded length prefixes for each section.
+	for _, sectionType := range SectionOrder {
+		result = append(result, lengthSections[sectionType].Data...)
+	}
+
+	// 3. The encoded data for each section.
+	for _, sectionType := range SectionOrder {
+		result = append(result, sections[sectionType].Data...)
+	}
+
+	return result
+}
+
+// serialize converts the fields of the Header struct into a compact byte slice.
+func (s *Serializer) serialize(h *Header) []byte {
+	// The data is packed in a specific order: Version, Flags, OriginalSize.
+	data := make([]byte, 0, HeaderDataSize)
 	data = append(data, utils.ToBytes(h.Version)...)
 	data = append(data, utils.ToBytes(h.Flags)...)
 	data = append(data, utils.ToBytes(h.OriginalSize)...)
