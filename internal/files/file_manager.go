@@ -88,7 +88,7 @@ func (fm *fileManager) isEligible(path string, info os.FileInfo, mode options.Pr
 func (fm *fileManager) isExcluded(path string) bool {
 	// Check if the file is in an excluded directory.
 	for _, dir := range config.ExcludedDirs {
-		if strings.Contains(path, dir) {
+		if strings.HasPrefix(path, dir) {
 			return true
 		}
 	}
