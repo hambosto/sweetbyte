@@ -5,7 +5,6 @@ import (
 	"io"
 
 	"github.com/hambosto/sweetbyte/internal/config"
-	"github.com/hambosto/sweetbyte/internal/encoding"
 )
 
 const (
@@ -24,20 +23,14 @@ type Header struct {
 	Flags        uint32
 	OriginalSize uint64
 
-	encoder         encoding.Encoder
 	decodedSections map[SectionType][]byte
 }
 
 func NewHeader() (*Header, error) {
-	encoder, err := encoding.NewEncoder(config.DataShards, config.ParityShards)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create reed-solomon encoder: %w", err)
-	}
 	return &Header{
 		Version:      CurrentVersion,
 		Flags:        DefaultFlags,
 		OriginalSize: 0,
-		encoder:      encoder,
 	}, nil
 }
 
@@ -85,12 +78,18 @@ func (h *Header) Validate() error {
 }
 
 func (h *Header) Marshal(salt, key []byte) ([]byte, error) {
-	marshaler := NewSerializer(h)
+	marshaler, err := NewSerializer(h)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create serializer: %w", err)
+	}
 	return marshaler.Marshal(salt, key)
 }
 
 func (h *Header) Unmarshal(r io.Reader) error {
-	unmarshaler := NewDeserializer(h)
+	unmarshaler, err := NewDeserializer(h)
+	if err != nil {
+		return fmt.Errorf("failed to create deserializer: %w", err)
+	}
 	return unmarshaler.Unmarshal(r)
 }
 

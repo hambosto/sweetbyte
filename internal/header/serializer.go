@@ -12,11 +12,15 @@ type Serializer struct {
 	encoder *SectionEncoder
 }
 
-func NewSerializer(header *Header) *Serializer {
+func NewSerializer(header *Header) (*Serializer, error) {
+	encoder, err := NewSectionEncoder()
+	if err != nil {
+		return nil, fmt.Errorf("failed to create section encoder: %w", err)
+	}
 	return &Serializer{
 		header:  header,
-		encoder: NewSectionEncoder(header.encoder),
-	}
+		encoder: encoder,
+	}, nil
 }
 
 func (s *Serializer) Marshal(salt, key []byte) ([]byte, error) {

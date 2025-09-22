@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 
+	"github.com/hambosto/sweetbyte/internal/config"
 	"github.com/hambosto/sweetbyte/internal/encoding"
 	"github.com/hambosto/sweetbyte/internal/utils"
 )
@@ -27,8 +28,12 @@ type SectionEncoder struct {
 	encoder encoding.Encoder
 }
 
-func NewSectionEncoder(encoder encoding.Encoder) *SectionEncoder {
-	return &SectionEncoder{encoder: encoder}
+func NewSectionEncoder() (*SectionEncoder, error) {
+	encoder, err := encoding.NewEncoder(config.DataShards, config.ParityShards)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create reed-solomon encoder: %w", err)
+	}
+	return &SectionEncoder{encoder: encoder}, nil
 }
 
 // EncodeSection encodes a data section with Reed-Solomon.

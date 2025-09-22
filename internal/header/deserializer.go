@@ -12,11 +12,15 @@ type Deserializer struct {
 	encoder *SectionEncoder
 }
 
-func NewDeserializer(header *Header) *Deserializer {
+func NewDeserializer(header *Header) (*Deserializer, error) {
+	encoder, err := NewSectionEncoder()
+	if err != nil {
+		return nil, fmt.Errorf("failed to create section encoder: %w", err)
+	}
 	return &Deserializer{
 		header:  header,
-		encoder: NewSectionEncoder(header.encoder),
-	}
+		encoder: encoder,
+	}, nil
 }
 
 func (d *Deserializer) Unmarshal(r io.Reader) error {
