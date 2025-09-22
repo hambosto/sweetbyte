@@ -11,7 +11,7 @@ import (
 
 const (
 	// MagicBytes is a unique identifier for the file format.
-	MagicBytes = uint32(0xDEADBEEF)
+	MagicBytes = uint32(0xCAFEBABE)
 	// MagicSize is the size of the magic bytes (4 bytes).
 	MagicSize = 4
 	// MACSize is the size of the HMAC-SHA256 message authentication code (32 bytes).

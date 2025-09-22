@@ -71,8 +71,8 @@ func (s *Serializer) Marshal(salt, key []byte) ([]byte, error) {
 }
 
 // validateInputs checks the header and input parameters for validity.
-func (m *Serializer) validateInputs(salt, key []byte) error {
-	if err := m.header.Validate(); err != nil {
+func (s *Serializer) validateInputs(salt, key []byte) error {
+	if err := s.header.Validate(); err != nil {
 		return fmt.Errorf("header validation failed: %w", err)
 	}
 	if len(salt) != config.SaltSize {
@@ -85,21 +85,21 @@ func (m *Serializer) validateInputs(salt, key []byte) error {
 }
 
 // encodeSections applies Reed-Solomon encoding to the primary header sections.
-func (m *Serializer) encodeSections(magic, salt, headerData, mac []byte) (map[SectionType]*EncodedSection, error) {
+func (s *Serializer) encodeSections(magic, salt, headerData, mac []byte) (map[SectionType]*EncodedSection, error) {
 	sections := make(map[SectionType]*EncodedSection)
 	var err error
 
 	// Encode each section and store it in the map.
-	if sections[SectionMagic], err = m.encoder.EncodeSection(magic); err != nil {
+	if sections[SectionMagic], err = s.encoder.EncodeSection(magic); err != nil {
 		return nil, fmt.Errorf("failed to encode magic: %w", err)
 	}
-	if sections[SectionSalt], err = m.encoder.EncodeSection(salt); err != nil {
+	if sections[SectionSalt], err = s.encoder.EncodeSection(salt); err != nil {
 		return nil, fmt.Errorf("failed to encode salt: %w", err)
 	}
-	if sections[SectionHeaderData], err = m.encoder.EncodeSection(headerData); err != nil {
+	if sections[SectionHeaderData], err = s.encoder.EncodeSection(headerData); err != nil {
 		return nil, fmt.Errorf("failed to encode header data: %w", err)
 	}
-	if sections[SectionMAC], err = m.encoder.EncodeSection(mac); err != nil {
+	if sections[SectionMAC], err = s.encoder.EncodeSection(mac); err != nil {
 		return nil, fmt.Errorf("failed to encode MAC: %w", err)
 	}
 
@@ -107,13 +107,13 @@ func (m *Serializer) encodeSections(magic, salt, headerData, mac []byte) (map[Se
 }
 
 // encodeLengthPrefixes takes the lengths of the encoded data sections and encodes those lengths themselves.
-func (m *Serializer) encodeLengthPrefixes(sections map[SectionType]*EncodedSection) (map[SectionType]*EncodedSection, error) {
+func (s *Serializer) encodeLengthPrefixes(sections map[SectionType]*EncodedSection) (map[SectionType]*EncodedSection, error) {
 	lengthSections := make(map[SectionType]*EncodedSection)
 	var err error
 
 	// For each section, encode its length.
 	for sectionType, section := range sections {
-		if lengthSections[sectionType], err = m.encoder.EncodeLengthPrefix(section.Length); err != nil {
+		if lengthSections[sectionType], err = s.encoder.EncodeLengthPrefix(section.Length); err != nil {
 			return nil, fmt.Errorf("failed to encode length for %s: %w", sectionType, err)
 		}
 	}
@@ -123,7 +123,7 @@ func (m *Serializer) encodeLengthPrefixes(sections map[SectionType]*EncodedSecti
 
 // buildLengthsHeader creates the 16-byte header that stores the lengths of the encoded length prefixes.
 // This is the very first part of the serialized header.
-func (m *Serializer) buildLengthsHeader(lengthSections map[SectionType]*EncodedSection) []byte {
+func (s *Serializer) buildLengthsHeader(lengthSections map[SectionType]*EncodedSection) []byte {
 	// This header is a fixed 16 bytes (4 sections * 4 bytes/length).
 	lengthsHeader := make([]byte, 0, 16)
 	lengthsHeader = append(lengthsHeader, utils.ToBytes(lengthSections[SectionMagic].Length)...)

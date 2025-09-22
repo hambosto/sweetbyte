@@ -61,8 +61,8 @@ func (o *fileOperations) Encrypt(srcPath, destPath, password string) error {
 
 	// Get the original file size.
 	originalSize := srcInfo.Size()
-	if originalSize == 0 {
-		return fmt.Errorf("cannot encrypt an empty file")
+	if originalSize <= 0 {
+		return fmt.Errorf("cannot encrypt a file with zero or negative size")
 	}
 
 	// Create a new header.
