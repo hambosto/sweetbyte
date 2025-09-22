@@ -29,7 +29,7 @@ type Header struct {
 }
 
 func NewHeader() (*Header, error) {
-	encoder, err := encoding.NewEncoder(4, 10)
+	encoder, err := encoding.NewEncoder(config.DataShards, config.ParityShards)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create reed-solomon encoder: %w", err)
 	}
@@ -74,7 +74,6 @@ func (h *Header) SetEncrypted(encrypted bool) {
 	}
 }
 
-// Validation
 func (h *Header) Validate() error {
 	if h.Version > CurrentVersion {
 		return fmt.Errorf("unsupported version: %d (current: %d)", h.Version, CurrentVersion)
@@ -85,18 +84,16 @@ func (h *Header) Validate() error {
 	return nil
 }
 
-// High-level marshal/unmarshal operations
 func (h *Header) Marshal(salt, key []byte) ([]byte, error) {
-	marshaler := &Marshaler{header: h}
+	marshaler := NewSerializer(h)
 	return marshaler.Marshal(salt, key)
 }
 
 func (h *Header) Unmarshal(r io.Reader) error {
-	unmarshaler := &Unmarshaler{header: h}
+	unmarshaler := NewDeserializer(h)
 	return unmarshaler.Unmarshal(r)
 }
 
-// Access to decoded sections (for backward compatibility)
 func (h *Header) Salt() ([]byte, error) {
 	if h.decodedSections == nil {
 		return nil, fmt.Errorf("header not unmarshalled yet")

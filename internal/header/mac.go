@@ -6,13 +6,7 @@ import (
 	"fmt"
 )
 
-type MACProcessor struct{}
-
-func NewMACProcessor() *MACProcessor {
-	return &MACProcessor{}
-}
-
-func (mp *MACProcessor) ComputeMAC(key []byte, parts ...[]byte) ([]byte, error) {
+func ComputeMAC(key []byte, parts ...[]byte) ([]byte, error) {
 	if len(key) == 0 {
 		return nil, fmt.Errorf("key cannot be empty")
 	}
@@ -28,8 +22,8 @@ func (mp *MACProcessor) ComputeMAC(key []byte, parts ...[]byte) ([]byte, error) 
 	return mac.Sum(nil), nil
 }
 
-func (mp *MACProcessor) VerifyMAC(key, expectedMAC []byte, parts ...[]byte) error {
-	computedMAC, err := mp.ComputeMAC(key, parts...)
+func VerifyMAC(key, expectedMAC []byte, parts ...[]byte) error {
+	computedMAC, err := ComputeMAC(key, parts...)
 	if err != nil {
 		return fmt.Errorf("failed to compute MAC: %w", err)
 	}
@@ -37,15 +31,4 @@ func (mp *MACProcessor) VerifyMAC(key, expectedMAC []byte, parts ...[]byte) erro
 		return fmt.Errorf("MAC verification failed")
 	}
 	return nil
-}
-
-// Package-level convenience functions for backward compatibility
-func ComputeMAC(key []byte, parts ...[]byte) ([]byte, error) {
-	mp := NewMACProcessor()
-	return mp.ComputeMAC(key, parts...)
-}
-
-func VerifyMAC(key, expectedMAC []byte, parts ...[]byte) error {
-	mp := NewMACProcessor()
-	return mp.VerifyMAC(key, expectedMAC, parts...)
 }

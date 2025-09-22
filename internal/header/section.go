@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 
+	"github.com/hambosto/sweetbyte/internal/encoding"
 	"github.com/hambosto/sweetbyte/internal/utils"
 )
 
@@ -23,17 +24,10 @@ type EncodedSection struct {
 }
 
 type SectionEncoder struct {
-	encoder interface {
-		Encode([]byte) ([]byte, error)
-		Decode([]byte) ([]byte, error)
-	}
+	encoder encoding.Encoder
 }
 
-func NewSectionEncoder(encoder interface {
-	Encode([]byte) ([]byte, error)
-	Decode([]byte) ([]byte, error)
-},
-) *SectionEncoder {
+func NewSectionEncoder(encoder encoding.Encoder) *SectionEncoder {
 	return &SectionEncoder{encoder: encoder}
 }
 

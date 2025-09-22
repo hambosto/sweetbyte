@@ -7,54 +7,52 @@ import (
 	"github.com/hambosto/sweetbyte/internal/utils"
 )
 
-type Unmarshaler struct {
-	header     *Header
-	serializer *Serializer
-	encoder    *SectionEncoder
+type Deserializer struct {
+	header  *Header
+	encoder *SectionEncoder
 }
 
-func NewUnmarshaler(header *Header) *Unmarshaler {
-	return &Unmarshaler{
-		header:     header,
-		serializer: NewSerializer(),
-		encoder:    NewSectionEncoder(header.encoder),
+func NewDeserializer(header *Header) *Deserializer {
+	return &Deserializer{
+		header:  header,
+		encoder: NewSectionEncoder(header.encoder),
 	}
 }
 
-func (u *Unmarshaler) Unmarshal(r io.Reader) error {
-	lengthSizes, err := u.readLengthSizes(r)
+func (d *Deserializer) Unmarshal(r io.Reader) error {
+	lengthSizes, err := d.readLengthSizes(r)
 	if err != nil {
 		return fmt.Errorf("failed to read length sizes: %w", err)
 	}
 
-	sectionLengths, err := u.readAndDecodeLengths(r, lengthSizes)
+	sectionLengths, err := d.readAndDecodeLengths(r, lengthSizes)
 	if err != nil {
 		return fmt.Errorf("failed to read section lengths: %w", err)
 	}
 
-	decodedSections, err := u.readAndDecodeData(r, sectionLengths)
+	decodedSections, err := d.readAndDecodeData(r, sectionLengths)
 	if err != nil {
 		return fmt.Errorf("failed to read and decode data: %w", err)
 	}
 
-	u.header.decodedSections = decodedSections
+	d.header.decodedSections = decodedSections
 
-	if !VerifyMagic(u.header.decodedSections[SectionMagic][:MagicSize]) {
+	if !VerifyMagic(d.header.decodedSections[SectionMagic][:MagicSize]) {
 		return fmt.Errorf("invalid magic bytes")
 	}
 
-	if err := u.serializer.Deserialize(u.header, u.header.decodedSections[SectionHeaderData][:HeaderDataSize]); err != nil {
+	if err := d.deserialize(d.header, d.header.decodedSections[SectionHeaderData][:HeaderDataSize]); err != nil {
 		return fmt.Errorf("failed to deserialize header: %w", err)
 	}
 
-	if err := u.header.Validate(); err != nil {
+	if err := d.header.Validate(); err != nil {
 		return fmt.Errorf("header validation failed: %w", err)
 	}
 
 	return nil
 }
 
-func (u *Unmarshaler) readLengthSizes(r io.Reader) (map[SectionType]uint32, error) {
+func (d *Deserializer) readLengthSizes(r io.Reader) (map[SectionType]uint32, error) {
 	lengthsHeader := make([]byte, 16)
 	if _, err := io.ReadFull(r, lengthsHeader); err != nil {
 		return nil, fmt.Errorf("failed to read lengths header: %w", err)
@@ -67,7 +65,7 @@ func (u *Unmarshaler) readLengthSizes(r io.Reader) (map[SectionType]uint32, erro
 	}, nil
 }
 
-func (u *Unmarshaler) readAndDecodeLengths(r io.Reader, lengthSizes map[SectionType]uint32) (map[SectionType]uint32, error) {
+func (d *Deserializer) readAndDecodeLengths(r io.Reader, lengthSizes map[SectionType]uint32) (map[SectionType]uint32, error) {
 	sectionLengths := make(map[SectionType]uint32)
 	for _, sectionType := range []SectionType{SectionMagic, SectionSalt, SectionHeaderData, SectionMAC} {
 		encodedLength := make([]byte, lengthSizes[sectionType])
@@ -75,7 +73,7 @@ func (u *Unmarshaler) readAndDecodeLengths(r io.Reader, lengthSizes map[SectionT
 			return nil, fmt.Errorf("failed to read encoded length for %s: %w", sectionType, err)
 		}
 		section := &EncodedSection{Data: encodedLength, Length: lengthSizes[sectionType]}
-		length, err := u.encoder.DecodeLengthPrefix(section)
+		length, err := d.encoder.DecodeLengthPrefix(section)
 		if err != nil {
 			return nil, fmt.Errorf("failed to decode length for %s: %w", sectionType, err)
 		}
@@ -84,7 +82,7 @@ func (u *Unmarshaler) readAndDecodeLengths(r io.Reader, lengthSizes map[SectionT
 	return sectionLengths, nil
 }
 
-func (u *Unmarshaler) readAndDecodeData(r io.Reader, sectionLengths map[SectionType]uint32) (map[SectionType][]byte, error) {
+func (d *Deserializer) readAndDecodeData(r io.Reader, sectionLengths map[SectionType]uint32) (map[SectionType][]byte, error) {
 	decodedSections := make(map[SectionType][]byte)
 	for _, sectionType := range []SectionType{SectionMagic, SectionSalt, SectionHeaderData, SectionMAC} {
 		encodedData := make([]byte, sectionLengths[sectionType])
@@ -92,11 +90,21 @@ func (u *Unmarshaler) readAndDecodeData(r io.Reader, sectionLengths map[SectionT
 			return nil, fmt.Errorf("failed to read encoded %s: %w", sectionType, err)
 		}
 		section := &EncodedSection{Data: encodedData, Length: sectionLengths[sectionType]}
-		decoded, err := u.encoder.DecodeSection(section)
+		decoded, err := d.encoder.DecodeSection(section)
 		if err != nil {
 			return nil, fmt.Errorf("failed to decode %s: %w", sectionType, err)
 		}
 		decodedSections[sectionType] = decoded
 	}
 	return decodedSections, nil
+}
+
+func (d *Deserializer) deserialize(h *Header, data []byte) error {
+	if len(data) != HeaderDataSize {
+		return fmt.Errorf("invalid header data size: expected %d bytes, got %d", HeaderDataSize, len(data))
+	}
+	h.Version = utils.FromBytes[uint16](data[0:2])
+	h.Flags = utils.FromBytes[uint32](data[2:6])
+	h.OriginalSize = utils.FromBytes[uint64](data[6:14])
+	return nil
 }

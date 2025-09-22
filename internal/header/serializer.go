@@ -7,49 +7,45 @@ import (
 	"github.com/hambosto/sweetbyte/internal/utils"
 )
 
-type Marshaler struct {
-	header       *Header
-	serializer   *Serializer
-	encoder      *SectionEncoder
-	macProcessor *MACProcessor
+type Serializer struct {
+	header  *Header
+	encoder *SectionEncoder
 }
 
-func NewMarshaler(header *Header) *Marshaler {
-	return &Marshaler{
-		header:       header,
-		serializer:   NewSerializer(),
-		encoder:      NewSectionEncoder(header.encoder),
-		macProcessor: NewMACProcessor(),
+func NewSerializer(header *Header) *Serializer {
+	return &Serializer{
+		header:  header,
+		encoder: NewSectionEncoder(header.encoder),
 	}
 }
 
-func (m *Marshaler) Marshal(salt, key []byte) ([]byte, error) {
-	if err := m.validateInputs(salt, key); err != nil {
+func (s *Serializer) Marshal(salt, key []byte) ([]byte, error) {
+	if err := s.validateInputs(salt, key); err != nil {
 		return nil, err
 	}
 
 	magic := []byte(MagicBytes)
-	headerData := m.serializer.Serialize(m.header)
-	mac, err := m.macProcessor.ComputeMAC(key, magic, salt, headerData)
+	headerData := s.serialize(s.header)
+	mac, err := ComputeMAC(key, magic, salt, headerData)
 	if err != nil {
 		return nil, fmt.Errorf("failed to compute MAC: %w", err)
 	}
 
-	sections, err := m.encodeSections(magic, salt, headerData, mac)
+	sections, err := s.encodeSections(magic, salt, headerData, mac)
 	if err != nil {
 		return nil, err
 	}
 
-	lengthSections, err := m.encodeLengthPrefixes(sections)
+	lengthSections, err := s.encodeLengthPrefixes(sections)
 	if err != nil {
 		return nil, err
 	}
 
-	lengthsHeader := m.buildLengthsHeader(lengthSections)
-	return m.assembleEncodedHeader(lengthsHeader, lengthSections, sections), nil
+	lengthsHeader := s.buildLengthsHeader(lengthSections)
+	return s.assembleEncodedHeader(lengthsHeader, lengthSections, sections), nil
 }
 
-func (m *Marshaler) validateInputs(salt, key []byte) error {
+func (m *Serializer) validateInputs(salt, key []byte) error {
 	if err := m.header.Validate(); err != nil {
 		return fmt.Errorf("header validation failed: %w", err)
 	}
@@ -62,7 +58,7 @@ func (m *Marshaler) validateInputs(salt, key []byte) error {
 	return nil
 }
 
-func (m *Marshaler) encodeSections(magic, salt, headerData, mac []byte) (map[SectionType]*EncodedSection, error) {
+func (m *Serializer) encodeSections(magic, salt, headerData, mac []byte) (map[SectionType]*EncodedSection, error) {
 	sections := make(map[SectionType]*EncodedSection)
 	var err error
 
@@ -82,7 +78,7 @@ func (m *Marshaler) encodeSections(magic, salt, headerData, mac []byte) (map[Sec
 	return sections, nil
 }
 
-func (m *Marshaler) encodeLengthPrefixes(sections map[SectionType]*EncodedSection) (map[SectionType]*EncodedSection, error) {
+func (m *Serializer) encodeLengthPrefixes(sections map[SectionType]*EncodedSection) (map[SectionType]*EncodedSection, error) {
 	lengthSections := make(map[SectionType]*EncodedSection)
 	var err error
 
@@ -95,7 +91,7 @@ func (m *Marshaler) encodeLengthPrefixes(sections map[SectionType]*EncodedSectio
 	return lengthSections, nil
 }
 
-func (m *Marshaler) buildLengthsHeader(lengthSections map[SectionType]*EncodedSection) []byte {
+func (m *Serializer) buildLengthsHeader(lengthSections map[SectionType]*EncodedSection) []byte {
 	lengthsHeader := make([]byte, 0, 16)
 	lengthsHeader = append(lengthsHeader, utils.ToBytes(lengthSections[SectionMagic].Length)...)
 	lengthsHeader = append(lengthsHeader, utils.ToBytes(lengthSections[SectionSalt].Length)...)
@@ -104,7 +100,11 @@ func (m *Marshaler) buildLengthsHeader(lengthSections map[SectionType]*EncodedSe
 	return lengthsHeader
 }
 
-func (m *Marshaler) assembleEncodedHeader(lengthsHeader []byte, lengthSections map[SectionType]*EncodedSection, sections map[SectionType]*EncodedSection) []byte {
+func (m *Serializer) assembleEncodedHeader(
+	lengthsHeader []byte,
+	lengthSections map[SectionType]*EncodedSection,
+	sections map[SectionType]*EncodedSection,
+) []byte {
 	var result []byte
 	result = append(result, lengthsHeader...)
 	result = append(result, lengthSections[SectionMagic].Data...)
@@ -116,4 +116,12 @@ func (m *Marshaler) assembleEncodedHeader(lengthsHeader []byte, lengthSections m
 	result = append(result, sections[SectionHeaderData].Data...)
 	result = append(result, sections[SectionMAC].Data...)
 	return result
+}
+
+func (s *Serializer) serialize(h *Header) []byte {
+	data := make([]byte, 0, HeaderDataSize)
+	data = append(data, utils.ToBytes(h.Version)...)
+	data = append(data, utils.ToBytes(h.Flags)...)
+	data = append(data, utils.ToBytes(h.OriginalSize)...)
+	return data
 }
