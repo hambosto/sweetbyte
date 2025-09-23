@@ -59,13 +59,19 @@ func (d *Deserializer) Unmarshal(r io.Reader) error {
 	d.header.decodedSections = decodedSections
 
 	// Step 4: Perform validation checks.
-	// Verify that the magic bytes are correct to ensure it's a valid file format.
-	if !VerifyMagic(d.header.decodedSections[SectionMagic][:MagicSize]) {
+	magic, ok := d.header.decodedSections[SectionMagic]
+	if !ok || len(magic) < MagicSize {
+		return fmt.Errorf("invalid or missing magic section")
+	}
+	if !VerifyMagic(magic[:MagicSize]) {
 		return fmt.Errorf("invalid magic bytes")
 	}
 
-	// Deserialize the core header data (version, flags, original size) into the Header struct.
-	if err := d.deserialize(d.header, d.header.decodedSections[SectionHeaderData][:HeaderDataSize]); err != nil {
+	headerData, ok := d.header.decodedSections[SectionHeaderData]
+	if !ok || len(headerData) < HeaderDataSize {
+		return fmt.Errorf("invalid or missing header data section")
+	}
+	if err := d.deserialize(d.header, headerData[:HeaderDataSize]); err != nil {
 		return fmt.Errorf("failed to deserialize header: %w", err)
 	}
 

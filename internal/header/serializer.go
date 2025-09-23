@@ -124,12 +124,14 @@ func (s *Serializer) encodeLengthPrefixes(sections map[SectionType]*EncodedSecti
 // buildLengthsHeader creates the 16-byte header that stores the lengths of the encoded length prefixes.
 // This is the very first part of the serialized header.
 func (s *Serializer) buildLengthsHeader(lengthSections map[SectionType]*EncodedSection) []byte {
-	// This header is a fixed 16 bytes (4 sections * 4 bytes/length).
 	lengthsHeader := make([]byte, 0, 16)
-	lengthsHeader = append(lengthsHeader, utils.ToBytes(lengthSections[SectionMagic].Length)...)
-	lengthsHeader = append(lengthsHeader, utils.ToBytes(lengthSections[SectionSalt].Length)...)
-	lengthsHeader = append(lengthsHeader, utils.ToBytes(lengthSections[SectionHeaderData].Length)...)
-	lengthsHeader = append(lengthsHeader, utils.ToBytes(lengthSections[SectionMAC].Length)...)
+	for _, sectionType := range SectionOrder {
+		sec, ok := lengthSections[sectionType]
+		if !ok || sec == nil {
+			panic(fmt.Sprintf("missing encoded length section for %s", sectionType))
+		}
+		lengthsHeader = append(lengthsHeader, utils.ToBytes(sec.Length)...)
+	}
 	return lengthsHeader
 }
 
@@ -146,12 +148,20 @@ func (s *Serializer) assembleEncodedHeader(
 
 	// 2. The encoded length prefixes for each section.
 	for _, sectionType := range SectionOrder {
-		result = append(result, lengthSections[sectionType].Data...)
+		sec, ok := lengthSections[sectionType]
+		if !ok || sec == nil || sec.Data == nil {
+			panic(fmt.Sprintf("missing encoded length prefix for %s", sectionType))
+		}
+		result = append(result, sec.Data...)
 	}
 
 	// 3. The encoded data for each section.
 	for _, sectionType := range SectionOrder {
-		result = append(result, sections[sectionType].Data...)
+		sec, ok := sections[sectionType]
+		if !ok || sec == nil || sec.Data == nil {
+			panic(fmt.Sprintf("missing encoded section for %s", sectionType))
+		}
+		result = append(result, sec.Data...)
 	}
 
 	return result

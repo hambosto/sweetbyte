@@ -154,11 +154,11 @@ func (h *Header) section(st SectionType, minLen int) ([]byte, error) {
 		return nil, fmt.Errorf("header not unmarshalled yet")
 	}
 	data, ok := h.decodedSections[st]
-	if !ok {
-		return nil, fmt.Errorf("section %q not found", st)
+	if !ok || data == nil {
+		return nil, fmt.Errorf("required section missing or nil")
 	}
 	if len(data) < minLen {
-		return nil, fmt.Errorf("section %q is too short: got %d, want at least %d", st, len(data), minLen)
+		return nil, fmt.Errorf("section too short")
 	}
 	return data[:minLen], nil
 }
