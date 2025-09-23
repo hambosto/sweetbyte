@@ -130,52 +130,64 @@ graph TD
 
 ## 📦 File Format
 
-Encrypted files (`.swb`) have a custom binary structure designed for security and efficiency.
+Encrypted files (`.swb`) have a custom binary structure designed for security and resilience.
 
 #### Overall Structure
-An encrypted file consists of a fixed-size header followed by a series of variable-length data chunks.
+An encrypted file consists of a resilient, variable-size header followed by a series of variable-length data chunks.
 
 ```
 [ Secure Header (variable size) ] [ Chunk 1 ] [ Chunk 2 ] ... [ Chunk N ]
 ```
 
 #### Secure Header
-The header contains all the metadata required to decrypt the file. It uses a fixed-size, authenticated format for simplicity and efficiency.
+The header is designed for extreme resilience to withstand data corruption. Instead of a simple, fixed structure, it's a multi-layered, self-verifying format where every component—including the metadata about component sizes—is protected by **Reed-Solomon error correction codes**. This ensures that the header can be reconstructed even if it is partially damaged.
 
-The header has the following structure:
+The header is composed of three main parts, read sequentially:
 
-`[Magic Bytes (4)] [Salt (32)] [Header Data (14)] [MAC (32)]`
+`[ Lengths Header (16 bytes) ] [ Encoded Length Prefixes (variable) ] [ Encoded Data Sections (variable) ]`
 
-| Part          | Size (bytes) | Description                                                                                                                                                           |
-|---------------|--------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Magic Bytes** | 4            | `SWX4` - A constant value that identifies the file as a SweetByte encrypted file.                                                                                     |
-| **Salt**        | 32           | A unique, random value used as an input for the Argon2id key derivation function. This ensures that even with the same password, the derived encryption key is unique. |
-| **Header Data** | 14           | A fixed-size block containing serialized file metadata. See details below.                                                                                            |
-| **MAC**         | 32           | A **Message Authentication Code** (HMAC-SHA256) that provides integrity and authenticity for the entire header structure (`Magic Bytes` + `Salt` + `Header Data`).      |
+**1. Lengths Header (16 bytes)**
+
+This is the only fixed-size part of the header. It acts as a bootstrap, providing the exact size of the *encoded length prefix* for each of the four main sections (Magic, Salt, Header Data, and MAC).
+
+**2. Encoded Length Prefixes (Variable Size)**
+
+Following the lengths header are four variable-size blocks. Each block is a Reed-Solomon encoded value that, when decoded, reveals the size of the corresponding encoded data section. This adds another layer of protection for the file's structural metadata.
+
+**3. Encoded Data Sections (Variable Size)**
+
+This is the core of the header, containing the actual metadata. Each section is individually encoded with Reed-Solomon, making it independently recoverable.
+
+| Section         | Raw Size | Description                                                                                                                                                           |
+|-----------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Magic Bytes**   | 4 bytes  | `0xCAFEBABE` - A constant value that identifies the file as a SweetByte encrypted file.                                                                               |
+| **Salt**          | 32 bytes | A unique, random value used for the Argon2id key derivation function. This ensures that even with the same password, the derived encryption key is unique.              |
+| **Header Data**   | 14 bytes | A block containing serialized file metadata. See details below.                                                                                                       |
+| **MAC**           | 32 bytes | An **HMAC-SHA256** that provides integrity and authenticity for the *raw, decoded* header sections (`Magic Bytes` + `Salt` + `Header Data`).                             |
 
 **Header Authentication**
 
-To prevent tampering, the **MAC** is computed over the `Magic Bytes`, `Salt`, and the `Header Data` block. If any of these parts are modified, the MAC verification will fail during decryption, and the process will be aborted. This is verified using a constant-time comparison to protect against timing attacks.
+To prevent tampering, the **MAC** is computed over the *raw, decoded* `Magic Bytes`, `Salt`, and `Header Data` sections. During decryption, the header sections are first decoded (and corrected if necessary), and then the MAC is verified. If verification fails, the process is aborted. This check uses a constant-time comparison to protect against timing attacks, ensuring that the header's metadata is authentic and has not been manipulated.
 
 **Header Data**
 
-The `Header Data` block is a 14-byte structure containing the core metadata for the file. It is created by directly serializing the internal `Header` struct and has the following layout:
+The `Header Data` block is a 14-byte structure containing the core metadata for the file. It is created by serializing the internal `Header` struct before being encoded and authenticated. It has the following layout:
 
 | Field          | Size (bytes) | Description                                                                                                                              |
 |----------------|--------------|------------------------------------------------------------------------------------------------------------------------------------------|
 | **Version**      | 2            | A 16-bit unsigned integer representing the file format version (currently `0x0001`).                                                     |
-| **Flags**        | 4            | A 32-bit unsigned integer bitfield of flags indicating processing options (e.g., `FlagCompressed`, `FlagEncrypted`).                     |
+| **Flags**        | 4            | A 32-bit unsigned integer bitfield of flags indicating processing options (e.g., `FlagProtected`).                                     |
 | **OriginalSize** | 8            | A 64-bit unsigned integer representing the original, uncompressed size of the file content.                                            |
 
-This fixed-structure approach is simple and efficient, providing all necessary information for decryption without the overhead of a more complex and extensible format like TLV.
+This layered approach provides extreme resilience and security for the file's critical metadata, protecting it against both accidental corruption and malicious tampering.
 
 #### Cryptographic Parameters
 SweetByte uses strong, modern cryptographic parameters for key derivation and encryption.
 
 - **Argon2id Parameters:**
     - **Time Cost:** 8
-    - **Memory Cost:** 128 MB
-    - **Parallelism:** 8 threads
+    - **Memory Cost:** 1 GB
+    - **Parallelism:** 8
 - **Reed-Solomon Parameters:**
     - **Data Shards:** 10
     - **Parity Shards:** 4 (Provides high redundancy)
