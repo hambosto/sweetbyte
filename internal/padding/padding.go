@@ -70,12 +70,14 @@ func (p *padding) Unpad(data []byte) ([]byte, error) {
 		return nil, fmt.Errorf("padding length %d exceeds data length %d", paddingLen, dataLen)
 	}
 
-	// Verify all padding bytes have the correct value
+	// Verify all padding bytes have the correct value (constant-time)
 	paddingStart := dataLen - paddingLen
 	paddingBytes := data[paddingStart:]
-	expectedPadding := bytes.Repeat([]byte{byte(paddingLen)}, paddingLen)
-
-	if !bytes.Equal(paddingBytes, expectedPadding) {
+	var invalid byte = 0
+	for _, b := range paddingBytes {
+		invalid |= b ^ byte(paddingLen)
+	}
+	if invalid != 0 {
 		return nil, fmt.Errorf("invalid padding bytes")
 	}
 
