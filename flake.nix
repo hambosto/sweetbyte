@@ -42,7 +42,7 @@
 
           meta = with pkgs.lib; {
             description = "A very small, very simple, yet very secure encryption tool.";
-            homepage = "https://github.com/yourusername/sweetbyte";
+            homepage = "https://github.com/hambosto/sweetbyte";
             license = licenses.mit;
             mainProgram = "sweetbyte";
           };
