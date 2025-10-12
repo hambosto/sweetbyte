@@ -6,22 +6,25 @@
     flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = {
-    nixpkgs,
-    flake-utils,
-    ...
-  }:
+  outputs =
+    {
+      nixpkgs,
+      flake-utils,
+      ...
+    }:
     flake-utils.lib.eachDefaultSystem (
-      system: let
+      system:
+      let
         pkgs = nixpkgs.legacyPackages.${system};
-      in {
+      in
+      {
         packages.default = pkgs.buildGoModule {
           pname = "sweetbyte";
           version = "1.0";
 
           src = ./.;
 
-          vendorHash = "sha256-MwNUkEmdaVv1gGMHjdqKzTSDVD5I2bGqRKUQN3R7p+U=";
+          vendorHash = "sha256-mQWS9QHVY95tAPwt5Sp7y1f9vSR3gqwbiRij+GXWExE=";
 
           env.CGO_ENABLED = 0;
           flags = [ "-trimpath" ];
