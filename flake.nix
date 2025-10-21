@@ -24,7 +24,7 @@
 
           src = ./.;
 
-          vendorHash = "sha256-mQWS9QHVY95tAPwt5Sp7y1f9vSR3gqwbiRij+GXWExE=";
+          vendorHash = "sha256-ZqjjU4RAU5R8EbhvNiXHyahWmIvY5RvUTQ7CJ7h0bTA=";
 
           env.CGO_ENABLED = 0;
           flags = [ "-trimpath" ];
