@@ -1,6 +1,6 @@
 module github.com/hambosto/sweetbyte
 
-go 1.25.1
+go 1.25.2
 
 require (
 	github.com/charmbracelet/huh v0.8.0
