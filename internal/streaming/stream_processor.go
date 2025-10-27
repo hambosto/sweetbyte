@@ -100,11 +100,9 @@ func (s *streamProcessor) runPipeline(ctx context.Context, input io.Reader, outp
 	var wg sync.WaitGroup
 
 	// Write the results to the output stream.
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		writerErr = s.writer.WriteChunks(pipelineCtx, output, results)
-	}()
+	})
 
 	wg.Wait()
 	// Check for any errors from the reader.
