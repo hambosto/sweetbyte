@@ -1,5 +1,6 @@
 {
   description = "SweetByte - A very small, very simple, yet very secure encryption tool.";
+
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
@@ -26,20 +27,16 @@
           version = "1.0";
           src = ./.;
           modules = ./gomod2nix.toml;
-          # env.CGO_ENABLED = 0;
-          # flags = [ "-trimpath" ];
-          # ldflags = [
-          #   "-s"
-          #   "-w"
-          #   "-extldflags -static"
-          # ];
+
           nativeBuildInputs = [ pkgs.installShellFiles ];
+
           postInstall = ''
             installShellCompletion --cmd sweetbyte \
               --bash <($out/bin/sweetbyte completion bash) \
               --fish <($out/bin/sweetbyte completion fish) \
               --zsh <($out/bin/sweetbyte completion zsh)
           '';
+
           meta = with pkgs.lib; {
             description = "A very small, very simple, yet very secure encryption tool.";
             homepage = "https://github.com/hambosto/sweetbyte";
@@ -47,6 +44,7 @@
             mainProgram = "sweetbyte";
           };
         };
+
         devShells = {
           default = pkgs.mkShell {
             packages = with pkgs; [
