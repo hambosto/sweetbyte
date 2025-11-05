@@ -5,25 +5,20 @@ import (
 	"fmt"
 )
 
-type Padding interface {
-	Pad(data []byte) ([]byte, error)
-	Unpad(data []byte) ([]byte, error)
-}
-
-type padding struct {
+type Padding struct {
 	blockSize int
 }
 
-func NewPadding(blockSize int) (Padding, error) {
+func NewPadding(blockSize int) (*Padding, error) {
 	if blockSize <= 0 || blockSize > 255 {
 		return nil, fmt.Errorf("block size must be between 1 and 255, got %d", blockSize)
 	}
-	return &padding{
+	return &Padding{
 		blockSize: blockSize,
 	}, nil
 }
 
-func (p *padding) Pad(data []byte) ([]byte, error) {
+func (p *Padding) Pad(data []byte) ([]byte, error) {
 	if data == nil {
 		return nil, fmt.Errorf("data cannot be nil")
 	}
@@ -33,7 +28,7 @@ func (p *padding) Pad(data []byte) ([]byte, error) {
 	return append(data, padding...), nil
 }
 
-func (p *padding) Unpad(data []byte) ([]byte, error) {
+func (p *Padding) Unpad(data []byte) ([]byte, error) {
 	dataLen := len(data)
 
 	if dataLen == 0 {

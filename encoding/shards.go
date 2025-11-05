@@ -4,28 +4,21 @@ import (
 	"fmt"
 )
 
-type Shards interface {
-	Split(data []byte) [][]byte
-	SplitEncoded(data []byte) [][]byte
-	Combine(shards [][]byte) []byte
-	Extract(shards [][]byte) ([]byte, error)
-}
-
-type shards struct {
+type Shards struct {
 	dataShards   int
 	parityShards int
 	totalShards  int
 }
 
-func NewShards(dataShards, parityShards int) Shards {
-	return &shards{
+func NewShards(dataShards, parityShards int) *Shards {
+	return &Shards{
 		dataShards:   dataShards,
 		parityShards: parityShards,
 		totalShards:  dataShards + parityShards,
 	}
 }
 
-func (s *shards) Split(data []byte) [][]byte {
+func (s *Shards) Split(data []byte) [][]byte {
 	shardSize := (len(data) + s.dataShards - 1) / s.dataShards
 	shards := make([][]byte, s.totalShards)
 	for i := range shards {
@@ -41,7 +34,7 @@ func (s *shards) Split(data []byte) [][]byte {
 	return shards
 }
 
-func (s *shards) SplitEncoded(data []byte) [][]byte {
+func (s *Shards) SplitEncoded(data []byte) [][]byte {
 	shardSize := len(data) / s.totalShards
 	shards := make([][]byte, s.totalShards)
 
@@ -55,7 +48,7 @@ func (s *shards) SplitEncoded(data []byte) [][]byte {
 	return shards
 }
 
-func (s *shards) Combine(shards [][]byte) []byte {
+func (s *Shards) Combine(shards [][]byte) []byte {
 	if len(shards) == 0 {
 		return nil
 	}
@@ -72,7 +65,7 @@ func (s *shards) Combine(shards [][]byte) []byte {
 	return result
 }
 
-func (s *shards) Extract(shards [][]byte) ([]byte, error) {
+func (s *Shards) Extract(shards [][]byte) ([]byte, error) {
 	if len(shards) < s.dataShards {
 		return nil, fmt.Errorf("insufficient shards, have %d but need at least %d data shards", len(shards), s.dataShards)
 	}

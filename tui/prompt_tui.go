@@ -9,28 +9,19 @@ import (
 	"github.com/charmbracelet/huh"
 )
 
-type PromptInput interface {
-	ConfirmFileOverwrite(path string) (bool, error)
-	GetEncryptionPassword() (string, error)
-	GetDecryptionPassword() (string, error)
-	ConfirmFileRemoval(path, fileType string) (bool, options.DeleteOption, error)
-	GetProcessingMode() (options.ProcessorMode, error)
-	ChooseFile(fileList []string) (string, error)
-}
-
-type promptInput struct {
+type PromptInput struct {
 	passwordMinLength int
 }
 
-func NewPromptInput(passwordMinLength int) PromptInput {
-	return &promptInput{passwordMinLength: passwordMinLength}
+func NewPromptInput(passwordMinLength int) *PromptInput {
+	return &PromptInput{passwordMinLength: passwordMinLength}
 }
 
-func (p *promptInput) ConfirmFileOverwrite(path string) (bool, error) {
+func (p *PromptInput) ConfirmFileOverwrite(path string) (bool, error) {
 	return p.confirm(fmt.Sprintf("Output file %s already exists. Overwrite?", path))
 }
 
-func (p *promptInput) GetEncryptionPassword() (string, error) {
+func (p *PromptInput) GetEncryptionPassword() (string, error) {
 	password, err := p.getPassword("Enter encryption password:")
 	if err != nil {
 		return "", err
@@ -50,7 +41,7 @@ func (p *promptInput) GetEncryptionPassword() (string, error) {
 	return password, nil
 }
 
-func (p *promptInput) GetDecryptionPassword() (string, error) {
+func (p *PromptInput) GetDecryptionPassword() (string, error) {
 	password, err := p.getPassword("Enter decryption password:")
 	if err != nil {
 		return "", err
@@ -62,7 +53,7 @@ func (p *promptInput) GetDecryptionPassword() (string, error) {
 	return password, nil
 }
 
-func (p *promptInput) ConfirmFileRemoval(path, fileType string) (bool, options.DeleteOption, error) {
+func (p *PromptInput) ConfirmFileRemoval(path, fileType string) (bool, options.DeleteOption, error) {
 	confirm, err := p.confirm(fmt.Sprintf("Delete %s file %s?", fileType, path))
 	if err != nil {
 		return false, "", err
@@ -81,7 +72,7 @@ func (p *promptInput) ConfirmFileRemoval(path, fileType string) (bool, options.D
 	return true, options.DeleteOption(deleteType), nil
 }
 
-func (p *promptInput) GetProcessingMode() (options.ProcessorMode, error) {
+func (p *PromptInput) GetProcessingMode() (options.ProcessorMode, error) {
 	mode, err := p.choose("Select operation:", []string{
 		string(options.ModeEncrypt),
 		string(options.ModeDecrypt),
@@ -92,11 +83,11 @@ func (p *promptInput) GetProcessingMode() (options.ProcessorMode, error) {
 	return options.ProcessorMode(mode), nil
 }
 
-func (p *promptInput) ChooseFile(fileList []string) (string, error) {
+func (p *PromptInput) ChooseFile(fileList []string) (string, error) {
 	return p.choose("Select file:", fileList)
 }
 
-func (p *promptInput) getPassword(message string) (string, error) {
+func (p *PromptInput) getPassword(message string) (string, error) {
 	var password string
 	if err := huh.NewInput().Title(message).EchoMode(huh.EchoModePassword).Value(&password).WithTheme(huh.ThemeCatppuccin()).Run(); err != nil {
 		return "", fmt.Errorf("password prompt failed: %w", err)
@@ -104,7 +95,7 @@ func (p *promptInput) getPassword(message string) (string, error) {
 	return password, nil
 }
 
-func (p *promptInput) validatePassword(password string) error {
+func (p *PromptInput) validatePassword(password string) error {
 	if len(password) < p.passwordMinLength {
 		return fmt.Errorf("password must be at least %d characters", p.passwordMinLength)
 	}
@@ -115,7 +106,7 @@ func (p *promptInput) validatePassword(password string) error {
 	return nil
 }
 
-func (p *promptInput) confirm(message string) (bool, error) {
+func (p *PromptInput) confirm(message string) (bool, error) {
 	var confirm bool
 	if err := huh.NewConfirm().Title(message).Value(&confirm).WithTheme(huh.ThemeCatppuccin()).Run(); err != nil {
 		return false, fmt.Errorf("confirmation failed: %w", err)
@@ -123,7 +114,7 @@ func (p *promptInput) confirm(message string) (bool, error) {
 	return confirm, nil
 }
 
-func (p *promptInput) choose(title string, optionList []string) (string, error) {
+func (p *PromptInput) choose(title string, optionList []string) (string, error) {
 	if len(optionList) == 0 {
 		return "", fmt.Errorf("no options available for selection")
 	}

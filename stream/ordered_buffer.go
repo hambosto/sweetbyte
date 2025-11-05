@@ -5,25 +5,20 @@ import (
 	"sync"
 )
 
-type OrderedBuffer interface {
-	Add(result TaskResult) []TaskResult
-	Flush() []TaskResult
-}
-
-type orderedBuffer struct {
+type OrderedBuffer struct {
 	mu      sync.Mutex
 	results map[uint64]TaskResult
 	next    uint64
 }
 
-func NewOrderedBuffer() OrderedBuffer {
-	return &orderedBuffer{
+func NewOrderedBuffer() *OrderedBuffer {
+	return &OrderedBuffer{
 		results: make(map[uint64]TaskResult),
 		next:    0,
 	}
 }
 
-func (b *orderedBuffer) Add(result TaskResult) []TaskResult {
+func (b *OrderedBuffer) Add(result TaskResult) []TaskResult {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
@@ -43,7 +38,7 @@ func (b *orderedBuffer) Add(result TaskResult) []TaskResult {
 	return ready
 }
 
-func (b *orderedBuffer) Flush() []TaskResult {
+func (b *OrderedBuffer) Flush() []TaskResult {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 

@@ -10,25 +10,21 @@ import (
 	"sweetbyte/utils"
 )
 
-type ChunkWriter interface {
-	WriteChunks(ctx context.Context, output io.Writer, results <-chan TaskResult) error
-}
-
-type chunkWriter struct {
+type ChunkWriter struct {
 	processing options.Processing
-	buffer     OrderedBuffer
-	bar        tui.ProgressBar
+	buffer     *OrderedBuffer
+	bar        *tui.ProgressBar
 }
 
-func NewChunkWriter(processing options.Processing, bar tui.ProgressBar) ChunkWriter {
-	return &chunkWriter{
+func NewChunkWriter(processing options.Processing, bar *tui.ProgressBar) *ChunkWriter {
+	return &ChunkWriter{
 		processing: processing,
 		buffer:     NewOrderedBuffer(),
 		bar:        bar,
 	}
 }
 
-func (w *chunkWriter) WriteChunks(ctx context.Context, output io.Writer, results <-chan TaskResult) error {
+func (w *ChunkWriter) WriteChunks(ctx context.Context, output io.Writer, results <-chan TaskResult) error {
 	for {
 		select {
 		case result, ok := <-results:
@@ -50,12 +46,12 @@ func (w *chunkWriter) WriteChunks(ctx context.Context, output io.Writer, results
 	}
 }
 
-func (w *chunkWriter) flushRemaining(output io.Writer) error {
+func (w *ChunkWriter) flushRemaining(output io.Writer) error {
 	remaining := w.buffer.Flush()
 	return w.writeResults(output, remaining)
 }
 
-func (w *chunkWriter) writeResults(output io.Writer, results []TaskResult) error {
+func (w *ChunkWriter) writeResults(output io.Writer, results []TaskResult) error {
 	for _, result := range results {
 		if err := w.writeResult(output, result); err != nil {
 			return err
@@ -64,7 +60,7 @@ func (w *chunkWriter) writeResults(output io.Writer, results []TaskResult) error
 	return nil
 }
 
-func (w *chunkWriter) writeResult(output io.Writer, result TaskResult) error {
+func (w *ChunkWriter) writeResult(output io.Writer, result TaskResult) error {
 	if w.processing == options.Encryption {
 		if err := w.writeChunkSize(output, len(result.Data)); err != nil {
 			return fmt.Errorf("writing chunk size: %w", err)
@@ -82,7 +78,7 @@ func (w *chunkWriter) writeResult(output io.Writer, result TaskResult) error {
 	return nil
 }
 
-func (w *chunkWriter) writeChunkSize(output io.Writer, size int) error {
+func (w *ChunkWriter) writeChunkSize(output io.Writer, size int) error {
 	buffer := utils.ToBytes(uint32(size))
 	if _, err := output.Write(buffer); err != nil {
 		return fmt.Errorf("chunk size write failed: %w", err)

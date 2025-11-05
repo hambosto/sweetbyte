@@ -10,25 +10,21 @@ import (
 	"sweetbyte/utils"
 )
 
-type ChunkReader interface {
-	ReadChunks(ctx context.Context, input io.Reader) (<-chan Task, <-chan error)
-}
-
-type chunkReader struct {
+type ChunkReader struct {
 	processing  options.Processing
 	chunkSize   int
 	concurrency int
 }
 
-func NewChunkReader(processing options.Processing, chunkSize, concurrency int) ChunkReader {
-	return &chunkReader{
+func NewChunkReader(processing options.Processing, chunkSize, concurrency int) *ChunkReader {
+	return &ChunkReader{
 		processing:  processing,
 		chunkSize:   chunkSize,
 		concurrency: concurrency,
 	}
 }
 
-func (r *chunkReader) ReadChunks(ctx context.Context, input io.Reader) (<-chan Task, <-chan error) {
+func (r *ChunkReader) ReadChunks(ctx context.Context, input io.Reader) (<-chan Task, <-chan error) {
 	taskChan := make(chan Task, r.concurrency)
 	errChan := make(chan error, 1)
 
@@ -58,7 +54,7 @@ func (r *chunkReader) ReadChunks(ctx context.Context, input io.Reader) (<-chan T
 	return taskChan, errChan
 }
 
-func (r *chunkReader) readForEncryption(ctx context.Context, reader io.Reader, tasks chan<- Task) error {
+func (r *ChunkReader) readForEncryption(ctx context.Context, reader io.Reader, tasks chan<- Task) error {
 	buffer := make([]byte, r.chunkSize)
 
 	var index uint64
@@ -93,7 +89,7 @@ func (r *chunkReader) readForEncryption(ctx context.Context, reader io.Reader, t
 	}
 }
 
-func (r *chunkReader) readForDecryption(ctx context.Context, reader io.Reader, tasks chan<- Task) error {
+func (r *ChunkReader) readForDecryption(ctx context.Context, reader io.Reader, tasks chan<- Task) error {
 	var index uint64
 
 	for {
@@ -136,7 +132,7 @@ func (r *chunkReader) readForDecryption(ctx context.Context, reader io.Reader, t
 	}
 }
 
-func (r *chunkReader) readChunkSize(reader io.Reader) (uint32, error) {
+func (r *ChunkReader) readChunkSize(reader io.Reader) (uint32, error) {
 	var sizeBuffer [4]byte
 	_, err := io.ReadFull(reader, sizeBuffer[:])
 	if err != nil {
@@ -145,7 +141,7 @@ func (r *chunkReader) readChunkSize(reader io.Reader) (uint32, error) {
 	return utils.FromBytes[uint32](sizeBuffer[:]), nil
 }
 
-func (r *chunkReader) readChunkData(reader io.Reader, length uint32) ([]byte, error) {
+func (r *ChunkReader) readChunkData(reader io.Reader, length uint32) ([]byte, error) {
 	data := make([]byte, length)
 	if _, err := io.ReadFull(reader, data); err != nil {
 		return nil, fmt.Errorf("failed to read chunk data (length: %d): %w", length, err)

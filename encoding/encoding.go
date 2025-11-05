@@ -10,19 +10,14 @@ const (
 	MaxDataLen = 1 << 30
 )
 
-type Encoding interface {
-	Encode(data []byte) ([]byte, error)
-	Decode(encoded []byte) ([]byte, error)
-}
-
-type encoding struct {
+type Encoding struct {
 	dataShards   int
 	parityShards int
 	Encoding     reedsolomon.Encoder
-	shards       Shards
+	shards       *Shards
 }
 
-func NewEncoding(dataShards, parityShards int) (Encoding, error) {
+func NewEncoding(dataShards, parityShards int) (*Encoding, error) {
 	if dataShards <= 0 {
 		return nil, fmt.Errorf("data shards must be positive")
 	}
@@ -38,7 +33,7 @@ func NewEncoding(dataShards, parityShards int) (Encoding, error) {
 		return nil, fmt.Errorf("failed to create reed-solomon Encoding: %w", err)
 	}
 
-	return &encoding{
+	return &Encoding{
 		dataShards:   dataShards,
 		parityShards: parityShards,
 		Encoding:     enc,
@@ -46,7 +41,7 @@ func NewEncoding(dataShards, parityShards int) (Encoding, error) {
 	}, nil
 }
 
-func (e *encoding) Encode(data []byte) ([]byte, error) {
+func (e *Encoding) Encode(data []byte) ([]byte, error) {
 	if len(data) == 0 {
 		return nil, fmt.Errorf("input data cannot be empty")
 	}
@@ -63,7 +58,7 @@ func (e *encoding) Encode(data []byte) ([]byte, error) {
 	return e.shards.Combine(shards), nil
 }
 
-func (e *encoding) Decode(encoded []byte) ([]byte, error) {
+func (e *Encoding) Decode(encoded []byte) ([]byte, error) {
 	totalShards := e.dataShards + e.parityShards
 
 	if len(encoded) == 0 {

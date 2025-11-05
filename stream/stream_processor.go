@@ -24,22 +24,18 @@ type TaskResult struct {
 	Err   error
 }
 
-type StreamProcessor interface {
-	Process(ctx context.Context, input io.Reader, output io.Writer, totalSize int64) error
-}
-
-type streamProcessor struct {
+type StreamProcessor struct {
 	key           []byte
 	processing    options.Processing
 	concurrency   int
 	chunkSize     int
-	taskProcessor TaskProcessor
-	reader        ChunkReader
-	writer        ChunkWriter
-	pool          WorkerPool
+	taskProcessor *TaskProcessor
+	reader        *ChunkReader
+	writer        *ChunkWriter
+	pool          *WorkerPool
 }
 
-func NewStreamProcessor(key []byte, processing options.Processing) (StreamProcessor, error) {
+func NewStreamProcessor(key []byte, processing options.Processing) (*StreamProcessor, error) {
 	if len(key) != config.MasterKeySize {
 		return nil, fmt.Errorf("key must be %d bytes long", config.MasterKeySize)
 	}
@@ -52,7 +48,7 @@ func NewStreamProcessor(key []byte, processing options.Processing) (StreamProces
 	concurrency := runtime.GOMAXPROCS(0)
 	chunkSize := config.DefaultChunkSize
 
-	return &streamProcessor{
+	return &StreamProcessor{
 		key:           key,
 		processing:    processing,
 		concurrency:   concurrency,
@@ -63,7 +59,7 @@ func NewStreamProcessor(key []byte, processing options.Processing) (StreamProces
 	}, nil
 }
 
-func (s *streamProcessor) Process(ctx context.Context, input io.Reader, output io.Writer, totalSize int64) error {
+func (s *StreamProcessor) Process(ctx context.Context, input io.Reader, output io.Writer, totalSize int64) error {
 	if input == nil || output == nil {
 		return fmt.Errorf("input and output streams must not be nil")
 	}
@@ -74,7 +70,7 @@ func (s *streamProcessor) Process(ctx context.Context, input io.Reader, output i
 	return s.runPipeline(ctx, input, output)
 }
 
-func (s *streamProcessor) runPipeline(ctx context.Context, input io.Reader, output io.Writer) error {
+func (s *StreamProcessor) runPipeline(ctx context.Context, input io.Reader, output io.Writer) error {
 	pipelineCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
 

@@ -10,16 +10,11 @@ import (
 	"sweetbyte/config"
 )
 
-type AESCipher interface {
-	Encrypt(plaintext []byte) ([]byte, error)
-	Decrypt(ciphertext []byte) ([]byte, error)
-}
-
-type aesCipher struct {
+type AESCipher struct {
 	aead cipher.AEAD
 }
 
-func NewAESCipher(key []byte) (AESCipher, error) {
+func NewAESCipher(key []byte) (*AESCipher, error) {
 	if len(key) != config.EncryptionKeySize {
 		return nil, fmt.Errorf("key must be %d bytes, got %d", config.EncryptionKeySize, len(key))
 	}
@@ -34,10 +29,10 @@ func NewAESCipher(key []byte) (AESCipher, error) {
 		return nil, fmt.Errorf("failed to create AES-GCM cipher: %w", err)
 	}
 
-	return &aesCipher{aead: aead}, nil
+	return &AESCipher{aead: aead}, nil
 }
 
-func (c *aesCipher) Encrypt(plaintext []byte) ([]byte, error) {
+func (c *AESCipher) Encrypt(plaintext []byte) ([]byte, error) {
 	if len(plaintext) == 0 {
 		return nil, fmt.Errorf("plaintext cannot be empty")
 	}
@@ -51,7 +46,7 @@ func (c *aesCipher) Encrypt(plaintext []byte) ([]byte, error) {
 	return ciphertext, nil
 }
 
-func (c *aesCipher) Decrypt(ciphertext []byte) ([]byte, error) {
+func (c *AESCipher) Decrypt(ciphertext []byte) ([]byte, error) {
 	if len(ciphertext) == 0 {
 		return nil, fmt.Errorf("ciphertext cannot be empty")
 	}

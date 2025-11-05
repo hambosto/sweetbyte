@@ -18,27 +18,15 @@ type FileInfo struct {
 	IsEligible  bool
 }
 
-type FileManager interface {
-	FindEligibleFiles(mode options.ProcessorMode) ([]string, error)
-	IsEncryptedFile(path string) bool
-	GetOutputPath(inputPath string, mode options.ProcessorMode) string
-	GetFileInfoList(files []string) ([]FileInfo, error)
-	Remove(path string, option options.DeleteOption) error
-	CreateFile(path string) (*os.File, error)
-	OpenFile(path string) (*os.File, os.FileInfo, error)
-	GetFileInfo(path string) (os.FileInfo, error)
-	ValidatePath(path string, mustExist bool) error
-}
-
-type fileManager struct {
+type FileManager struct {
 	overwritePasses int
 }
 
-func NewFileManager(passes int) FileManager {
-	return &fileManager{overwritePasses: passes}
+func NewFileManager(passes int) *FileManager {
+	return &FileManager{overwritePasses: passes}
 }
 
-func (fm *fileManager) FindEligibleFiles(mode options.ProcessorMode) ([]string, error) {
+func (fm *FileManager) FindEligibleFiles(mode options.ProcessorMode) ([]string, error) {
 	var files []string
 
 	err := filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
@@ -56,7 +44,7 @@ func (fm *fileManager) FindEligibleFiles(mode options.ProcessorMode) ([]string, 
 	return files, nil
 }
 
-func (fm *fileManager) isEligible(path string, info os.FileInfo, mode options.ProcessorMode) bool {
+func (fm *FileManager) isEligible(path string, info os.FileInfo, mode options.ProcessorMode) bool {
 	if info.IsDir() || strings.HasPrefix(info.Name(), ".") || fm.isExcluded(path) {
 		return false
 	}
@@ -65,7 +53,7 @@ func (fm *fileManager) isEligible(path string, info os.FileInfo, mode options.Pr
 	return (mode == options.ModeEncrypt && !encrypted) || (mode == options.ModeDecrypt && encrypted)
 }
 
-func (fm *fileManager) isExcluded(path string) bool {
+func (fm *FileManager) isExcluded(path string) bool {
 	for _, dir := range config.ExcludedDirs {
 		if strings.HasPrefix(path, dir) {
 			return true
@@ -80,18 +68,18 @@ func (fm *fileManager) isExcluded(path string) bool {
 	return false
 }
 
-func (fm *fileManager) IsEncryptedFile(path string) bool {
+func (fm *FileManager) IsEncryptedFile(path string) bool {
 	return strings.HasSuffix(path, config.FileExtension)
 }
 
-func (fm *fileManager) GetOutputPath(inputPath string, mode options.ProcessorMode) string {
+func (fm *FileManager) GetOutputPath(inputPath string, mode options.ProcessorMode) string {
 	if mode == options.ModeEncrypt {
 		return inputPath + config.FileExtension
 	}
 	return strings.TrimSuffix(inputPath, config.FileExtension)
 }
 
-func (fm *fileManager) GetFileInfoList(files []string) ([]FileInfo, error) {
+func (fm *FileManager) GetFileInfoList(files []string) ([]FileInfo, error) {
 	var infos []FileInfo
 	for _, f := range files {
 		stat, err := os.Stat(f)
@@ -108,7 +96,7 @@ func (fm *fileManager) GetFileInfoList(files []string) ([]FileInfo, error) {
 	return infos, nil
 }
 
-func (fm *fileManager) Remove(path string, opt options.DeleteOption) error {
+func (fm *FileManager) Remove(path string, opt options.DeleteOption) error {
 	path = filepath.Clean(path)
 
 	if err := fm.requireExists(path); err != nil {
@@ -125,7 +113,7 @@ func (fm *fileManager) Remove(path string, opt options.DeleteOption) error {
 	}
 }
 
-func (fm *fileManager) CreateFile(path string) (*os.File, error) {
+func (fm *FileManager) CreateFile(path string) (*os.File, error) {
 	path = filepath.Clean(path)
 
 	if err := fm.ensureParentDir(path); err != nil {
@@ -134,7 +122,7 @@ func (fm *fileManager) CreateFile(path string) (*os.File, error) {
 	return os.Create(path)
 }
 
-func (fm *fileManager) OpenFile(path string) (*os.File, os.FileInfo, error) {
+func (fm *FileManager) OpenFile(path string) (*os.File, os.FileInfo, error) {
 	path = filepath.Clean(path)
 
 	f, err := os.Open(path)
@@ -149,7 +137,7 @@ func (fm *fileManager) OpenFile(path string) (*os.File, os.FileInfo, error) {
 	return f, info, nil
 }
 
-func (fm *fileManager) GetFileInfo(path string) (os.FileInfo, error) {
+func (fm *FileManager) GetFileInfo(path string) (os.FileInfo, error) {
 	path = filepath.Clean(path)
 	stat, err := os.Stat(path)
 	if err != nil {
@@ -161,7 +149,7 @@ func (fm *fileManager) GetFileInfo(path string) (os.FileInfo, error) {
 	return stat, nil
 }
 
-func (fm *fileManager) ValidatePath(path string, mustExist bool) error {
+func (fm *FileManager) ValidatePath(path string, mustExist bool) error {
 	info, err := fm.GetFileInfo(path)
 	if err != nil {
 		return err
@@ -181,7 +169,7 @@ func (fm *fileManager) ValidatePath(path string, mustExist bool) error {
 	return nil
 }
 
-func (fm *fileManager) secureDelete(path string) error {
+func (fm *FileManager) secureDelete(path string) error {
 	path = filepath.Clean(path)
 
 	f, err := os.OpenFile(path, os.O_WRONLY, 0)
@@ -207,7 +195,7 @@ func (fm *fileManager) secureDelete(path string) error {
 	return nil
 }
 
-func (fm *fileManager) overwriteRandom(f *os.File, size int64) error {
+func (fm *FileManager) overwriteRandom(f *os.File, size int64) error {
 	if _, err := f.Seek(0, 0); err != nil {
 		return fmt.Errorf("seek failed: %w", err)
 	}
@@ -228,7 +216,7 @@ func (fm *fileManager) overwriteRandom(f *os.File, size int64) error {
 	return f.Sync()
 }
 
-func (fm *fileManager) requireExists(path string) error {
+func (fm *FileManager) requireExists(path string) error {
 	if _, err := os.Stat(path); err != nil {
 		if os.IsNotExist(err) {
 			return fmt.Errorf("not found: %s", path)
@@ -238,7 +226,7 @@ func (fm *fileManager) requireExists(path string) error {
 	return nil
 }
 
-func (fm *fileManager) ensureParentDir(path string) error {
+func (fm *FileManager) ensureParentDir(path string) error {
 	dir := filepath.Dir(path)
 	if dir == "." || dir == "/" {
 		return nil

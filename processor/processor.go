@@ -12,20 +12,15 @@ import (
 	"sweetbyte/stream"
 )
 
-type Processor interface {
-	Encrypt(srcPath, destPath, password string) error
-	Decrypt(srcPath, destPath, password string) error
+type Processor struct {
+	fileManager *filemanager.FileManager
 }
 
-type processor struct {
-	fileManager filemanager.FileManager
+func NewProcessor(fileManager *filemanager.FileManager) *Processor {
+	return &Processor{fileManager: fileManager}
 }
 
-func NewProcessor(fileManager filemanager.FileManager) Processor {
-	return &processor{fileManager: fileManager}
-}
-
-func (p *processor) Encrypt(srcPath, destPath, password string) error {
+func (p *Processor) Encrypt(srcPath, destPath, password string) error {
 	srcFile, srcInfo, err := p.fileManager.OpenFile(srcPath)
 	if err != nil {
 		return fmt.Errorf("failed to open source file: %w", err)
@@ -81,7 +76,7 @@ func (p *processor) Encrypt(srcPath, destPath, password string) error {
 	return nil
 }
 
-func (p *processor) Decrypt(srcPath, destPath, password string) error {
+func (p *Processor) Decrypt(srcPath, destPath, password string) error {
 	srcFile, _, err := p.fileManager.OpenFile(srcPath)
 	if err != nil {
 		return fmt.Errorf("failed to open source file: %w", err)

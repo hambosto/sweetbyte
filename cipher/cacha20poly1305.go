@@ -11,16 +11,11 @@ import (
 	"golang.org/x/crypto/chacha20poly1305"
 )
 
-type ChaCha20Cipher interface {
-	Encrypt(plaintext []byte) ([]byte, error)
-	Decrypt(ciphertext []byte) ([]byte, error)
-}
-
-type chaCha20Cipher struct {
+type ChaCha20Cipher struct {
 	aead cipher.AEAD
 }
 
-func NewChaCha20Cipher(key []byte) (ChaCha20Cipher, error) {
+func NewChaCha20Cipher(key []byte) (*ChaCha20Cipher, error) {
 	if len(key) != config.EncryptionKeySize {
 		return nil, fmt.Errorf("key must be %d bytes, got %d", config.EncryptionKeySize, len(key))
 	}
@@ -30,10 +25,10 @@ func NewChaCha20Cipher(key []byte) (ChaCha20Cipher, error) {
 		return nil, fmt.Errorf("failed to create XChaCha20-Poly1305 cipher: %w", err)
 	}
 
-	return &chaCha20Cipher{aead: aead}, nil
+	return &ChaCha20Cipher{aead: aead}, nil
 }
 
-func (c *chaCha20Cipher) Encrypt(plaintext []byte) ([]byte, error) {
+func (c *ChaCha20Cipher) Encrypt(plaintext []byte) ([]byte, error) {
 	if len(plaintext) == 0 {
 		return nil, fmt.Errorf("plaintext cannot be empty")
 	}
@@ -47,7 +42,7 @@ func (c *chaCha20Cipher) Encrypt(plaintext []byte) ([]byte, error) {
 	return ciphertext, nil
 }
 
-func (c *chaCha20Cipher) Decrypt(ciphertext []byte) ([]byte, error) {
+func (c *ChaCha20Cipher) Decrypt(ciphertext []byte) ([]byte, error) {
 	if len(ciphertext) == 0 {
 		return nil, fmt.Errorf("ciphertext cannot be empty")
 	}

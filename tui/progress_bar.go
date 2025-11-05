@@ -4,16 +4,12 @@ import (
 	"github.com/schollz/progressbar/v3"
 )
 
-type ProgressBar interface {
-	Add(size int64) error
-}
-
-type progressBar struct {
+type ProgressBar struct {
 	bar         *progressbar.ProgressBar
 	description string
 }
 
-func NewProgressBar(totalSize int64, description string) ProgressBar {
+func NewProgressBar(totalSize int64, description string) *ProgressBar {
 	bar := progressbar.NewOptions64(
 		totalSize,
 		progressbar.OptionSetDescription(description),
@@ -29,12 +25,12 @@ func NewProgressBar(totalSize int64, description string) ProgressBar {
 		}),
 	)
 
-	return &progressBar{
+	return &ProgressBar{
 		bar:         bar,
 		description: description,
 	}
 }
 
-func (p *progressBar) Add(size int64) error {
+func (p *ProgressBar) Add(size int64) error {
 	return p.bar.Add64(size)
 }

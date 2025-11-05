@@ -26,7 +26,7 @@ type EncodedSection struct {
 }
 
 type SectionEncoder struct {
-	encoder encoding.Encoding
+	encoder *encoding.Encoding
 }
 
 func NewSectionEncoder() (*SectionEncoder, error) {

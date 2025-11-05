@@ -12,22 +12,16 @@ import (
 	"sweetbyte/padding"
 )
 
-type TaskProcessor interface {
-	Encrypt(data []byte) ([]byte, error)
-	Decrypt(data []byte) ([]byte, error)
-	Process(ctx context.Context, task Task) TaskResult
-}
-
-type taskProcessor struct {
-	firstCipher  cipher.AESCipher
-	secondCipher cipher.ChaCha20Cipher
-	encoder      encoding.Encoding
-	compressor   compression.Compressor
-	padding      padding.Padding
+type TaskProcessor struct {
+	firstCipher  *cipher.AESCipher
+	secondCipher *cipher.ChaCha20Cipher
+	encoder      *encoding.Encoding
+	compressor   *compression.Compressor
+	padding      *padding.Padding
 	processing   options.Processing
 }
 
-func NewTaskProcessor(key []byte, processing options.Processing) (TaskProcessor, error) {
+func NewTaskProcessor(key []byte, processing options.Processing) (*TaskProcessor, error) {
 	if len(key) < config.MasterKeySize {
 		return nil, fmt.Errorf("encryption key must be at least %d bytes long, got %d bytes", config.MasterKeySize, len(key))
 	}
@@ -57,7 +51,7 @@ func NewTaskProcessor(key []byte, processing options.Processing) (TaskProcessor,
 		return nil, fmt.Errorf("failed to initialize PKCS#7 padding: %w", err)
 	}
 
-	return &taskProcessor{
+	return &TaskProcessor{
 		firstCipher:  firstCipher,
 		secondCipher: secondCipher,
 		encoder:      encoder,
@@ -67,7 +61,7 @@ func NewTaskProcessor(key []byte, processing options.Processing) (TaskProcessor,
 	}, nil
 }
 
-func (tp *taskProcessor) Process(ctx context.Context, task Task) TaskResult {
+func (tp *TaskProcessor) Process(ctx context.Context, task Task) TaskResult {
 	select {
 	case <-ctx.Done():
 		return TaskResult{
@@ -98,7 +92,7 @@ func (tp *taskProcessor) Process(ctx context.Context, task Task) TaskResult {
 	}
 }
 
-func (tp *taskProcessor) Encrypt(data []byte) ([]byte, error) {
+func (tp *TaskProcessor) Encrypt(data []byte) ([]byte, error) {
 	compressed, err := tp.compressor.Compress(data)
 	if err != nil {
 		return nil, fmt.Errorf("compression failed: %w", err)
@@ -127,7 +121,7 @@ func (tp *taskProcessor) Encrypt(data []byte) ([]byte, error) {
 	return encoded, nil
 }
 
-func (tp *taskProcessor) Decrypt(data []byte) ([]byte, error) {
+func (tp *TaskProcessor) Decrypt(data []byte) ([]byte, error) {
 	decoded, err := tp.encoder.Decode(data)
 	if err != nil {
 		return nil, fmt.Errorf("Reed-Solomon decoding failed (data may be corrupted): %w", err)
@@ -156,7 +150,7 @@ func (tp *taskProcessor) Decrypt(data []byte) ([]byte, error) {
 	return decompressed, nil
 }
 
-func (tp *taskProcessor) calculateProgressSize(input, output []byte) int {
+func (tp *TaskProcessor) calculateProgressSize(input, output []byte) int {
 	if tp.processing == options.Encryption {
 		return len(input)
 	}

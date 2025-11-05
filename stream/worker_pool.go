@@ -5,23 +5,19 @@ import (
 	"sync"
 )
 
-type WorkerPool interface {
-	Process(ctx context.Context, tasks <-chan Task) <-chan TaskResult
-}
-
-type workerPool struct {
-	processor   TaskProcessor
+type WorkerPool struct {
+	processor   *TaskProcessor
 	concurrency int
 }
 
-func NewWorkerPool(processor TaskProcessor, concurrency int) WorkerPool {
-	return &workerPool{
+func NewWorkerPool(processor *TaskProcessor, concurrency int) *WorkerPool {
+	return &WorkerPool{
 		processor:   processor,
 		concurrency: concurrency,
 	}
 }
 
-func (p *workerPool) Process(ctx context.Context, tasks <-chan Task) <-chan TaskResult {
+func (p *WorkerPool) Process(ctx context.Context, tasks <-chan Task) <-chan TaskResult {
 	results := make(chan TaskResult, p.concurrency)
 	go func() {
 		defer close(results)
@@ -36,7 +32,7 @@ func (p *workerPool) Process(ctx context.Context, tasks <-chan Task) <-chan Task
 	return results
 }
 
-func (p *workerPool) worker(ctx context.Context, wg *sync.WaitGroup, tasks <-chan Task, results chan<- TaskResult) {
+func (p *WorkerPool) worker(ctx context.Context, wg *sync.WaitGroup, tasks <-chan Task, results chan<- TaskResult) {
 	defer wg.Done()
 	for {
 		select {

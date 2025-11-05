@@ -12,9 +12,9 @@ import (
 )
 
 type Interactive struct {
-	fileManager filemanager.FileManager
-	processor   processor.Processor
-	prompt      tui.PromptInput
+	fileManager *filemanager.FileManager
+	processor   *processor.Processor
+	prompt      *tui.PromptInput
 }
 
 func NewInteractive() *Interactive {
