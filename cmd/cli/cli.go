@@ -1,12 +1,90 @@
-// Package cli provides the entry point for the command-line interface.
 package cli
 
 import (
-	"github.com/hambosto/sweetbyte/internal/cli"
+	"fmt"
+
+	"sweetbyte/config"
+	"sweetbyte/filemanager"
+	"sweetbyte/options"
+	"sweetbyte/processor"
+	"sweetbyte/tui"
 )
 
-// NewCLI creates a new CLI command runner.
-func NewCLI() *cli.Commands {
-	// It returns a new command runner from the internal cli package.
-	return cli.NewCommands()
+type CLI struct {
+	fileManager filemanager.FileManager
+	processor   processor.Processor
+	prompt      tui.PromptInput
+}
+
+func NewCLI() *CLI {
+	fileManager := filemanager.NewFileManager(config.OverwritePasses)
+	processor := processor.NewProcessor(fileManager)
+	prompt := tui.NewPromptInput(config.PasswordMinLen)
+	return &CLI{
+		fileManager: fileManager,
+		processor:   processor,
+		prompt:      prompt,
+	}
+}
+
+func (p *CLI) Encrypt(inputFile, outputFile, password string, deleteSource, secureDelete bool) error {
+	if len(password) == 0 {
+		var err error
+		password, err = p.prompt.GetEncryptionPassword()
+		if err != nil {
+			return fmt.Errorf("failed to get password: %w", err)
+		}
+	}
+
+	fmt.Printf("Encrypting: %s -> %s\n", inputFile, outputFile)
+	if err := p.processor.Encrypt(inputFile, outputFile, password); err != nil {
+		return fmt.Errorf("failed to encrypt %s: %w", inputFile, err)
+	}
+
+	fmt.Printf("File encrypted successfully: %s", outputFile)
+	if deleteSource {
+		deleteOption := options.DeleteStandard
+		if secureDelete {
+			deleteOption = options.DeleteSecure
+		}
+
+		fmt.Printf("Deleting source file: %s\n", inputFile)
+		if err := p.fileManager.Remove(inputFile, deleteOption); err != nil {
+			return fmt.Errorf("failed to delete source file: %w", err)
+		}
+		fmt.Printf("Source file deleted successfully\n")
+	}
+
+	return nil
+}
+
+func (p *CLI) Decrypt(inputFile, outputFile, password string, deleteSource, secureDelete bool) error {
+	if len(password) == 0 {
+		var err error
+		password, err = p.prompt.GetDecryptionPassword()
+		if err != nil {
+			return fmt.Errorf("failed to get password: %w", err)
+		}
+	}
+
+	fmt.Printf("Decrypting: %s -> %s\n", inputFile, outputFile)
+	if err := p.processor.Decrypt(inputFile, outputFile, password); err != nil {
+		return fmt.Errorf("failed to decrypt %s: %w", inputFile, err)
+	}
+
+	fmt.Printf("✓ File decrypted successfully: %s\n", outputFile)
+	if deleteSource {
+		deleteOption := options.DeleteStandard
+		if secureDelete {
+			deleteOption = options.DeleteSecure
+		}
+
+		fmt.Printf("Deleting source file: %s\n", inputFile)
+		if err := p.fileManager.Remove(inputFile, deleteOption); err != nil {
+			return fmt.Errorf("failed to delete source file: %w", err)
+		}
+		fmt.Printf("Source file deleted successfully\n")
+	}
+
+	return nil
 }

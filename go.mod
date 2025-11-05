@@ -1,4 +1,4 @@
-module github.com/hambosto/sweetbyte
+module sweetbyte
 
 go 1.25.2
 

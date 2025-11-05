@@ -1,0 +1,134 @@
+package processor
+
+import (
+	"context"
+	"fmt"
+
+	"sweetbyte/config"
+	"sweetbyte/derive"
+	"sweetbyte/filemanager"
+	"sweetbyte/header"
+	"sweetbyte/options"
+	"sweetbyte/stream"
+)
+
+type Processor interface {
+	Encrypt(srcPath, destPath, password string) error
+	Decrypt(srcPath, destPath, password string) error
+}
+
+type processor struct {
+	fileManager filemanager.FileManager
+}
+
+func NewProcessor(fileManager filemanager.FileManager) Processor {
+	return &processor{fileManager: fileManager}
+}
+
+func (p *processor) Encrypt(srcPath, destPath, password string) error {
+	srcFile, srcInfo, err := p.fileManager.OpenFile(srcPath)
+	if err != nil {
+		return fmt.Errorf("failed to open source file: %w", err)
+	}
+	defer srcFile.Close()
+
+	destFile, err := p.fileManager.CreateFile(destPath)
+	if err != nil {
+		return fmt.Errorf("failed to create destination file: %w", err)
+	}
+	defer destFile.Close()
+
+	salt, err := derive.GetRandomSalt(config.SaltSize)
+	if err != nil {
+		return fmt.Errorf("failed to generate salt: %w", err)
+	}
+
+	key, err := derive.Hash([]byte(password), salt)
+	if err != nil {
+		return fmt.Errorf("failed to derive key: %w", err)
+	}
+
+	originalSize := srcInfo.Size()
+	if originalSize <= 0 {
+		return fmt.Errorf("cannot encrypt a file with zero or negative size")
+	}
+
+	h, err := header.NewHeader()
+	if err != nil {
+		return fmt.Errorf("failed to create header: %w", err)
+	}
+	h.SetOriginalSize(uint64(originalSize))
+	h.SetProtected(true)
+
+	headerBytes, err := h.Marshal(salt, key)
+	if err != nil {
+		return fmt.Errorf("failed to marshal header: %w", err)
+	}
+
+	if _, err := destFile.Write(headerBytes); err != nil {
+		return fmt.Errorf("failed to write header: %w", err)
+	}
+
+	processor, err := stream.NewStreamProcessor(key, options.Encryption)
+	if err != nil {
+		return fmt.Errorf("failed to create stream processor: %w", err)
+	}
+
+	if err := processor.Process(context.Background(), srcFile, destFile, originalSize); err != nil {
+		return fmt.Errorf("failed to process file: %w", err)
+	}
+
+	return nil
+}
+
+func (p *processor) Decrypt(srcPath, destPath, password string) error {
+	srcFile, _, err := p.fileManager.OpenFile(srcPath)
+	if err != nil {
+		return fmt.Errorf("failed to open source file: %w", err)
+	}
+	defer srcFile.Close()
+
+	h, err := header.NewHeader()
+	if err != nil {
+		return fmt.Errorf("failed to create header: %w", err)
+	}
+
+	if err := h.Unmarshal(srcFile); err != nil {
+		return fmt.Errorf("failed to unmarshal header: %w", err)
+	}
+
+	salt, err := h.Salt()
+	if err != nil {
+		return fmt.Errorf("failed to get salt from header: %w", err)
+	}
+
+	key, err := derive.Hash([]byte(password), salt)
+	if err != nil {
+		return fmt.Errorf("failed to derive key: %w", err)
+	}
+
+	if err := h.Verify(key); err != nil {
+		return fmt.Errorf("decryption failed: incorrect password or corrupt file: %w", err)
+	}
+
+	if !h.IsProtected() {
+		return fmt.Errorf("file is not protected")
+	}
+
+	destFile, err := p.fileManager.CreateFile(destPath)
+	if err != nil {
+		return fmt.Errorf("failed to create destination file: %w", err)
+	}
+	defer destFile.Close()
+
+	processor, err := stream.NewStreamProcessor(key, options.Decryption)
+	if err != nil {
+		return fmt.Errorf("failed to create stream processor: %w", err)
+	}
+
+	if err := processor.Process(context.Background(), srcFile, destFile, int64(h.GetOriginalSize())); err != nil {
+		return fmt.Errorf("failed to process file: %w", err)
+	}
+
+	return nil
+}
