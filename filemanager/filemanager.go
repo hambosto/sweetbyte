@@ -9,14 +9,8 @@ import (
 
 	"sweetbyte/config"
 	"sweetbyte/options"
+	"sweetbyte/types"
 )
-
-type FileInfo struct {
-	Path        string
-	Size        int64
-	IsEncrypted bool
-	IsEligible  bool
-}
 
 type FileManager struct {
 	overwritePasses int
@@ -79,14 +73,14 @@ func (fm *FileManager) GetOutputPath(inputPath string, mode options.ProcessorMod
 	return strings.TrimSuffix(inputPath, config.FileExtension)
 }
 
-func (fm *FileManager) GetFileInfoList(files []string) ([]FileInfo, error) {
-	var infos []FileInfo
+func (fm *FileManager) GetFileInfoList(files []string) ([]types.FileInfo, error) {
+	var infos []types.FileInfo
 	for _, f := range files {
 		stat, err := os.Stat(f)
 		if err != nil {
 			return nil, fmt.Errorf("stat failed for %q: %w", f, err)
 		}
-		infos = append(infos, FileInfo{
+		infos = append(infos, types.FileInfo{
 			Path:        f,
 			Size:        stat.Size(),
 			IsEncrypted: fm.IsEncryptedFile(f),

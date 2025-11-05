@@ -10,6 +10,7 @@ import (
 	"sweetbyte/encoding"
 	"sweetbyte/options"
 	"sweetbyte/padding"
+	"sweetbyte/types"
 )
 
 type TaskProcessor struct {
@@ -61,10 +62,10 @@ func NewTaskProcessor(key []byte, processing options.Processing) (*TaskProcessor
 	}, nil
 }
 
-func (tp *TaskProcessor) Process(ctx context.Context, task Task) TaskResult {
+func (tp *TaskProcessor) Process(ctx context.Context, task types.Task) types.TaskResult {
 	select {
 	case <-ctx.Done():
-		return TaskResult{
+		return types.TaskResult{
 			Index: task.Index,
 			Err:   ctx.Err(),
 		}
@@ -84,7 +85,7 @@ func (tp *TaskProcessor) Process(ctx context.Context, task Task) TaskResult {
 	}
 
 	size := tp.calculateProgressSize(task.Data, output)
-	return TaskResult{
+	return types.TaskResult{
 		Index: task.Index,
 		Data:  output,
 		Size:  size,

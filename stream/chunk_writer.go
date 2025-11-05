@@ -7,6 +7,7 @@ import (
 
 	"sweetbyte/options"
 	"sweetbyte/tui"
+	"sweetbyte/types"
 	"sweetbyte/utils"
 )
 
@@ -24,7 +25,7 @@ func NewChunkWriter(processing options.Processing, bar *tui.ProgressBar) *ChunkW
 	}
 }
 
-func (w *ChunkWriter) WriteChunks(ctx context.Context, output io.Writer, results <-chan TaskResult) error {
+func (w *ChunkWriter) WriteChunks(ctx context.Context, output io.Writer, results <-chan types.TaskResult) error {
 	for {
 		select {
 		case result, ok := <-results:
@@ -51,7 +52,7 @@ func (w *ChunkWriter) flushRemaining(output io.Writer) error {
 	return w.writeResults(output, remaining)
 }
 
-func (w *ChunkWriter) writeResults(output io.Writer, results []TaskResult) error {
+func (w *ChunkWriter) writeResults(output io.Writer, results []types.TaskResult) error {
 	for _, result := range results {
 		if err := w.writeResult(output, result); err != nil {
 			return err
@@ -60,7 +61,7 @@ func (w *ChunkWriter) writeResults(output io.Writer, results []TaskResult) error
 	return nil
 }
 
-func (w *ChunkWriter) writeResult(output io.Writer, result TaskResult) error {
+func (w *ChunkWriter) writeResult(output io.Writer, result types.TaskResult) error {
 	if w.processing == options.Encryption {
 		if err := w.writeChunkSize(output, len(result.Data)); err != nil {
 			return fmt.Errorf("writing chunk size: %w", err)

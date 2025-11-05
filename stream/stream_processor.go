@@ -12,17 +12,17 @@ import (
 	"sweetbyte/tui"
 )
 
-type Task struct {
-	Data  []byte
-	Index uint64
-}
+// type Task struct {
+// 	Data  []byte
+// 	Index uint64
+// }
 
-type TaskResult struct {
-	Index uint64
-	Data  []byte
-	Size  int
-	Err   error
-}
+// type TaskResult struct {
+// 	Index uint64
+// 	Data  []byte
+// 	Size  int
+// 	Err   error
+// }
 
 type StreamProcessor struct {
 	key           []byte

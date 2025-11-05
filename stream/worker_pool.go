@@ -3,6 +3,8 @@ package stream
 import (
 	"context"
 	"sync"
+
+	"sweetbyte/types"
 )
 
 type WorkerPool struct {
@@ -17,8 +19,8 @@ func NewWorkerPool(processor *TaskProcessor, concurrency int) *WorkerPool {
 	}
 }
 
-func (p *WorkerPool) Process(ctx context.Context, tasks <-chan Task) <-chan TaskResult {
-	results := make(chan TaskResult, p.concurrency)
+func (p *WorkerPool) Process(ctx context.Context, tasks <-chan types.Task) <-chan types.TaskResult {
+	results := make(chan types.TaskResult, p.concurrency)
 	go func() {
 		defer close(results)
 		var wg sync.WaitGroup
@@ -32,7 +34,7 @@ func (p *WorkerPool) Process(ctx context.Context, tasks <-chan Task) <-chan Task
 	return results
 }
 
-func (p *WorkerPool) worker(ctx context.Context, wg *sync.WaitGroup, tasks <-chan Task, results chan<- TaskResult) {
+func (p *WorkerPool) worker(ctx context.Context, wg *sync.WaitGroup, tasks <-chan types.Task, results chan<- types.TaskResult) {
 	defer wg.Done()
 	for {
 		select {

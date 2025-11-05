@@ -7,6 +7,7 @@ import (
 	"io"
 
 	"sweetbyte/options"
+	"sweetbyte/types"
 	"sweetbyte/utils"
 )
 
@@ -24,8 +25,8 @@ func NewChunkReader(processing options.Processing, chunkSize, concurrency int) *
 	}
 }
 
-func (r *ChunkReader) ReadChunks(ctx context.Context, input io.Reader) (<-chan Task, <-chan error) {
-	taskChan := make(chan Task, r.concurrency)
+func (r *ChunkReader) ReadChunks(ctx context.Context, input io.Reader) (<-chan types.Task, <-chan error) {
+	taskChan := make(chan types.Task, r.concurrency)
 	errChan := make(chan error, 1)
 
 	go func() {
@@ -54,7 +55,7 @@ func (r *ChunkReader) ReadChunks(ctx context.Context, input io.Reader) (<-chan T
 	return taskChan, errChan
 }
 
-func (r *ChunkReader) readForEncryption(ctx context.Context, reader io.Reader, tasks chan<- Task) error {
+func (r *ChunkReader) readForEncryption(ctx context.Context, reader io.Reader, tasks chan<- types.Task) error {
 	buffer := make([]byte, r.chunkSize)
 
 	var index uint64
@@ -74,7 +75,7 @@ func (r *ChunkReader) readForEncryption(ctx context.Context, reader io.Reader, t
 			return fmt.Errorf("failed to read input: %w", err)
 		}
 
-		task := Task{
+		task := types.Task{
 			Data:  make([]byte, n),
 			Index: index,
 		}
@@ -89,7 +90,7 @@ func (r *ChunkReader) readForEncryption(ctx context.Context, reader io.Reader, t
 	}
 }
 
-func (r *ChunkReader) readForDecryption(ctx context.Context, reader io.Reader, tasks chan<- Task) error {
+func (r *ChunkReader) readForDecryption(ctx context.Context, reader io.Reader, tasks chan<- types.Task) error {
 	var index uint64
 
 	for {
@@ -118,7 +119,7 @@ func (r *ChunkReader) readForDecryption(ctx context.Context, reader io.Reader, t
 			return err
 		}
 
-		task := Task{
+		task := types.Task{
 			Data:  data,
 			Index: index,
 		}

@@ -3,27 +3,29 @@ package stream
 import (
 	"slices"
 	"sync"
+
+	"sweetbyte/types"
 )
 
 type OrderedBuffer struct {
 	mu      sync.Mutex
-	results map[uint64]TaskResult
+	results map[uint64]types.TaskResult
 	next    uint64
 }
 
 func NewOrderedBuffer() *OrderedBuffer {
 	return &OrderedBuffer{
-		results: make(map[uint64]TaskResult),
+		results: make(map[uint64]types.TaskResult),
 		next:    0,
 	}
 }
 
-func (b *OrderedBuffer) Add(result TaskResult) []TaskResult {
+func (b *OrderedBuffer) Add(result types.TaskResult) []types.TaskResult {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
 	b.results[result.Index] = result
-	var ready []TaskResult
+	var ready []types.TaskResult
 
 	for {
 		if result, exists := b.results[b.next]; exists {
@@ -38,7 +40,7 @@ func (b *OrderedBuffer) Add(result TaskResult) []TaskResult {
 	return ready
 }
 
-func (b *OrderedBuffer) Flush() []TaskResult {
+func (b *OrderedBuffer) Flush() []types.TaskResult {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
@@ -52,7 +54,7 @@ func (b *OrderedBuffer) Flush() []TaskResult {
 	}
 
 	slices.Sort(indices)
-	results := make([]TaskResult, len(indices))
+	results := make([]types.TaskResult, len(indices))
 	for i, idx := range indices {
 		results[i] = b.results[idx]
 	}
