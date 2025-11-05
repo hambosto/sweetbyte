@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strconv"
 
-	"sweetbyte/filemanager"
 	"sweetbyte/options"
 	"sweetbyte/utils"
 
@@ -17,14 +16,19 @@ var (
 	boldStyle    = lipgloss.NewStyle().Bold(true)
 )
 
-func ShowFileInfo(files []filemanager.FileInfo) {
-	if len(files) == 0 {
+func ShowFileInfo(filePaths []string, fileSizes []int64, fileEncrypted []bool) {
+	if len(filePaths) == 0 {
 		fmt.Println("No files found.")
 		return
 	}
 
+	if len(filePaths) != len(fileSizes) || len(filePaths) != len(fileEncrypted) {
+		fmt.Println("Error: Mismatched input arrays.")
+		return
+	}
+
 	fmt.Println()
-	fmt.Printf("%s %s ", successStyle.Render("✓"), boldStyle.Render(fmt.Sprintf("Found %d file(s):", len(files))))
+	fmt.Printf("%s %s ", successStyle.Render("✓"), boldStyle.Render(fmt.Sprintf("Found %d file(s):", len(filePaths))))
 	fmt.Println()
 
 	t := table.New().
@@ -32,20 +36,20 @@ func ShowFileInfo(files []filemanager.FileInfo) {
 		Border(lipgloss.NormalBorder()).
 		BorderStyle(boldStyle)
 
-	for i, fi := range files {
+	for i := range filePaths {
 		fileStatus := "unencrypted"
-		if fi.IsEncrypted {
+		if fileEncrypted[i] {
 			fileStatus = "encrypted"
 		}
 
-		filename := fi.Path
+		filename := filePaths[i]
 		if len(filename) > 28 {
 			filename = filename[:25] + "..."
 		}
 
 		no := boldStyle.Render(strconv.Itoa(i + 1))
 		name := successStyle.Render(filename)
-		size := boldStyle.Render(utils.FormatBytes(fi.Size))
+		size := boldStyle.Render(utils.FormatBytes(fileSizes[i]))
 		status := boldStyle.Render(fileStatus)
 
 		t = t.Row(no, name, size, status)
