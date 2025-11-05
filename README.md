@@ -259,18 +259,41 @@ SweetByte is built with a modular architecture, with each package handling a spe
 | `cli`             | Contains the command-line interface logic using the Cobra library.       |
 | `compression`     | Handles Zlib compression and decompression.                              |
 | `config`          | Stores all application-wide constants and configuration parameters.      |
+| `derive`          | Handles key derivation using Argon2id and secure salt generation.        |
 | `encoding`        | Manages Reed-Solomon error correction encoding and decoding.             |
-| `files`           | Provides utilities for finding, managing, and securely deleting files.   |
+| `filemanager`     | Provides utilities for finding, managing, and securely deleting files.   |
 | `header`          | Manages the serialization, deserialization, and verification of the secure file header. |
 | `interactive`     | Implements the user-friendly interactive mode workflow.                  |
-| `keys`            | Handles key derivation using Argon2id and secure salt generation.        |
-| `operations`      | Contains the high-level logic for the main encrypt/decrypt file operations. |
 | `options`         | Defines the different modes and processing options for the application. |
 | `padding`         | Implements PKCS7 padding.                                                |
-| `processor`       | Applies the complete cryptographic pipeline (compress, pad, encrypt, encode) to individual data chunks. |
-| `streaming`       | Manages concurrent, chunk-based file processing with a worker pool.      |
-| `ui`              | Provides UI components like interactive prompts, progress bars, and banners. |
+| `processor`       | Contains the high-level logic for the main encrypt/decrypt file operations. |
+| `stream`          | Manages concurrent, chunk-based file processing with a worker pool.      |
+| `tui`             | Provides UI components like interactive prompts, progress bars, and banners. |
 | `utils`           | Contains miscellaneous helper functions.                                 |
+
+## 🔄 Recent Changes
+
+This project has undergone significant restructuring to improve maintainability and simplify the codebase:
+
+- **Package Restructuring**: All internal packages have been moved to the root level and renamed for clarity:
+  - `internal/files` → `filemanager`
+  - `internal/kdf` → `derive` 
+  - `internal/operations` → `processor`
+  - `internal/streaming` → `stream`
+  - `internal/ui` → `tui`
+  - `internal/options` consolidated into `options/options.go`
+
+- **Interface Simplification**: Single-implementation interfaces have been replaced with concrete types to reduce unnecessary abstraction layers. This includes:
+  - `AESCipher interface` → `AESCipher struct`
+  - `ChaCha20Cipher interface` → `ChaCha20Cipher struct`
+  - `Compressor interface` → `Compressor struct`
+  - `Encoding interface` → `Encoding struct`
+  - `FileManager interface` → `FileManager struct`
+  - `Processor interface` → `Processor struct`
+  - And many other interfaces throughout the codebase
+  This change improves code readability and reduces complexity without losing functionality.
+
+- **Module Path Update**: The Go module path has been changed from `github.com/hambosto/sweetbyte` to `sweetbyte`, with all imports updated to use relative internal paths (`"sweetbyte/..."` format).
 
 ## 🛡️ Security Considerations
 
