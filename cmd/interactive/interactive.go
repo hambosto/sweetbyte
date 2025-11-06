@@ -56,18 +56,18 @@ func (a *Interactive) runInteractiveLoop() error {
 	if err != nil {
 		return fmt.Errorf("failed to get file information: %w", err)
 	}
-	
+
 	// Extract the data needed for ShowFileInfo
 	filePaths := make([]string, len(fileInfos))
 	fileSizes := make([]int64, len(fileInfos))
 	fileEncrypted := make([]bool, len(fileInfos))
-	
+
 	for i, fileInfo := range fileInfos {
 		filePaths[i] = fileInfo.Path
 		fileSizes[i] = fileInfo.Size
 		fileEncrypted[i] = fileInfo.IsEncrypted
 	}
-	
+
 	tui.ShowFileInfo(filePaths, fileSizes, fileEncrypted)
 
 	selectedFile, err := a.prompt.ChooseFile(eligibleFiles)
