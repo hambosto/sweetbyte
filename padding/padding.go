@@ -32,31 +32,25 @@ func (p *Padding) Unpad(data []byte) ([]byte, error) {
 	dataLen := len(data)
 
 	if dataLen == 0 {
-		return nil, fmt.Errorf("cannot unpad empty data")
-	}
-
-	if dataLen%p.blockSize != 0 {
-		return nil, fmt.Errorf("data length %d is not a multiple of block size %d", dataLen, p.blockSize)
+		return nil, fmt.Errorf("data too short to contain valid padding")
 	}
 
 	paddingLen := int(data[dataLen-1])
 	if paddingLen == 0 || paddingLen > p.blockSize {
-		return nil, fmt.Errorf("invalid padding length %d, must be between 1 and %d", paddingLen, p.blockSize)
+		return nil, fmt.Errorf("invalid padding length %d for block size %d", paddingLen, p.blockSize)
 	}
 
 	if paddingLen > dataLen {
 		return nil, fmt.Errorf("padding length %d exceeds data length %d", paddingLen, dataLen)
 	}
 
-	paddingStart := dataLen - paddingLen
-	paddingBytes := data[paddingStart:]
-	var invalid byte = 0
-	for _, b := range paddingBytes {
-		invalid |= b ^ byte(paddingLen)
-	}
-	if invalid != 0 {
-		return nil, fmt.Errorf("invalid padding bytes")
+	for i := dataLen - paddingLen; i < dataLen; i++ {
+		if data[i] != byte(paddingLen) {
+			return nil, fmt.Errorf("invalid padding byte at position %d: expected %d, got %d", i, paddingLen, data[i])
+		}
 	}
 
-	return data[:paddingStart], nil
+	result := make([]byte, dataLen-paddingLen)
+	copy(result, data[:dataLen-paddingLen])
+	return result, nil
 }
