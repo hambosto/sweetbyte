@@ -63,9 +63,9 @@ func (a *Interactive) runInteractiveLoop() error {
 	fileEncrypted := make([]bool, len(fileInfos))
 
 	for i, fileInfo := range fileInfos {
-		filePaths[i] = fileInfo.Path
-		fileSizes[i] = fileInfo.Size
-		fileEncrypted[i] = fileInfo.IsEncrypted
+		filePaths[i] = fileInfo[0].(string)        // Path
+		fileSizes[i] = fileInfo[1].(int64)         // Size
+		fileEncrypted[i] = fileInfo[2].(bool)      // IsEncrypted
 	}
 
 	tui.ShowFileInfo(filePaths, fileSizes, fileEncrypted)

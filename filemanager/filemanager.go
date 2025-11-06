@@ -9,7 +9,6 @@ import (
 
 	"sweetbyte/config"
 	"sweetbyte/options"
-	"sweetbyte/types"
 )
 
 type FileManager struct {
@@ -73,19 +72,20 @@ func (fm *FileManager) GetOutputPath(inputPath string, mode options.ProcessorMod
 	return strings.TrimSuffix(inputPath, config.FileExtension)
 }
 
-func (fm *FileManager) GetFileInfoList(files []string) ([]types.FileInfo, error) {
-	var infos []types.FileInfo
+func (fm *FileManager) GetFileInfoList(files []string) ([][]interface{}, error) {
+	var infos [][]interface{}
 	for _, f := range files {
 		stat, err := os.Stat(f)
 		if err != nil {
 			return nil, fmt.Errorf("stat failed for %q: %w", f, err)
 		}
-		infos = append(infos, types.FileInfo{
-			Path:        f,
-			Size:        stat.Size(),
-			IsEncrypted: fm.IsEncryptedFile(f),
-			IsEligible:  true,
-		})
+		info := []interface{}{
+			f,                    // Path
+			stat.Size(),          // Size
+			fm.IsEncryptedFile(f), // IsEncrypted
+			true,                 // IsEligible
+		}
+		infos = append(infos, info)
 	}
 	return infos, nil
 }
