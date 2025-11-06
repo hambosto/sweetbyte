@@ -170,7 +170,7 @@ func (fm *FileManager) secureDelete(path string) error {
 	if err != nil {
 		return fmt.Errorf("secure open failed: %w", err)
 	}
-	defer f.Close()
+	defer f.Close() //nolint:errcheck
 
 	stat, err := f.Stat()
 	if err != nil {

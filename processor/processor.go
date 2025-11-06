@@ -26,13 +26,13 @@ func (p *Processor) Encrypt(srcPath, destPath, password string) error {
 	if err != nil {
 		return fmt.Errorf("failed to open source file: %w", err)
 	}
-	defer srcFile.Close()
+	defer srcFile.Close() //nolint:errcheck
 
 	destFile, err := p.fileManager.CreateFile(destPath)
 	if err != nil {
 		return fmt.Errorf("failed to create destination file: %w", err)
 	}
-	defer destFile.Close()
+	defer destFile.Close() //nolint:errcheck
 
 	salt, err := derive.GetRandomSalt(config.SaltSize)
 	if err != nil {
@@ -82,7 +82,7 @@ func (p *Processor) Decrypt(srcPath, destPath, password string) error {
 	if err != nil {
 		return fmt.Errorf("failed to open source file: %w", err)
 	}
-	defer srcFile.Close()
+	defer srcFile.Close() //nolint:errcheck
 
 	h, err := header.NewHeader()
 	if err != nil {
@@ -115,7 +115,7 @@ func (p *Processor) Decrypt(srcPath, destPath, password string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create destination file: %w", err)
 	}
-	defer destFile.Close()
+	defer destFile.Close() //nolint:errcheck
 
 	processor, err := stream.NewStreamProcessor(key, types.Decryption)
 	if err != nil {
