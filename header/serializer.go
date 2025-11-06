@@ -65,8 +65,8 @@ func (s *Serializer) validateInputs(salt, key []byte) error {
 
 func (s *Serializer) encodeSections(magic, salt, headerData, mac []byte) (map[SectionType]*EncodedSection, error) {
 	sections := make(map[SectionType]*EncodedSection)
-	var err error
 
+	var err error
 	if sections[SectionMagic], err = s.encoder.EncodeSection(magic); err != nil {
 		return nil, fmt.Errorf("failed to encode magic: %w", err)
 	}
@@ -85,8 +85,8 @@ func (s *Serializer) encodeSections(magic, salt, headerData, mac []byte) (map[Se
 
 func (s *Serializer) encodeLengthPrefixes(sections map[SectionType]*EncodedSection) (map[SectionType]*EncodedSection, error) {
 	lengthSections := make(map[SectionType]*EncodedSection)
-	var err error
 
+	var err error
 	for sectionType, section := range sections {
 		if lengthSections[sectionType], err = s.encoder.EncodeLengthPrefix(section.Length); err != nil {
 			return nil, fmt.Errorf("failed to encode length for %s: %w", sectionType, err)
@@ -116,7 +116,6 @@ func (s *Serializer) assembleEncodedHeader(
 	var result []byte
 
 	result = append(result, lengthsHeader...)
-
 	for _, sectionType := range SectionOrder {
 		sec, ok := lengthSections[sectionType]
 		if !ok || sec == nil || sec.Data == nil {

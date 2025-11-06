@@ -196,7 +196,6 @@ func (fm *FileManager) overwriteRandom(f *os.File, size int64) error {
 
 	buf := make([]byte, 4096)
 	left := size
-
 	for left > 0 {
 		chunk := min(left, int64(len(buf)))
 		if _, err := rand.Read(buf[:chunk]); err != nil {

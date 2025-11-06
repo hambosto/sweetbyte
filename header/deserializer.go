@@ -40,7 +40,6 @@ func (d *Deserializer) Unmarshal(r io.Reader) error {
 	}
 
 	d.header.decodedSections = decodedSections
-
 	magic, ok := d.header.decodedSections[SectionMagic]
 	if !ok || len(magic) < MagicSize {
 		return fmt.Errorf("invalid or missing magic section")
