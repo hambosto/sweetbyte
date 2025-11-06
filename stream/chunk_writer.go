@@ -79,6 +79,10 @@ func (w *ChunkWriter) writeResult(output io.Writer, result types.TaskResult) err
 }
 
 func (w *ChunkWriter) writeChunkSize(output io.Writer, size int) error {
+	if size < 0 || size > int(^uint32(0)) {
+		return fmt.Errorf("size %d exceeds maximum allowed size for uint32", size)
+	}
+	
 	buffer := utils.ToBytes(uint32(size))
 	if _, err := output.Write(buffer); err != nil {
 		return fmt.Errorf("chunk size write failed: %w", err)

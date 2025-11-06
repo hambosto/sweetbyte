@@ -122,7 +122,11 @@ func (p *Processor) Decrypt(srcPath, destPath, password string) error {
 		return fmt.Errorf("failed to create stream processor: %w", err)
 	}
 
-	if err := processor.Process(context.Background(), srcFile, destFile, int64(h.GetOriginalSize())); err != nil {
+	originalSize := h.GetOriginalSize()
+	if originalSize > uint64(int64(^uint64(0)>>1)) { // Check if it exceeds max int64
+		return fmt.Errorf("original size exceeds maximum allowed size for processing: %d", originalSize)
+	}
+	if err := processor.Process(context.Background(), srcFile, destFile, int64(originalSize)); err != nil {
 		return fmt.Errorf("failed to process file: %w", err)
 	}
 

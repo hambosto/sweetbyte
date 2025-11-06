@@ -47,9 +47,14 @@ func (se *SectionEncoder) EncodeSection(data []byte) (*EncodedSection, error) {
 		return nil, fmt.Errorf("failed to encode data: %w", err)
 	}
 
+	encodedLen := len(encoded)
+	if encodedLen < 0 || encodedLen > int(^uint32(0)) {
+		return nil, fmt.Errorf("encoded data length %d exceeds maximum allowed size for uint32", encodedLen)
+	}
+
 	return &EncodedSection{
 		Data:   encoded,
-		Length: uint32(len(encoded)),
+		Length: uint32(encodedLen),
 	}, nil
 }
 

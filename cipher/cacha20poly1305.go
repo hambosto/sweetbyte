@@ -38,6 +38,7 @@ func (c *ChaCha20Cipher) Encrypt(plaintext []byte) ([]byte, error) {
 		return nil, fmt.Errorf("failed to generate nonce: %w", err)
 	}
 
+	// #nosec G407 - Nonce is generated randomly for each encryption operation
 	ciphertext := c.aead.Seal(nonce, nonce, plaintext, nil)
 	return ciphertext, nil
 }
