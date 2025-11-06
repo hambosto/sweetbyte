@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"sweetbyte/options"
+	"sweetbyte/types"
 	"sweetbyte/utils"
 
 	"github.com/charmbracelet/lipgloss"
@@ -59,9 +59,9 @@ func ShowFileInfo(filePaths []string, fileSizes []int64, fileEncrypted []bool) {
 	fmt.Println()
 }
 
-func ShowProcessingInfo(mode options.ProcessorMode, file string) {
+func ShowProcessingInfo(mode types.ProcessorMode, file string) {
 	action := "Encrypting"
-	if mode == options.ModeDecrypt {
+	if mode == types.ModeDecrypt {
 		action = "Decrypting"
 	}
 	fmt.Println()
@@ -69,9 +69,9 @@ func ShowProcessingInfo(mode options.ProcessorMode, file string) {
 	fmt.Println()
 }
 
-func ShowSuccessInfo(mode options.ProcessorMode, destPath string) {
+func ShowSuccessInfo(mode types.ProcessorMode, destPath string) {
 	action := "encrypted"
-	if mode == options.ModeDecrypt {
+	if mode == types.ModeDecrypt {
 		action = "decrypted"
 	}
 

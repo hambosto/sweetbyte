@@ -7,9 +7,10 @@ import (
 	"sweetbyte/config"
 	"sweetbyte/derive"
 	"sweetbyte/filemanager"
+
 	"sweetbyte/header"
-	"sweetbyte/options"
 	"sweetbyte/stream"
+	"sweetbyte/types"
 )
 
 type Processor struct {
@@ -64,7 +65,7 @@ func (p *Processor) Encrypt(srcPath, destPath, password string) error {
 		return fmt.Errorf("failed to write header: %w", err)
 	}
 
-	processor, err := stream.NewStreamProcessor(key, options.Encryption)
+	processor, err := stream.NewStreamProcessor(key, types.Encryption)
 	if err != nil {
 		return fmt.Errorf("failed to create stream processor: %w", err)
 	}
@@ -116,7 +117,7 @@ func (p *Processor) Decrypt(srcPath, destPath, password string) error {
 	}
 	defer destFile.Close()
 
-	processor, err := stream.NewStreamProcessor(key, options.Decryption)
+	processor, err := stream.NewStreamProcessor(key, types.Decryption)
 	if err != nil {
 		return fmt.Errorf("failed to create stream processor: %w", err)
 	}

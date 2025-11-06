@@ -8,13 +8,13 @@ import (
 	"sync"
 
 	"sweetbyte/config"
-	"sweetbyte/options"
 	"sweetbyte/tui"
+	"sweetbyte/types"
 )
 
 type StreamProcessor struct {
 	key           []byte
-	processing    options.Processing
+	processing    types.Processing
 	concurrency   int
 	chunkSize     int
 	taskProcessor *TaskProcessor
@@ -23,7 +23,7 @@ type StreamProcessor struct {
 	pool          *WorkerPool
 }
 
-func NewStreamProcessor(key []byte, processing options.Processing) (*StreamProcessor, error) {
+func NewStreamProcessor(key []byte, processing types.Processing) (*StreamProcessor, error) {
 	if len(key) != config.MasterKeySize {
 		return nil, fmt.Errorf("key must be %d bytes long", config.MasterKeySize)
 	}

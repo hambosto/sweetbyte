@@ -8,7 +8,6 @@ import (
 	"sweetbyte/compression"
 	"sweetbyte/config"
 	"sweetbyte/encoding"
-	"sweetbyte/options"
 	"sweetbyte/padding"
 	"sweetbyte/types"
 )
@@ -19,10 +18,10 @@ type TaskProcessor struct {
 	encoder      *encoding.Encoding
 	compressor   *compression.Compression
 	padding      *padding.Padding
-	processing   options.Processing
+	processing   types.Processing
 }
 
-func NewTaskProcessor(key []byte, processing options.Processing) (*TaskProcessor, error) {
+func NewTaskProcessor(key []byte, processing types.Processing) (*TaskProcessor, error) {
 	if len(key) < config.MasterKeySize {
 		return nil, fmt.Errorf("encryption key must be at least %d bytes long, got %d bytes", config.MasterKeySize, len(key))
 	}
@@ -76,9 +75,9 @@ func (tp *TaskProcessor) Process(ctx context.Context, task types.Task) types.Tas
 	var err error
 
 	switch tp.processing {
-	case options.Encryption:
+	case types.Encryption:
 		output, err = tp.Encrypt(task.Data)
-	case options.Decryption:
+	case types.Decryption:
 		output, err = tp.Decrypt(task.Data)
 	default:
 		err = fmt.Errorf("unknown processing type: %d", tp.processing)
@@ -152,7 +151,7 @@ func (tp *TaskProcessor) Decrypt(data []byte) ([]byte, error) {
 }
 
 func (tp *TaskProcessor) calculateProgressSize(input, output []byte) int {
-	if tp.processing == options.Encryption {
+	if tp.processing == types.Encryption {
 		return len(input)
 	}
 	return len(output)

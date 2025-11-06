@@ -6,18 +6,17 @@ import (
 	"fmt"
 	"io"
 
-	"sweetbyte/options"
 	"sweetbyte/types"
 	"sweetbyte/utils"
 )
 
 type ChunkReader struct {
-	processing  options.Processing
+	processing  types.Processing
 	chunkSize   int
 	concurrency int
 }
 
-func NewChunkReader(processing options.Processing, chunkSize, concurrency int) *ChunkReader {
+func NewChunkReader(processing types.Processing, chunkSize, concurrency int) *ChunkReader {
 	return &ChunkReader{
 		processing:  processing,
 		chunkSize:   chunkSize,
@@ -36,9 +35,9 @@ func (r *ChunkReader) ReadChunks(ctx context.Context, input io.Reader) (<-chan t
 		var err error
 
 		switch r.processing {
-		case options.Encryption:
+		case types.Encryption:
 			err = r.readForEncryption(ctx, input, taskChan)
-		case options.Decryption:
+		case types.Decryption:
 			err = r.readForDecryption(ctx, input, taskChan)
 		default:
 			err = fmt.Errorf("unknown processing type: %d", r.processing)

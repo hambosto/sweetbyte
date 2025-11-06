@@ -5,19 +5,18 @@ import (
 	"fmt"
 	"io"
 
-	"sweetbyte/options"
 	"sweetbyte/tui"
 	"sweetbyte/types"
 	"sweetbyte/utils"
 )
 
 type ChunkWriter struct {
-	processing options.Processing
+	processing types.Processing
 	buffer     *OrderedBuffer
 	bar        *tui.ProgressBar
 }
 
-func NewChunkWriter(processing options.Processing, bar *tui.ProgressBar) *ChunkWriter {
+func NewChunkWriter(processing types.Processing, bar *tui.ProgressBar) *ChunkWriter {
 	return &ChunkWriter{
 		processing: processing,
 		buffer:     NewOrderedBuffer(),
@@ -62,7 +61,7 @@ func (w *ChunkWriter) writeResults(output io.Writer, results []types.TaskResult)
 }
 
 func (w *ChunkWriter) writeResult(output io.Writer, result types.TaskResult) error {
-	if w.processing == options.Encryption {
+	if w.processing == types.Encryption {
 		if err := w.writeChunkSize(output, len(result.Data)); err != nil {
 			return fmt.Errorf("writing chunk size: %w", err)
 		}

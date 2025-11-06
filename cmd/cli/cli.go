@@ -5,9 +5,9 @@ import (
 
 	"sweetbyte/config"
 	"sweetbyte/filemanager"
-	"sweetbyte/options"
 	"sweetbyte/processor"
 	"sweetbyte/tui"
+	"sweetbyte/types"
 )
 
 type CLI struct {
@@ -43,9 +43,9 @@ func (p *CLI) Encrypt(inputFile, outputFile, password string, deleteSource, secu
 
 	fmt.Printf("File encrypted successfully: %s", outputFile)
 	if deleteSource {
-		deleteOption := options.DeleteStandard
+		deleteOption := types.DeleteStandard
 		if secureDelete {
-			deleteOption = options.DeleteSecure
+			deleteOption = types.DeleteSecure
 		}
 
 		fmt.Printf("Deleting source file: %s\n", inputFile)
@@ -74,9 +74,9 @@ func (p *CLI) Decrypt(inputFile, outputFile, password string, deleteSource, secu
 
 	fmt.Printf("✓ File decrypted successfully: %s\n", outputFile)
 	if deleteSource {
-		deleteOption := options.DeleteStandard
+		deleteOption := types.DeleteStandard
 		if secureDelete {
-			deleteOption = options.DeleteSecure
+			deleteOption = types.DeleteSecure
 		}
 
 		fmt.Printf("Deleting source file: %s\n", inputFile)

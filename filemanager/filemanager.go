@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"sweetbyte/config"
-	"sweetbyte/options"
+	"sweetbyte/types"
 )
 
 type FileManager struct {
@@ -19,7 +19,7 @@ func NewFileManager(passes int) *FileManager {
 	return &FileManager{overwritePasses: passes}
 }
 
-func (fm *FileManager) FindEligibleFiles(mode options.ProcessorMode) ([]string, error) {
+func (fm *FileManager) FindEligibleFiles(mode types.ProcessorMode) ([]string, error) {
 	var files []string
 
 	err := filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
@@ -37,13 +37,13 @@ func (fm *FileManager) FindEligibleFiles(mode options.ProcessorMode) ([]string, 
 	return files, nil
 }
 
-func (fm *FileManager) isEligible(path string, info os.FileInfo, mode options.ProcessorMode) bool {
+func (fm *FileManager) isEligible(path string, info os.FileInfo, mode types.ProcessorMode) bool {
 	if info.IsDir() || strings.HasPrefix(info.Name(), ".") || fm.isExcluded(path) {
 		return false
 	}
 
 	encrypted := strings.HasSuffix(path, config.FileExtension)
-	return (mode == options.ModeEncrypt && !encrypted) || (mode == options.ModeDecrypt && encrypted)
+	return (mode == types.ModeEncrypt && !encrypted) || (mode == types.ModeDecrypt && encrypted)
 }
 
 func (fm *FileManager) isExcluded(path string) bool {
@@ -65,8 +65,8 @@ func (fm *FileManager) IsEncryptedFile(path string) bool {
 	return strings.HasSuffix(path, config.FileExtension)
 }
 
-func (fm *FileManager) GetOutputPath(inputPath string, mode options.ProcessorMode) string {
-	if mode == options.ModeEncrypt {
+func (fm *FileManager) GetOutputPath(inputPath string, mode types.ProcessorMode) string {
+	if mode == types.ModeEncrypt {
 		return inputPath + config.FileExtension
 	}
 	return strings.TrimSuffix(inputPath, config.FileExtension)
@@ -90,7 +90,7 @@ func (fm *FileManager) GetFileInfoList(files []string) ([][]any, error) {
 	return infos, nil
 }
 
-func (fm *FileManager) Remove(path string, opt options.DeleteOption) error {
+func (fm *FileManager) Remove(path string, opt types.DeleteOption) error {
 	path = filepath.Clean(path)
 
 	if err := fm.requireExists(path); err != nil {
@@ -98,9 +98,9 @@ func (fm *FileManager) Remove(path string, opt options.DeleteOption) error {
 	}
 
 	switch opt {
-	case options.DeleteStandard:
+	case types.DeleteStandard:
 		return os.Remove(path)
-	case options.DeleteSecure:
+	case types.DeleteSecure:
 		return fm.secureDelete(path)
 	default:
 		return fmt.Errorf("unsupported delete option: %s", opt)

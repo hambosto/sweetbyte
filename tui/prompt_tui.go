@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"sweetbyte/options"
+	"sweetbyte/types"
 
 	"github.com/charmbracelet/huh"
 )
@@ -53,7 +53,7 @@ func (p *PromptInput) GetDecryptionPassword() (string, error) {
 	return password, nil
 }
 
-func (p *PromptInput) ConfirmFileRemoval(path, fileType string) (bool, options.DeleteOption, error) {
+func (p *PromptInput) ConfirmFileRemoval(path, fileType string) (bool, types.DeleteOption, error) {
 	confirm, err := p.confirm(fmt.Sprintf("Delete %s file %s?", fileType, path))
 	if err != nil {
 		return false, "", err
@@ -63,24 +63,24 @@ func (p *PromptInput) ConfirmFileRemoval(path, fileType string) (bool, options.D
 	}
 
 	deleteType, err := p.choose("Select delete type:", []string{
-		string(options.DeleteStandard),
-		string(options.DeleteSecure),
+		string(types.DeleteStandard),
+		string(types.DeleteSecure),
 	})
 	if err != nil {
 		return false, "", fmt.Errorf("delete option selection failed: %w", err)
 	}
-	return true, options.DeleteOption(deleteType), nil
+	return true, types.DeleteOption(deleteType), nil
 }
 
-func (p *PromptInput) GetProcessingMode() (options.ProcessorMode, error) {
+func (p *PromptInput) GetProcessingMode() (types.ProcessorMode, error) {
 	mode, err := p.choose("Select operation:", []string{
-		string(options.ModeEncrypt),
-		string(options.ModeDecrypt),
+		string(types.ModeEncrypt),
+		string(types.ModeDecrypt),
 	})
 	if err != nil {
 		return "", fmt.Errorf("operation selection failed: %w", err)
 	}
-	return options.ProcessorMode(mode), nil
+	return types.ProcessorMode(mode), nil
 }
 
 func (p *PromptInput) ChooseFile(fileList []string) (string, error) {

@@ -6,9 +6,9 @@ import (
 
 	"sweetbyte/config"
 	"sweetbyte/filemanager"
-	"sweetbyte/options"
 	"sweetbyte/processor"
 	"sweetbyte/tui"
+	"sweetbyte/types"
 )
 
 type Interactive struct {
@@ -83,7 +83,7 @@ func (a *Interactive) runInteractiveLoop() error {
 	return nil
 }
 
-func (a *Interactive) getEligibleFiles(operation options.ProcessorMode) ([]string, error) {
+func (a *Interactive) getEligibleFiles(operation types.ProcessorMode) ([]string, error) {
 	eligibleFiles, err := a.fileManager.FindEligibleFiles(operation)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find eligible files: %w", err)
@@ -96,7 +96,7 @@ func (a *Interactive) getEligibleFiles(operation options.ProcessorMode) ([]strin
 	return eligibleFiles, nil
 }
 
-func (a *Interactive) processFile(inputPath string, mode options.ProcessorMode) error {
+func (a *Interactive) processFile(inputPath string, mode types.ProcessorMode) error {
 	outputPath := a.fileManager.GetOutputPath(inputPath, mode)
 
 	if err := a.fileManager.ValidatePath(inputPath, true); err != nil {
@@ -111,9 +111,9 @@ func (a *Interactive) processFile(inputPath string, mode options.ProcessorMode) 
 
 	var err error
 	switch mode {
-	case options.ModeEncrypt:
+	case types.ModeEncrypt:
 		err = a.encryptFile(inputPath, outputPath)
-	case options.ModeDecrypt:
+	case types.ModeDecrypt:
 		err = a.decryptFile(inputPath, outputPath)
 	default:
 		return fmt.Errorf("unknown processing mode: %v", mode)
@@ -126,7 +126,7 @@ func (a *Interactive) processFile(inputPath string, mode options.ProcessorMode) 
 	tui.ShowSuccessInfo(mode, outputPath)
 
 	var fileType string
-	if mode == options.ModeEncrypt {
+	if mode == types.ModeEncrypt {
 		fileType = "original"
 	} else {
 		fileType = "encrypted"
