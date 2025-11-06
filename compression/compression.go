@@ -16,11 +16,11 @@ const (
 	LevelBestCompression
 )
 
-type Compressor struct {
+type Compression struct {
 	level int
 }
 
-func NewCompressor(level Level) (*Compressor, error) {
+func NewCompression(level Level) (*Compression, error) {
 	var zlibLevel int
 
 	switch level {
@@ -36,10 +36,10 @@ func NewCompressor(level Level) (*Compressor, error) {
 		zlibLevel = zlib.DefaultCompression
 	}
 
-	return &Compressor{level: zlibLevel}, nil
+	return &Compression{level: zlibLevel}, nil
 }
 
-func (c *Compressor) Compress(data []byte) ([]byte, error) {
+func (c *Compression) Compress(data []byte) ([]byte, error) {
 	if len(data) == 0 {
 		return nil, fmt.Errorf("data cannot be empty")
 	}
@@ -61,7 +61,7 @@ func (c *Compressor) Compress(data []byte) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func (c *Compressor) Decompress(data []byte) ([]byte, error) {
+func (c *Compression) Decompress(data []byte) ([]byte, error) {
 	if len(data) == 0 {
 		return nil, fmt.Errorf("data cannot be empty")
 	}

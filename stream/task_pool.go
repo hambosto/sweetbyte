@@ -17,7 +17,7 @@ type TaskProcessor struct {
 	firstCipher  *cipher.AESCipher
 	secondCipher *cipher.ChaCha20Cipher
 	encoder      *encoding.Encoding
-	compressor   *compression.Compressor
+	compressor   *compression.Compression
 	padding      *padding.Padding
 	processing   options.Processing
 }
@@ -42,7 +42,7 @@ func NewTaskProcessor(key []byte, processing options.Processing) (*TaskProcessor
 		return nil, fmt.Errorf("failed to initialize Reed-Solomon encoder: %w", err)
 	}
 
-	compressor, err := compression.NewCompressor(compression.LevelBestSpeed)
+	compressor, err := compression.NewCompression(compression.LevelBestSpeed)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize compressor: %w", err)
 	}
