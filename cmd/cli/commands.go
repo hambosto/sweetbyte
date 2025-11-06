@@ -27,12 +27,10 @@ func (c *Commands) Execute() error {
 func (c *Commands) setupCommands() {
 	c.rootCmd = &cobra.Command{
 		Use:   "sweetbyte",
-		Short: "A tool for multi-layered file encryption and error correction.",
-		Long: `SweetByte secures your files through a multi-layered process that includes compression,
-dual-layer encryption with AES-256-GCM and XChaCha20-Poly1305, and Reed-Solomon error
-correction codes. This ensures both confidentiality and resilience against data corruption.
-
-SweetByte can be run in a user-friendly interactive mode or via the command line for automation.`,
+		Short: "Multi-layered file encryption tool with error correction.",
+		Long: `SweetByte encrypts files using multiple layers of encryption with AES-256-GCM and 
+XChaCha20-Poly1305, plus Reed-Solomon error correction for data resilience.
+Run without arguments to start interactive mode.`,
 		Version: config.AppVersion,
 		Run: func(cmd *cobra.Command, args []string) {
 			interactiveApp := interactive.NewInteractive()
@@ -56,11 +54,11 @@ func (c *Commands) createEncryptCommand() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "encrypt [flags]",
-		Short: "Encrypts a file using a multi-layered approach.",
-		Long: `This command secures a file by first compressing it, then encrypting it with two independent
-layers of state-of-the-art ciphers: AES-256-GCM followed by XChaCha20-Poly1305. Finally,
-it applies Reed-Solomon error correction codes to the ciphertext, protecting it from
-corruption. A strong encryption key is derived from your password using Argon2id.`,
+		Short: "Encrypts a file with multiple layers of encryption.",
+		Long: `This command compresses the file, then encrypts it with two layers:
+AES-256-GCM followed by XChaCha20-Poly1305. It also applies Reed-Solomon
+error correction codes for data resilience. The encryption key is derived
+from your password using Argon2id.`,
 		Example: `  sweetbyte encrypt -i document.txt -o document.txt.swb
   sweetbyte encrypt -i document.txt -p mypassword --delete-source
   sweetbyte encrypt -i document.txt --secure-delete`,
@@ -93,11 +91,11 @@ func (c *Commands) createDecryptCommand() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "decrypt [flags]",
-		Short: "Decrypts a file encrypted by SweetByte.",
-		Long: `This command reverses the encryption process. It first uses the Reed-Solomon codes to
-verify and correct any data corruption, then decrypts the data through two layers
-(XChaCha20-Poly1305 and AES-256-GCM), and finally decompresses it to restore the original
-file. The correct password is required to derive the necessary decryption key.`,
+		Short: "Decrypts a file with error correction and multiple layers.",
+		Long: `This command first uses Reed-Solomon codes to verify and correct any data 
+corruption, then decrypts with two layers (XChaCha20-Poly1305 and AES-256-GCM), 
+and finally decompresses to restore the original file. The correct password is 
+required to derive the decryption key.`,
 		Example: `  sweetbyte decrypt -i document.txt.swb -o document.txt
   sweetbyte decrypt -i document.txt.swb -p mypassword
   sweetbyte decrypt -i document.txt.swb --delete-source`,
@@ -122,10 +120,9 @@ file. The correct password is required to derive the necessary decryption key.`,
 func (c *Commands) createInteractiveCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "interactive",
-		Short: "Starts a guided session for multi-layered encryption and decryption.",
-		Long: `This command launches SweetByte in interactive mode, providing a step-by-step guided
-experience for encrypting and decrypting files using the multi-layered security process.
-This is ideal for users who prefer a more intuitive and user-friendly interface.`,
+		Short: "Starts a guided session for encryption and decryption.",
+		Long: `This command launches SweetByte in interactive mode with a step-by-step
+interface for encrypting and decrypting files using the multi-layered security process.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			interactiveApp := interactive.NewInteractive()
 			interactiveApp.Run()
