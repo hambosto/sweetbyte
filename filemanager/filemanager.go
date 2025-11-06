@@ -72,18 +72,18 @@ func (fm *FileManager) GetOutputPath(inputPath string, mode options.ProcessorMod
 	return strings.TrimSuffix(inputPath, config.FileExtension)
 }
 
-func (fm *FileManager) GetFileInfoList(files []string) ([][]interface{}, error) {
-	var infos [][]interface{}
+func (fm *FileManager) GetFileInfoList(files []string) ([][]any, error) {
+	var infos [][]any
 	for _, f := range files {
 		stat, err := os.Stat(f)
 		if err != nil {
 			return nil, fmt.Errorf("stat failed for %q: %w", f, err)
 		}
-		info := []interface{}{
-			f,                    // Path
-			stat.Size(),          // Size
+		info := []any{
+			f,                     // Path
+			stat.Size(),           // Size
 			fm.IsEncryptedFile(f), // IsEncrypted
-			true,                 // IsEligible
+			true,                  // IsEligible
 		}
 		infos = append(infos, info)
 	}
