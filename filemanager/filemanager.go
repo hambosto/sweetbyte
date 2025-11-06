@@ -80,10 +80,10 @@ func (fm *FileManager) GetFileInfoList(files []string) ([][]any, error) {
 			return nil, fmt.Errorf("stat failed for %q: %w", f, err)
 		}
 		info := []any{
-			f,                     // Path
-			stat.Size(),           // Size
-			fm.IsEncryptedFile(f), // IsEncrypted
-			true,                  // IsEligible
+			f,
+			stat.Size(),
+			fm.IsEncryptedFile(f),
+			true,
 		}
 		infos = append(infos, info)
 	}
