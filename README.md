@@ -87,22 +87,23 @@ graph TD
         A[CLI Mode]
         B[Interactive Mode]
 
-        C[Operations]
-        E[Streaming]
-        D[Processor]
+        C[Processor]
+        E[Stream]
+        D[Task Pool]
 
 
         F[Cipher]
-        G[Keys]
+        G[Derive]
         H[Header]
         I[Compression]
         J[Encoding]
         K[Padding]
 
-        L[Files]
-        M[UI]
+        L[Filemanager]
+        M[TUI]
         N[Config]
         P[Utils]
+        Q[Types]
 
     A --> C
     B --> C
@@ -121,12 +122,13 @@ graph TD
     B --> M
     E --> N
     D --> P
+    C --> Q
 ```
 
-- **User Interfaces:** The `cli` and `interactive` packages provide two distinct ways for users to interact with the application. Both interfaces are built on top of the `operations` package.
-- **Core Logic:** The `operations`, `streaming`, and `processor` packages form the core of the application. The `operations` package orchestrates the high-level workflow, the `streaming` package handles concurrent, chunk-based file processing, and the `processor` package applies the full cryptographic pipeline to each individual data chunk.
-- **Cryptographic & Data Processing:** This layer contains the packages that implement the cryptographic and data processing primitives. These packages are responsible for encryption, key derivation, header serialization, compression, error correction, and padding. They are primarily consumed by the `processor` package.
-- **Utilities & Support:** This layer provides a set of utility and support packages that are used throughout the application. These packages handle file management, UI components, configuration, and other miscellaneous tasks.
+- **User Interfaces:** The `cli` and `interactive` packages provide two distinct ways for users to interact with the application. Both interfaces are built on top of the `processor` package.
+- **Core Logic:** The `processor`, `stream`, and `task pool` packages form the core of the application. The `processor` package orchestrates the high-level workflow, the `stream` package handles concurrent, chunk-based file processing, and the `task pool` package manages concurrent task execution.
+- **Cryptographic & Data Processing:** This layer contains the packages that implement the cryptographic and data processing primitives. These packages are responsible for encryption, key derivation, header serialization, compression, error correction, and padding. They are primarily consumed by the `task pool` package.
+- **Utilities & Support:** This layer provides a set of utility and support packages that are used throughout the application. These packages handle file management (`filemanager`), UI components (`tui`), configuration, and other miscellaneous tasks. The `types` package contains common data structures used throughout the application.
 
 ## 📦 File Format
 
@@ -259,18 +261,18 @@ SweetByte is built with a modular architecture, with each package handling a spe
 | `cli`             | Contains the command-line interface logic using the Cobra library.       |
 | `compression`     | Handles Zlib compression and decompression.                              |
 | `config`          | Stores all application-wide constants and configuration parameters.      |
+| `derive`          | Handles key derivation using Argon2id and secure salt generation.        |
 | `encoding`        | Manages Reed-Solomon error correction encoding and decoding.             |
-| `files`           | Provides utilities for finding, managing, and securely deleting files.   |
+| `filemanager`     | Provides utilities for finding, managing, and securely deleting files.   |
 | `header`          | Manages the serialization, deserialization, and verification of the secure file header. |
 | `interactive`     | Implements the user-friendly interactive mode workflow.                  |
-| `keys`            | Handles key derivation using Argon2id and secure salt generation.        |
-| `operations`      | Contains the high-level logic for the main encrypt/decrypt file operations. |
-| `options`         | Defines the different modes and processing options for the application. |
+| `types`           | Defines common types, enums, and data structures used throughout the application. |
 | `padding`         | Implements PKCS7 padding.                                                |
-| `processor`       | Applies the complete cryptographic pipeline (compress, pad, encrypt, encode) to individual data chunks. |
-| `streaming`       | Manages concurrent, chunk-based file processing with a worker pool.      |
-| `ui`              | Provides UI components like interactive prompts, progress bars, and banners. |
+| `processor`       | Contains the high-level logic for the main encrypt/decrypt file operations. |
+| `stream`          | Manages concurrent, chunk-based file processing with a worker pool.      |
+| `tui`             | Provides UI components like interactive prompts, progress bars, and banners. |
 | `utils`           | Contains miscellaneous helper functions.                                 |
+
 
 ## 🛡️ Security Considerations
 
