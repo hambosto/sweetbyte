@@ -132,7 +132,7 @@ graph TD
 
 ## 📦 File Format
 
-Encrypted files (`.swb`) have a custom binary structure designed for security and resilience.
+Encrypted files (`.swx`) have a custom binary structure designed for security and resilience.
 
 #### Overall Structure
 An encrypted file consists of a resilient, variable-size header followed by a series of variable-length data chunks.
@@ -226,7 +226,7 @@ For scripting and automation, use the `encrypt` and `decrypt` commands.
 **To Encrypt a File:**
 ```sh
 # Basic encryption (will prompt for password)
-sweetbyte encrypt -i my_document.txt -o my_document.swb
+sweetbyte encrypt -i my_document.txt -o my_document.swx
 
 # Provide a password and delete the original file after encryption
 sweetbyte encrypt -i my_document.txt -p "my-secret-password" --delete-source
@@ -235,10 +235,10 @@ sweetbyte encrypt -i my_document.txt -p "my-secret-password" --delete-source
 **To Decrypt a File:**
 ```sh
 # Basic decryption (will prompt for password)
-sweetbyte decrypt -i my_document.swb -o my_document.txt
+sweetbyte decrypt -i my_document.swx -o my_document.txt
 
 # Provide a password and securely delete the encrypted source file
-sweetbyte decrypt -i my_document.swb -p "my-secret-password" --delete-source --secure-delete
+sweetbyte decrypt -i my_document.swx -p "my-secret-password" --delete-source --secure-delete
 ```
 
 ## 🏗️ Building from Source

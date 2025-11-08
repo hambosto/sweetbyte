@@ -3,7 +3,7 @@ package config
 const (
 	AppName       = "SweetByte"
 	AppVersion    = "1.0"
-	FileExtension = ".swb"
+	FileExtension = ".swx"
 )
 
 const (

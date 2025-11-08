@@ -59,7 +59,7 @@ func (c *Commands) createEncryptCommand() *cobra.Command {
 AES-256-GCM followed by XChaCha20-Poly1305. It also applies Reed-Solomon
 error correction codes for data resilience. The encryption key is derived
 from your password using Argon2id.`,
-		Example: `  sweetbyte encrypt -i document.txt -o document.txt.swb
+		Example: `  sweetbyte encrypt -i document.txt -o document.txt.swx
   sweetbyte encrypt -i document.txt -p mypassword --delete-source
   sweetbyte encrypt -i document.txt --secure-delete`,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -68,7 +68,7 @@ from your password using Argon2id.`,
 	}
 
 	cmd.Flags().StringVarP(&inputFile, "input", "i", "", "Input file to encrypt (required)")
-	cmd.Flags().StringVarP(&outputFile, "output", "o", "", "Output encrypted file (default: input + .swb)")
+	cmd.Flags().StringVarP(&outputFile, "output", "o", "", "Output encrypted file (default: input + .swx)")
 	cmd.Flags().StringVarP(&password, "password", "p", "", "Encryption password (will prompt if not provided)")
 	cmd.Flags().BoolVar(&deleteSource, "delete-source", false, "Delete source file after encryption")
 	cmd.Flags().BoolVar(&secureDelete, "secure-delete", false, "Use secure deletion (slower but unrecoverable)")
@@ -96,16 +96,16 @@ func (c *Commands) createDecryptCommand() *cobra.Command {
 corruption, then decrypts with two layers (XChaCha20-Poly1305 and AES-256-GCM), 
 and finally decompresses to restore the original file. The correct password is 
 required to derive the decryption key.`,
-		Example: `  sweetbyte decrypt -i document.txt.swb -o document.txt
-  sweetbyte decrypt -i document.txt.swb -p mypassword
-  sweetbyte decrypt -i document.txt.swb --delete-source`,
+		Example: `  sweetbyte decrypt -i document.txt.swx -o document.txt
+  sweetbyte decrypt -i document.txt.swx -p mypassword
+  sweetbyte decrypt -i document.txt.swx --delete-source`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return c.runDecrypt(inputFile, outputFile, password, deleteSource, secureDelete)
 		},
 	}
 
 	cmd.Flags().StringVarP(&inputFile, "input", "i", "", "Input file to decrypt (required)")
-	cmd.Flags().StringVarP(&outputFile, "output", "o", "", "Output decrypted file (default: remove .swb extension)")
+	cmd.Flags().StringVarP(&outputFile, "output", "o", "", "Output decrypted file (default: remove .swx extension)")
 	cmd.Flags().StringVarP(&password, "password", "p", "", "Decryption password (will prompt if not provided)")
 	cmd.Flags().BoolVar(&deleteSource, "delete-source", false, "Delete source file after decryption")
 	cmd.Flags().BoolVar(&secureDelete, "secure-delete", false, "Use secure deletion (slower but unrecoverable)")
