@@ -76,14 +76,18 @@ func (tp *TaskProcessor) Process(ctx context.Context, task types.Task) types.Tas
 
 	switch tp.processing {
 	case types.Encryption:
-		output, err = tp.Encrypt(task.Data)
+		output, err = tp.Encryption(task.Data)
 	case types.Decryption:
-		output, err = tp.Decrypt(task.Data)
+		output, err = tp.Decryption(task.Data)
 	default:
 		err = fmt.Errorf("unknown processing type: %d", tp.processing)
 	}
 
-	size := tp.calculateProgressSize(task.Data, output)
+	size := len(task.Data)
+	if tp.processing == types.Decryption {
+		size = len(output)
+	}
+
 	return types.TaskResult{
 		Index: task.Index,
 		Data:  output,
@@ -92,7 +96,7 @@ func (tp *TaskProcessor) Process(ctx context.Context, task types.Task) types.Tas
 	}
 }
 
-func (tp *TaskProcessor) Encrypt(data []byte) ([]byte, error) {
+func (tp *TaskProcessor) Encryption(data []byte) ([]byte, error) {
 	compressed, err := tp.compressor.Compress(data)
 	if err != nil {
 		return nil, fmt.Errorf("compression failed: %w", err)
@@ -121,7 +125,7 @@ func (tp *TaskProcessor) Encrypt(data []byte) ([]byte, error) {
 	return encoded, nil
 }
 
-func (tp *TaskProcessor) Decrypt(data []byte) ([]byte, error) {
+func (tp *TaskProcessor) Decryption(data []byte) ([]byte, error) {
 	decoded, err := tp.encoder.Decode(data)
 	if err != nil {
 		return nil, fmt.Errorf("Reed-Solomon decoding failed (data may be corrupted): %w", err)
@@ -148,11 +152,4 @@ func (tp *TaskProcessor) Decrypt(data []byte) ([]byte, error) {
 	}
 
 	return decompressed, nil
-}
-
-func (tp *TaskProcessor) calculateProgressSize(input, output []byte) int {
-	if tp.processing == types.Encryption {
-		return len(input)
-	}
-	return len(output)
 }
