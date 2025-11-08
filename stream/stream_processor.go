@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"sweetbyte/config"
+	"sweetbyte/derive"
 	"sweetbyte/tui"
 	"sweetbyte/types"
 )
@@ -24,8 +25,8 @@ type StreamProcessor struct {
 }
 
 func NewStreamProcessor(key []byte, processing types.Processing) (*StreamProcessor, error) {
-	if len(key) != config.MasterKeySize {
-		return nil, fmt.Errorf("key must be %d bytes long", config.MasterKeySize)
+	if len(key) != derive.ArgonKeyLen {
+		return nil, fmt.Errorf("key must be %d bytes long", derive.ArgonKeyLen)
 	}
 
 	taskProcessor, err := NewTaskProcessor(key, processing)

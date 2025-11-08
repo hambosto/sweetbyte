@@ -14,7 +14,6 @@ const (
 
 const (
 	SaltSize          = 32
-	MasterKeySize     = 64
 	EncryptionKeySize = 32
 )
 

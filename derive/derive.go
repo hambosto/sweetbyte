@@ -14,6 +14,7 @@ const (
 	ArgonTime    = 8
 	ArgonMemory  = 1 << 20
 	ArgonThreads = 8
+	ArgonKeyLen  = 64
 )
 
 func Hash(password, salt []byte) ([]byte, error) {
@@ -31,7 +32,7 @@ func Hash(password, salt []byte) ([]byte, error) {
 		ArgonTime,
 		ArgonMemory,
 		ArgonThreads,
-		config.MasterKeySize,
+		ArgonKeyLen,
 	)
 
 	return key, nil

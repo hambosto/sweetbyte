@@ -7,6 +7,7 @@ import (
 	"sweetbyte/cipher"
 	"sweetbyte/compression"
 	"sweetbyte/config"
+	"sweetbyte/derive"
 	"sweetbyte/encoding"
 	"sweetbyte/padding"
 	"sweetbyte/types"
@@ -22,8 +23,8 @@ type TaskProcessor struct {
 }
 
 func NewTaskProcessor(key []byte, processing types.Processing) (*TaskProcessor, error) {
-	if len(key) < config.MasterKeySize {
-		return nil, fmt.Errorf("encryption key must be at least %d bytes long, got %d bytes", config.MasterKeySize, len(key))
+	if len(key) < derive.ArgonKeyLen {
+		return nil, fmt.Errorf("encryption key must be at least %d bytes long, got %d bytes", derive.ArgonKeyLen, len(key))
 	}
 
 	firstCipher, err := cipher.NewAESCipher(key[:32])
