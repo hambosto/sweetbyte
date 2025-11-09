@@ -7,10 +7,13 @@ import (
 	"runtime"
 	"sync"
 
-	"sweetbyte/config"
 	"sweetbyte/derive"
 	"sweetbyte/tui"
 	"sweetbyte/types"
+)
+
+const (
+	DefaultChunkSize = 1 * 1024 * 1024
 )
 
 type StreamProcessor struct {
@@ -35,15 +38,14 @@ func NewStreamProcessor(key []byte, processing types.Processing) (*StreamProcess
 	}
 
 	concurrency := runtime.GOMAXPROCS(0)
-	chunkSize := config.DefaultChunkSize
 
 	return &StreamProcessor{
 		key:           key,
 		processing:    processing,
 		concurrency:   concurrency,
-		chunkSize:     chunkSize,
+		chunkSize:     DefaultChunkSize,
 		taskProcessor: taskProcessor,
-		reader:        NewChunkReader(processing, chunkSize, concurrency),
+		reader:        NewChunkReader(processing, DefaultChunkSize, concurrency),
 		pool:          NewWorkerPool(taskProcessor, concurrency),
 	}, nil
 }

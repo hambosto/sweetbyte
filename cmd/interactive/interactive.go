@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	"sweetbyte/config"
 	"sweetbyte/filemanager"
 	"sweetbyte/processor"
 	"sweetbyte/tui"
@@ -18,9 +17,9 @@ type Interactive struct {
 }
 
 func NewInteractive() *Interactive {
-	fileManager := filemanager.NewFileManager(config.OverwritePasses)
+	fileManager := filemanager.NewFileManager(filemanager.OverwritePasses)
 	processor := processor.NewProcessor(fileManager)
-	prompt := tui.NewPromptInput(config.PasswordMinLen)
+	prompt := tui.NewPromptInput(filemanager.PasswordMinLen)
 	return &Interactive{
 		fileManager: fileManager,
 		prompt:      prompt,

@@ -3,7 +3,7 @@ package header
 import (
 	"fmt"
 
-	"sweetbyte/config"
+	"sweetbyte/derive"
 	"sweetbyte/utils"
 )
 
@@ -54,8 +54,8 @@ func (s *Serializer) validateInputs(salt, key []byte) error {
 	if err := s.header.Validate(); err != nil {
 		return fmt.Errorf("header validation failed: %w", err)
 	}
-	if len(salt) != config.SaltSize {
-		return fmt.Errorf("invalid salt size: expected %d, got %d", config.SaltSize, len(salt))
+	if len(salt) != derive.ArgonSaltLen {
+		return fmt.Errorf("invalid salt size: expected %d, got %d", derive.ArgonSaltLen, len(salt))
 	}
 	if len(key) == 0 {
 		return fmt.Errorf("key cannot be empty")

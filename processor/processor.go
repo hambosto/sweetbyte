@@ -4,10 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"sweetbyte/config"
 	"sweetbyte/derive"
 	"sweetbyte/filemanager"
-
 	"sweetbyte/header"
 	"sweetbyte/stream"
 	"sweetbyte/types"
@@ -34,7 +32,7 @@ func (p *Processor) Encrypt(srcPath, destPath, password string) error {
 	}
 	defer destFile.Close() //nolint:errcheck
 
-	salt, err := derive.GetRandomSalt(config.SaltSize)
+	salt, err := derive.GetRandomSalt(derive.ArgonSaltLen)
 	if err != nil {
 		return fmt.Errorf("failed to generate salt: %w", err)
 	}

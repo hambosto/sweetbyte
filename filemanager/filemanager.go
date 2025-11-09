@@ -11,6 +11,11 @@ import (
 	"sweetbyte/types"
 )
 
+const (
+	OverwritePasses = 3
+	PasswordMinLen  = 8
+)
+
 type FileManager struct {
 	overwritePasses int
 }

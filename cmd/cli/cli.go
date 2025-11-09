@@ -3,7 +3,6 @@ package cli
 import (
 	"fmt"
 
-	"sweetbyte/config"
 	"sweetbyte/filemanager"
 	"sweetbyte/processor"
 	"sweetbyte/tui"
@@ -17,9 +16,9 @@ type CLI struct {
 }
 
 func NewCLI() *CLI {
-	fileManager := filemanager.NewFileManager(config.OverwritePasses)
+	fileManager := filemanager.NewFileManager(filemanager.OverwritePasses)
 	processor := processor.NewProcessor(fileManager)
-	prompt := tui.NewPromptInput(config.PasswordMinLen)
+	prompt := tui.NewPromptInput(filemanager.PasswordMinLen)
 	return &CLI{
 		fileManager: fileManager,
 		processor:   processor,

@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"io"
 
-	"sweetbyte/config"
-
 	"golang.org/x/crypto/chacha20poly1305"
 )
 
@@ -16,8 +14,8 @@ type ChaCha20Cipher struct {
 }
 
 func NewChaCha20Cipher(key []byte) (*ChaCha20Cipher, error) {
-	if len(key) != config.EncryptionKeySize {
-		return nil, fmt.Errorf("key must be %d bytes, got %d", config.EncryptionKeySize, len(key))
+	if len(key) != KeySize {
+		return nil, fmt.Errorf("key must be %d bytes, got %d", KeySize, len(key))
 	}
 
 	aead, err := chacha20poly1305.NewX(key)
@@ -33,7 +31,7 @@ func (c *ChaCha20Cipher) Encrypt(plaintext []byte) ([]byte, error) {
 		return nil, fmt.Errorf("plaintext cannot be empty")
 	}
 
-	nonce := make([]byte, chacha20poly1305.NonceSizeX)
+	nonce := make([]byte, NonceSizeX)
 	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
 		return nil, fmt.Errorf("failed to generate nonce: %w", err)
 	}
@@ -48,13 +46,12 @@ func (c *ChaCha20Cipher) Decrypt(ciphertext []byte) ([]byte, error) {
 		return nil, fmt.Errorf("ciphertext cannot be empty")
 	}
 
-	nonceSize := chacha20poly1305.NonceSizeX
-	if len(ciphertext) < nonceSize {
-		return nil, fmt.Errorf("ciphertext too short, need at least %d bytes, got %d", nonceSize, len(ciphertext))
+	if len(ciphertext) < NonceSizeX {
+		return nil, fmt.Errorf("ciphertext too short, need at least %d bytes, got %d", NonceSizeX, len(ciphertext))
 	}
 
-	nonce := ciphertext[:nonceSize]
-	ciphertext = ciphertext[nonceSize:]
+	nonce := ciphertext[:NonceSizeX]
+	ciphertext = ciphertext[NonceSizeX:]
 
 	plaintext, err := c.aead.Open(nil, nonce, ciphertext, nil)
 	if err != nil {

@@ -6,17 +6,6 @@ const (
 	FileExtension = ".swx"
 )
 
-const (
-	DefaultChunkSize = 1 * 1024 * 1024
-	OverwritePasses  = 3
-	PasswordMinLen   = 8
-)
-
-const (
-	SaltSize          = 32
-	EncryptionKeySize = 32
-)
-
 var (
 	ExcludedDirs = []string{
 		"vendor/", "node_modules/", ".git", ".github",
@@ -28,13 +17,4 @@ var (
 		".go", "go.mod", "go.sum", ".nix", ".gitignore",
 		".exe", ".dll", ".so", ".dylib",
 	}
-)
-
-const (
-	DataShards   = 4
-	ParityShards = 10
-)
-
-const (
-	PaddingSize = 16
 )

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 
-	"sweetbyte/config"
 	"sweetbyte/encoding"
 	"sweetbyte/utils"
 )
@@ -30,7 +29,7 @@ type SectionEncoder struct {
 }
 
 func NewSectionEncoder() (*SectionEncoder, error) {
-	encoder, err := encoding.NewEncoding(config.DataShards, config.ParityShards)
+	encoder, err := encoding.NewEncoding(encoding.DataShards, encoding.ParityShards)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create reed-solomon encoder: %w", err)
 	}

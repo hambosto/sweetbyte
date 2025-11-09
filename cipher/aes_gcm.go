@@ -6,8 +6,6 @@ import (
 	"crypto/rand"
 	"fmt"
 	"io"
-
-	"sweetbyte/config"
 )
 
 type AESCipher struct {
@@ -15,8 +13,8 @@ type AESCipher struct {
 }
 
 func NewAESCipher(key []byte) (*AESCipher, error) {
-	if len(key) != config.EncryptionKeySize {
-		return nil, fmt.Errorf("key must be %d bytes, got %d", config.EncryptionKeySize, len(key))
+	if len(key) != KeySize {
+		return nil, fmt.Errorf("key must be %d bytes, got %d", KeySize, len(key))
 	}
 
 	block, err := aes.NewCipher(key)
@@ -37,7 +35,7 @@ func (c *AESCipher) Encrypt(plaintext []byte) ([]byte, error) {
 		return nil, fmt.Errorf("plaintext cannot be empty")
 	}
 
-	nonce := make([]byte, c.aead.NonceSize())
+	nonce := make([]byte, NonceSize)
 	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
 		return nil, fmt.Errorf("failed to generate nonce: %w", err)
 	}
@@ -52,13 +50,12 @@ func (c *AESCipher) Decrypt(ciphertext []byte) ([]byte, error) {
 		return nil, fmt.Errorf("ciphertext cannot be empty")
 	}
 
-	nonceSize := c.aead.NonceSize()
-	if len(ciphertext) < nonceSize {
-		return nil, fmt.Errorf("ciphertext too short, need at least %d bytes, got %d", nonceSize, len(ciphertext))
+	if len(ciphertext) < NonceSize {
+		return nil, fmt.Errorf("ciphertext too short, need at least %d bytes, got %d", NonceSize, len(ciphertext))
 	}
 
-	nonce := ciphertext[:nonceSize]
-	ciphertext = ciphertext[nonceSize:]
+	nonce := ciphertext[:NonceSize]
+	ciphertext = ciphertext[NonceSize:]
 
 	plaintext, err := c.aead.Open(nil, nonce, ciphertext, nil)
 	if err != nil {

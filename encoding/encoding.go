@@ -7,7 +7,9 @@ import (
 )
 
 const (
-	MaxDataLen = 1 << 30
+	MaxDataLen   = 1 << 30
+	DataShards   = 4
+	ParityShards = 10
 )
 
 type Encoding struct {

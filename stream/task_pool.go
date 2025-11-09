@@ -6,7 +6,6 @@ import (
 
 	"sweetbyte/cipher"
 	"sweetbyte/compression"
-	"sweetbyte/config"
 	"sweetbyte/derive"
 	"sweetbyte/encoding"
 	"sweetbyte/padding"
@@ -37,7 +36,7 @@ func NewTaskProcessor(key []byte, processing types.Processing) (*TaskProcessor, 
 		return nil, fmt.Errorf("failed to initialize XChaCha20-Poly1305 cipher: %w", err)
 	}
 
-	encoder, err := encoding.NewEncoding(config.DataShards, config.ParityShards)
+	encoder, err := encoding.NewEncoding(encoding.DataShards, encoding.ParityShards)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize Reed-Solomon encoder: %w", err)
 	}
@@ -47,7 +46,7 @@ func NewTaskProcessor(key []byte, processing types.Processing) (*TaskProcessor, 
 		return nil, fmt.Errorf("failed to initialize compressor: %w", err)
 	}
 
-	padder, err := padding.NewPadding(config.PaddingSize)
+	padder, err := padding.NewPadding(padding.BlockSize)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize PKCS#7 padding: %w", err)
 	}

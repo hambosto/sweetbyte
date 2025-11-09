@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 
-	"sweetbyte/config"
+	"sweetbyte/derive"
 )
 
 const (
@@ -77,7 +77,7 @@ func (h *Header) Unmarshal(r io.Reader) error {
 }
 
 func (h *Header) Salt() ([]byte, error) {
-	return h.section(SectionSalt, config.SaltSize)
+	return h.section(SectionSalt, derive.ArgonSaltLen)
 }
 
 func (h *Header) Magic() ([]byte, error) {
@@ -97,7 +97,7 @@ func (h *Header) Verify(key []byte) error {
 	if err != nil {
 		return err
 	}
-	salt, err := h.section(SectionSalt, config.SaltSize)
+	salt, err := h.section(SectionSalt, derive.ArgonSaltLen)
 	if err != nil {
 		return err
 	}
