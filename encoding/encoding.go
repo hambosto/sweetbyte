@@ -52,7 +52,6 @@ func (e *Encoding) Encode(data []byte) ([]byte, error) {
 	}
 
 	shards := e.shards.Split(data)
-
 	if err := e.Encoding.Encode(shards); err != nil {
 		return nil, fmt.Errorf("encoding failed: %w", err)
 	}
