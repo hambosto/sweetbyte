@@ -37,7 +37,7 @@ func Hash(password, salt []byte) ([]byte, error) {
 	return key, nil
 }
 
-func GetRandomSalt(size int) ([]byte, error) {
+func GetRandomBytes(size int) ([]byte, error) {
 	salt := make([]byte, size)
 	if _, err := io.ReadFull(rand.Reader, salt); err != nil {
 		return nil, fmt.Errorf("failed to generate salt: %w", err)

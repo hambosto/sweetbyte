@@ -3,9 +3,9 @@ package cipher
 import (
 	"crypto/aes"
 	"crypto/cipher"
-	"crypto/rand"
 	"fmt"
-	"io"
+
+	"sweetbyte/derive"
 )
 
 type AESCipher struct {
@@ -35,12 +35,11 @@ func (c *AESCipher) Encrypt(plaintext []byte) ([]byte, error) {
 		return nil, fmt.Errorf("plaintext cannot be empty")
 	}
 
-	nonce := make([]byte, NonceSize)
-	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
+	nonce, err := derive.GetRandomBytes(NonceSize)
+	if err != nil {
 		return nil, fmt.Errorf("failed to generate nonce: %w", err)
 	}
 
-	// #nosec G407 - Nonce is generated randomly for each encryption operation
 	ciphertext := c.aead.Seal(nonce, nonce, plaintext, nil)
 	return ciphertext, nil
 }

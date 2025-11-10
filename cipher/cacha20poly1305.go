@@ -2,9 +2,9 @@ package cipher
 
 import (
 	"crypto/cipher"
-	"crypto/rand"
 	"fmt"
-	"io"
+
+	"sweetbyte/derive"
 
 	"golang.org/x/crypto/chacha20poly1305"
 )
@@ -31,12 +31,11 @@ func (c *ChaCha20Cipher) Encrypt(plaintext []byte) ([]byte, error) {
 		return nil, fmt.Errorf("plaintext cannot be empty")
 	}
 
-	nonce := make([]byte, NonceSizeX)
-	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
+	nonce, err := derive.GetRandomBytes(NonceSizeX)
+	if err != nil {
 		return nil, fmt.Errorf("failed to generate nonce: %w", err)
 	}
 
-	// #nosec G407 - Nonce is generated randomly for each encryption operation
 	ciphertext := c.aead.Seal(nonce, nonce, plaintext, nil)
 	return ciphertext, nil
 }

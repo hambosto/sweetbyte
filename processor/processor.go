@@ -32,7 +32,7 @@ func (p *Processor) Encrypt(srcPath, destPath, password string) error {
 	}
 	defer destFile.Close() //nolint:errcheck
 
-	salt, err := derive.GetRandomSalt(derive.ArgonSaltLen)
+	salt, err := derive.GetRandomBytes(derive.ArgonSaltLen)
 	if err != nil {
 		return fmt.Errorf("failed to generate salt: %w", err)
 	}
