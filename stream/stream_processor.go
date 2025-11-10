@@ -38,7 +38,6 @@ func NewStreamProcessor(key []byte, processing types.Processing) (*StreamProcess
 	}
 
 	concurrency := runtime.GOMAXPROCS(0)
-
 	return &StreamProcessor{
 		key:           key,
 		processing:    processing,
@@ -57,7 +56,6 @@ func (s *StreamProcessor) Process(ctx context.Context, input io.Reader, output i
 
 	bar := tui.NewProgressBar(totalSize, s.processing.String())
 	s.writer = NewChunkWriter(s.processing, bar)
-
 	return s.runPipeline(ctx, input, output)
 }
 
@@ -71,9 +69,11 @@ func (s *StreamProcessor) runPipeline(ctx context.Context, input io.Reader, outp
 	var writerErr error
 	var wg sync.WaitGroup
 
-	wg.Go(func() {
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
 		writerErr = s.writer.WriteChunks(pipelineCtx, output, results)
-	})
+	}()
 	wg.Wait()
 
 	select {

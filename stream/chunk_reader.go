@@ -100,22 +100,23 @@ func (r *ChunkReader) readForDecryption(ctx context.Context, reader io.Reader, t
 		default:
 		}
 
-		chunkLen, err := r.readChunkSize(reader)
+		var sizeBuffer [4]byte
+		_, err := io.ReadFull(reader, sizeBuffer[:])
 		if err == io.EOF {
 			return nil
 		}
-
 		if err != nil {
 			return err
 		}
+		chunkLen := utils.FromBytes[uint32](sizeBuffer[:])
 
 		if chunkLen == 0 {
 			continue
 		}
 
-		data, err := r.readChunkData(reader, chunkLen)
-		if err != nil {
-			return err
+		data := make([]byte, chunkLen)
+		if _, err := io.ReadFull(reader, data); err != nil {
+			return fmt.Errorf("failed to read chunk data (length: %d): %w", chunkLen, err)
 		}
 
 		task := types.Task{
@@ -130,22 +131,4 @@ func (r *ChunkReader) readForDecryption(ctx context.Context, reader io.Reader, t
 			return ctx.Err()
 		}
 	}
-}
-
-func (r *ChunkReader) readChunkSize(reader io.Reader) (uint32, error) {
-	var sizeBuffer [4]byte
-	_, err := io.ReadFull(reader, sizeBuffer[:])
-	if err != nil {
-		return 0, err
-	}
-	return utils.FromBytes[uint32](sizeBuffer[:]), nil
-}
-
-func (r *ChunkReader) readChunkData(reader io.Reader, length uint32) ([]byte, error) {
-	data := make([]byte, length)
-	if _, err := io.ReadFull(reader, data); err != nil {
-		return nil, fmt.Errorf("failed to read chunk data (length: %d): %w", length, err)
-	}
-
-	return data, nil
 }
