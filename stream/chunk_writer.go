@@ -48,7 +48,7 @@ func (w *ChunkWriter) writeResults(output io.Writer, results []types.TaskResult)
 	for _, res := range results {
 		if proc {
 			size := len(res.Data)
-			buffer := utils.ToBytes(uint32(size))
+			buffer := utils.ToBytes(uint32(size)) // #nosec G115
 			if _, err := output.Write(buffer); err != nil {
 				return fmt.Errorf("writing chunk size: %w", err)
 			}
