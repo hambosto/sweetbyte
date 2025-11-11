@@ -3,6 +3,7 @@ package header
 import (
 	"fmt"
 	"io"
+	"math"
 
 	"sweetbyte/derive"
 )
@@ -30,8 +31,11 @@ func NewHeader() (*Header, error) {
 	}, nil
 }
 
-func (h *Header) GetOriginalSize() uint64 {
-	return h.OriginalSize
+func (h *Header) GetOriginalSize() int64 {
+	if h.OriginalSize > math.MaxInt64 {
+		panic("original size overflow during int64 conversion")
+	}
+	return int64(h.OriginalSize)
 }
 
 func (h *Header) SetOriginalSize(size uint64) {

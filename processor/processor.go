@@ -121,8 +121,7 @@ func (p *Processor) Decrypt(srcPath, destPath, password string) error {
 	}
 
 	originalSize := h.GetOriginalSize()
-	// #nosec G115
-	if err := processor.Process(context.Background(), srcFile, destFile, int64(originalSize)); err != nil {
+	if err := processor.Process(context.Background(), srcFile, destFile, originalSize); err != nil {
 		return fmt.Errorf("failed to process file: %w", err)
 	}
 
