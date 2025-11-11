@@ -3,6 +3,7 @@ package header
 import (
 	"bytes"
 	"fmt"
+	"math"
 
 	"sweetbyte/encoding"
 	"sweetbyte/utils"
@@ -47,10 +48,9 @@ func (se *SectionEncoder) EncodeSection(data []byte) (*EncodedSection, error) {
 	}
 
 	encodedLen := len(encoded)
-	if encodedLen < 0 || encodedLen > int(^uint32(0)) {
+	if encodedLen > math.MaxUint32 {
 		return nil, fmt.Errorf("encoded data length %d exceeds maximum allowed size for uint32", encodedLen)
 	}
-
 	return &EncodedSection{
 		Data:   encoded,
 		Length: uint32(encodedLen),
