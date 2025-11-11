@@ -8,6 +8,10 @@ import (
 	"golang.org/x/crypto/chacha20poly1305"
 )
 
+const (
+	NonceSizeX = 24
+)
+
 type ChaCha20Cipher struct {
 	aead cipher.AEAD
 }

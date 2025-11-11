@@ -8,6 +8,10 @@ import (
 	"github.com/hambosto/sweetbyte/derive"
 )
 
+const (
+	NonceSize = 12
+)
+
 type AESCipher struct {
 	aead cipher.AEAD
 }
