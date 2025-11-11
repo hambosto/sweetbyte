@@ -3,8 +3,8 @@ package main
 import (
 	"os"
 
-	"sweetbyte/cmd/cli"
-	"sweetbyte/cmd/interactive"
+	"github.com/hambosto/sweetbyte/cmd/cli"
+	"github.com/hambosto/sweetbyte/cmd/interactive"
 )
 
 func main() {
