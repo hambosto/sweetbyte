@@ -4,11 +4,10 @@ import (
 	"fmt"
 	"strconv"
 
-	"sweetbyte/types"
-	"sweetbyte/utils"
-
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/table"
+	"github.com/hambosto/sweetbyte/types"
+	"github.com/hambosto/sweetbyte/utils"
 )
 
 var (

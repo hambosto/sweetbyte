@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"sweetbyte/config"
-	"sweetbyte/types"
+	"github.com/hambosto/sweetbyte/config"
+	"github.com/hambosto/sweetbyte/types"
 )
 
 const (

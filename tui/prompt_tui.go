@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"sweetbyte/types"
-
 	"github.com/charmbracelet/huh"
+	"github.com/hambosto/sweetbyte/types"
 )
 
 type PromptInput struct {

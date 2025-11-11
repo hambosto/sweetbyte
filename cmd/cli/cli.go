@@ -3,10 +3,10 @@ package cli
 import (
 	"fmt"
 
-	"sweetbyte/filemanager"
-	"sweetbyte/processor"
-	"sweetbyte/tui"
-	"sweetbyte/types"
+	"github.com/hambosto/sweetbyte/filemanager"
+	"github.com/hambosto/sweetbyte/processor"
+	"github.com/hambosto/sweetbyte/tui"
+	"github.com/hambosto/sweetbyte/types"
 )
 
 type CLI struct {

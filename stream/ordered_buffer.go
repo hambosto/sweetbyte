@@ -4,7 +4,7 @@ import (
 	"slices"
 	"sync"
 
-	"sweetbyte/types"
+	"github.com/hambosto/sweetbyte/types"
 )
 
 type OrderedBuffer struct {

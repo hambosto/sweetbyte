@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"sweetbyte/derive"
-	"sweetbyte/filemanager"
-	"sweetbyte/header"
-	"sweetbyte/stream"
-	"sweetbyte/types"
+	"github.com/hambosto/sweetbyte/derive"
+	"github.com/hambosto/sweetbyte/filemanager"
+	"github.com/hambosto/sweetbyte/header"
+	"github.com/hambosto/sweetbyte/stream"
+	"github.com/hambosto/sweetbyte/types"
 )
 
 type Processor struct {

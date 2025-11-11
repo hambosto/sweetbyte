@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	"sweetbyte/cipher"
-	"sweetbyte/compression"
-	"sweetbyte/derive"
-	"sweetbyte/encoding"
-	"sweetbyte/padding"
-	"sweetbyte/types"
+	"github.com/hambosto/sweetbyte/cipher"
+	"github.com/hambosto/sweetbyte/compression"
+	"github.com/hambosto/sweetbyte/derive"
+	"github.com/hambosto/sweetbyte/encoding"
+	"github.com/hambosto/sweetbyte/padding"
+	"github.com/hambosto/sweetbyte/types"
 )
 
 type TaskProcessor struct {

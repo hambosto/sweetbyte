@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"math"
 
-	"sweetbyte/encoding"
-	"sweetbyte/utils"
+	"github.com/hambosto/sweetbyte/encoding"
+	"github.com/hambosto/sweetbyte/utils"
 )
 
 type SectionType string

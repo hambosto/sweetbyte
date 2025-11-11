@@ -1,10 +1,34 @@
 package cipher
 
 import (
+	"crypto/aes"
+	"crypto/cipher"
 	"fmt"
 
-	"sweetbyte/derive"
+	"github.com/hambosto/sweetbyte/derive"
 )
+
+type AESCipher struct {
+	aead cipher.AEAD
+}
+
+func NewAESCipher(key []byte) (*AESCipher, error) {
+	if len(key) != KeySize {
+		return nil, fmt.Errorf("key must be %d bytes, got %d", KeySize, len(key))
+	}
+
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create cipher: %w", err)
+	}
+
+	aead, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create AES-GCM cipher: %w", err)
+	}
+
+	return &AESCipher{aead: aead}, nil
+}
 
 func (c *AESCipher) Encrypt(plaintext []byte) ([]byte, error) {
 	if len(plaintext) == 0 {

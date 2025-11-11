@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 
-	"sweetbyte/utils"
+	"github.com/hambosto/sweetbyte/utils"
 )
 
 type Deserializer struct {

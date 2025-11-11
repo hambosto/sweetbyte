@@ -3,8 +3,8 @@ package header
 import (
 	"fmt"
 
-	"sweetbyte/derive"
-	"sweetbyte/utils"
+	"github.com/hambosto/sweetbyte/derive"
+	"github.com/hambosto/sweetbyte/utils"
 )
 
 type Serializer struct {

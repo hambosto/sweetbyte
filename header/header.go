@@ -5,7 +5,7 @@ import (
 	"io"
 	"math"
 
-	"sweetbyte/derive"
+	"github.com/hambosto/sweetbyte/derive"
 )
 
 const (

@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"io"
 
-	"sweetbyte/types"
-	"sweetbyte/utils"
+	"github.com/hambosto/sweetbyte/types"
+	"github.com/hambosto/sweetbyte/utils"
 )
 
 type ChunkReader struct {

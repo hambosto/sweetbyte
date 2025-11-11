@@ -6,9 +6,9 @@ import (
 	"io"
 	"math"
 
-	"sweetbyte/tui"
-	"sweetbyte/types"
-	"sweetbyte/utils"
+	"github.com/hambosto/sweetbyte/tui"
+	"github.com/hambosto/sweetbyte/types"
+	"github.com/hambosto/sweetbyte/utils"
 )
 
 type ChunkWriter struct {

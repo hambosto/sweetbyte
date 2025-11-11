@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"sweetbyte/cmd/interactive"
-	"sweetbyte/config"
-
+	"github.com/hambosto/sweetbyte/cmd/interactive"
+	"github.com/hambosto/sweetbyte/config"
 	"github.com/spf13/cobra"
 )
 

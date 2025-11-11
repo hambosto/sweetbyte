@@ -7,9 +7,9 @@ import (
 	"runtime"
 	"sync"
 
-	"sweetbyte/derive"
-	"sweetbyte/tui"
-	"sweetbyte/types"
+	"github.com/hambosto/sweetbyte/derive"
+	"github.com/hambosto/sweetbyte/tui"
+	"github.com/hambosto/sweetbyte/types"
 )
 
 const (

@@ -1,10 +1,29 @@
 package cipher
 
 import (
+	"crypto/cipher"
 	"fmt"
 
-	"sweetbyte/derive"
+	"github.com/hambosto/sweetbyte/derive"
+	"golang.org/x/crypto/chacha20poly1305"
 )
+
+type ChaCha20Cipher struct {
+	aead cipher.AEAD
+}
+
+func NewChaCha20Cipher(key []byte) (*ChaCha20Cipher, error) {
+	if len(key) != KeySize {
+		return nil, fmt.Errorf("key must be %d bytes, got %d", KeySize, len(key))
+	}
+
+	aead, err := chacha20poly1305.NewX(key)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create XChaCha20-Poly1305 cipher: %w", err)
+	}
+
+	return &ChaCha20Cipher{aead: aead}, nil
+}
 
 func (c *ChaCha20Cipher) Encrypt(plaintext []byte) ([]byte, error) {
 	if len(plaintext) == 0 {
