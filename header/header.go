@@ -97,14 +97,17 @@ func (h *Header) Verify(key []byte) error {
 	if err != nil {
 		return err
 	}
+
 	magic, err := h.section(SectionMagic, MagicSize)
 	if err != nil {
 		return err
 	}
+
 	salt, err := h.section(SectionSalt, derive.ArgonSaltLen)
 	if err != nil {
 		return err
 	}
+
 	headerData, err := h.section(SectionHeaderData, HeaderDataSize)
 	if err != nil {
 		return err
