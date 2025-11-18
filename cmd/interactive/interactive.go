@@ -130,8 +130,8 @@ func (a *Interactive) processFile(inputPath string, mode types.ProcessorMode) er
 		fileType = "encrypted"
 	}
 
-	if shouldDelete, deleteType, err := a.prompt.ConfirmFileRemoval(inputPath, fileType); err == nil && shouldDelete {
-		if err := a.fileManager.Remove(inputPath, deleteType); err != nil {
+	if shouldDelete, err := a.prompt.ConfirmFileRemoval(inputPath, fileType); err == nil && shouldDelete {
+		if err := a.fileManager.Remove(inputPath); err != nil {
 			return fmt.Errorf("failed to delete source file: %w", err)
 		}
 		tui.ShowSourceDeleted(inputPath)

@@ -237,8 +237,8 @@ sweetbyte encrypt -i my_document.txt -p "my-secret-password" --delete-source
 # Basic decryption (will prompt for password)
 sweetbyte decrypt -i my_document.swx -o my_document.txt
 
-# Provide a password and securely delete the encrypted source file
-sweetbyte decrypt -i my_document.swx -p "my-secret-password" --delete-source --secure-delete
+# Provide a password and delete the encrypted source file
+sweetbyte decrypt -i my_document.swx -p "my-secret-password" --delete-source
 ```
 
 ## 🏗️ Building from Source
@@ -280,7 +280,7 @@ SweetByte is designed with a strong focus on security. However, it's important t
 
 - **Password Strength:** The security of your encrypted files depends heavily on the strength of your password. Use a long, complex, and unique password to protect against brute-force attacks.
 - **Secure Environment:** Run SweetByte in a secure environment. If your system is compromised with malware, your password could be stolen, and your encrypted files could be decrypted.
-- **Source File Deletion:** The `--delete-source` and `--secure-delete` options are provided for convenience. However, secure file deletion is a complex problem that depends on the underlying hardware and operating system. While SweetByte takes measures to overwrite the source file with random data, it cannot guarantee that the file is unrecoverable.
+- **Source File Deletion:** The `--delete-source` option is provided for convenience. However, file deletion is a complex problem that depends on the underlying hardware and operating system. While SweetByte attempts to securely remove source files after encryption/decryption, it cannot guarantee that the file is unrecoverable.
 - **Side-Channel Attacks:** While SweetByte uses modern, secure ciphers, it's not immune to side-channel attacks. These attacks are beyond the scope of this tool and require physical access to the machine.
 
 ## 🤝 Contributing

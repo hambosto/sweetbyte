@@ -52,23 +52,16 @@ func (p *PromptInput) GetDecryptionPassword() (string, error) {
 	return password, nil
 }
 
-func (p *PromptInput) ConfirmFileRemoval(path, fileType string) (bool, types.DeleteOption, error) {
+func (p *PromptInput) ConfirmFileRemoval(path, fileType string) (bool, error) {
 	confirm, err := p.confirm(fmt.Sprintf("Delete %s file %s?", fileType, path))
 	if err != nil {
-		return false, "", err
+		return false, err
 	}
 	if !confirm {
-		return false, "", nil
+		return false, nil
 	}
 
-	deleteType, err := p.choose("Select delete type:", []string{
-		string(types.DeleteStandard),
-		string(types.DeleteSecure),
-	})
-	if err != nil {
-		return false, "", fmt.Errorf("delete option selection failed: %w", err)
-	}
-	return true, types.DeleteOption(deleteType), nil
+	return true, nil
 }
 
 func (p *PromptInput) GetProcessingMode() (types.ProcessorMode, error) {

@@ -6,7 +6,6 @@ import (
 	"github.com/hambosto/sweetbyte/filemanager"
 	"github.com/hambosto/sweetbyte/processor"
 	"github.com/hambosto/sweetbyte/tui"
-	"github.com/hambosto/sweetbyte/types"
 )
 
 type CLI struct {
@@ -26,7 +25,7 @@ func NewCLI() *CLI {
 	}
 }
 
-func (p *CLI) Encrypt(inputFile, outputFile, password string, deleteSource, secureDelete bool) error {
+func (p *CLI) Encrypt(inputFile, outputFile, password string, deleteSource bool) error {
 	if len(password) == 0 {
 		var err error
 		password, err = p.prompt.GetEncryptionPassword()
@@ -42,13 +41,8 @@ func (p *CLI) Encrypt(inputFile, outputFile, password string, deleteSource, secu
 
 	fmt.Printf("File encrypted successfully: %s", outputFile)
 	if deleteSource {
-		deleteOption := types.DeleteStandard
-		if secureDelete {
-			deleteOption = types.DeleteSecure
-		}
-
 		fmt.Printf("Deleting source file: %s\n", inputFile)
-		if err := p.fileManager.Remove(inputFile, deleteOption); err != nil {
+		if err := p.fileManager.Remove(inputFile); err != nil {
 			return fmt.Errorf("failed to delete source file: %w", err)
 		}
 		fmt.Printf("Source file deleted successfully\n")
@@ -57,7 +51,7 @@ func (p *CLI) Encrypt(inputFile, outputFile, password string, deleteSource, secu
 	return nil
 }
 
-func (p *CLI) Decrypt(inputFile, outputFile, password string, deleteSource, secureDelete bool) error {
+func (p *CLI) Decrypt(inputFile, outputFile, password string, deleteSource bool) error {
 	if len(password) == 0 {
 		var err error
 		password, err = p.prompt.GetDecryptionPassword()
@@ -73,13 +67,8 @@ func (p *CLI) Decrypt(inputFile, outputFile, password string, deleteSource, secu
 
 	fmt.Printf("✓ File decrypted successfully: %s\n", outputFile)
 	if deleteSource {
-		deleteOption := types.DeleteStandard
-		if secureDelete {
-			deleteOption = types.DeleteSecure
-		}
-
 		fmt.Printf("Deleting source file: %s\n", inputFile)
-		if err := p.fileManager.Remove(inputFile, deleteOption); err != nil {
+		if err := p.fileManager.Remove(inputFile); err != nil {
 			return fmt.Errorf("failed to delete source file: %w", err)
 		}
 		fmt.Printf("Source file deleted successfully\n")

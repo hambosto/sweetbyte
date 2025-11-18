@@ -27,7 +27,7 @@ func (c *Commands) setupCommands() {
 	c.rootCmd = &cobra.Command{
 		Use:   "sweetbyte",
 		Short: "Multi-layered file encryption tool with error correction.",
-		Long: `SweetByte encrypts files using multiple layers of encryption with AES-256-GCM and 
+		Long: `SweetByte encrypts files using multiple layers of encryption with AES-256-GCM and
 XChaCha20-Poly1305, plus Reed-Solomon error correction for data resilience.
 Run without arguments to start interactive mode.`,
 		Version: config.AppVersion,
@@ -48,7 +48,6 @@ func (c *Commands) createEncryptCommand() *cobra.Command {
 		outputFile   string
 		password     string
 		deleteSource bool
-		secureDelete bool
 	)
 
 	cmd := &cobra.Command{
@@ -59,10 +58,9 @@ AES-256-GCM followed by XChaCha20-Poly1305. It also applies Reed-Solomon
 error correction codes for data resilience. The encryption key is derived
 from your password using Argon2id.`,
 		Example: `  sweetbyte encrypt -i document.txt -o document.txt.swx
-  sweetbyte encrypt -i document.txt -p mypassword --delete-source
-  sweetbyte encrypt -i document.txt --secure-delete`,
+  sweetbyte encrypt -i document.txt -p mypassword --delete-source`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return c.runEncrypt(inputFile, outputFile, password, deleteSource, secureDelete)
+			return c.runEncrypt(inputFile, outputFile, password, deleteSource)
 		},
 	}
 
@@ -70,7 +68,6 @@ from your password using Argon2id.`,
 	cmd.Flags().StringVarP(&outputFile, "output", "o", "", "Output encrypted file (default: input + .swx)")
 	cmd.Flags().StringVarP(&password, "password", "p", "", "Encryption password (will prompt if not provided)")
 	cmd.Flags().BoolVar(&deleteSource, "delete-source", false, "Delete source file after encryption")
-	cmd.Flags().BoolVar(&secureDelete, "secure-delete", false, "Use secure deletion (slower but unrecoverable)")
 
 	if err := cmd.MarkFlagRequired("input"); err != nil {
 		panic(fmt.Sprintf("failed to mark input flag as required: %v", err))
@@ -85,21 +82,20 @@ func (c *Commands) createDecryptCommand() *cobra.Command {
 		outputFile   string
 		password     string
 		deleteSource bool
-		secureDelete bool
 	)
 
 	cmd := &cobra.Command{
 		Use:   "decrypt [flags]",
 		Short: "Decrypts a file with error correction and multiple layers.",
-		Long: `This command first uses Reed-Solomon codes to verify and correct any data 
-corruption, then decrypts with two layers (XChaCha20-Poly1305 and AES-256-GCM), 
-and finally decompresses to restore the original file. The correct password is 
+		Long: `This command first uses Reed-Solomon codes to verify and correct any data
+corruption, then decrypts with two layers (XChaCha20-Poly1305 and AES-256-GCM),
+and finally decompresses to restore the original file. The correct password is
 required to derive the decryption key.`,
 		Example: `  sweetbyte decrypt -i document.txt.swx -o document.txt
   sweetbyte decrypt -i document.txt.swx -p mypassword
   sweetbyte decrypt -i document.txt.swx --delete-source`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return c.runDecrypt(inputFile, outputFile, password, deleteSource, secureDelete)
+			return c.runDecrypt(inputFile, outputFile, password, deleteSource)
 		},
 	}
 
@@ -107,7 +103,6 @@ required to derive the decryption key.`,
 	cmd.Flags().StringVarP(&outputFile, "output", "o", "", "Output decrypted file (default: remove .swx extension)")
 	cmd.Flags().StringVarP(&password, "password", "p", "", "Decryption password (will prompt if not provided)")
 	cmd.Flags().BoolVar(&deleteSource, "delete-source", false, "Delete source file after decryption")
-	cmd.Flags().BoolVar(&secureDelete, "secure-delete", false, "Use secure deletion (slower but unrecoverable)")
 
 	if err := cmd.MarkFlagRequired("input"); err != nil {
 		panic(fmt.Sprintf("failed to mark input flag as required: %v", err))
@@ -115,7 +110,6 @@ required to derive the decryption key.`,
 
 	return cmd
 }
-
 func (c *Commands) createInteractiveCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "interactive",
@@ -129,7 +123,7 @@ interface for encrypting and decrypting files using the multi-layered security p
 	}
 }
 
-func (c *Commands) runEncrypt(inputFile, outputFile, password string, deleteSource, secureDelete bool) error {
+func (c *Commands) runEncrypt(inputFile, outputFile, password string, deleteSource bool) error {
 	if _, err := os.Stat(inputFile); err != nil {
 		if os.IsNotExist(err) {
 			return fmt.Errorf("input file not found: %s", inputFile)
@@ -148,10 +142,10 @@ func (c *Commands) runEncrypt(inputFile, outputFile, password string, deleteSour
 	}
 
 	processor := NewCLI()
-	return processor.Encrypt(inputFile, outputFile, password, deleteSource, secureDelete)
+	return processor.Encrypt(inputFile, outputFile, password, deleteSource)
 }
 
-func (c *Commands) runDecrypt(inputFile, outputFile, password string, deleteSource, secureDelete bool) error {
+func (c *Commands) runDecrypt(inputFile, outputFile, password string, deleteSource bool) error {
 	if _, err := os.Stat(inputFile); err != nil {
 		if os.IsNotExist(err) {
 			return fmt.Errorf("input file not found: %s", inputFile)
@@ -175,5 +169,5 @@ func (c *Commands) runDecrypt(inputFile, outputFile, password string, deleteSour
 	}
 
 	processor := NewCLI()
-	return processor.Decrypt(inputFile, outputFile, password, deleteSource, secureDelete)
+	return processor.Decrypt(inputFile, outputFile, password, deleteSource)
 }
