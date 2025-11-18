@@ -187,9 +187,9 @@ This layered approach provides extreme resilience and security for the file's cr
 SweetByte uses strong, modern cryptographic parameters for key derivation and encryption.
 
 - **Argon2id Parameters:**
-    - **Time Cost:** 8
-    - **Memory Cost:** 1 GB
-    - **Parallelism:** 8
+    - **Time Cost:** 3
+    - **Memory Cost:** 64 KB
+    - **Parallelism:** 4
 - **Reed-Solomon Parameters:**
     - **Data Shards:** 10
     - **Parity Shards:** 4 (Provides high redundancy)
