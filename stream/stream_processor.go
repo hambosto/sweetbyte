@@ -37,7 +37,7 @@ func NewStreamProcessor(key []byte, processing types.Processing) (*StreamProcess
 		return nil, fmt.Errorf("failed to create task processor: %w", err)
 	}
 
-	concurrency := runtime.GOMAXPROCS(0)
+	concurrency := runtime.NumCPU()
 	return &StreamProcessor{
 		key:           key,
 		processing:    processing,
