@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	DefaultChunkSize = 1 * 1024 * 1024
+	DefaultChunkSize = 256 * 1024
 )
 
 type StreamProcessor struct {
@@ -69,11 +69,9 @@ func (s *StreamProcessor) runPipeline(ctx context.Context, input io.Reader, outp
 	var writerErr error
 	var wg sync.WaitGroup
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		writerErr = s.writer.WriteChunks(pipelineCtx, output, results)
-	}()
+	})
 	wg.Wait()
 
 	select {

@@ -9,9 +9,9 @@ import (
 )
 
 const (
-	ArgonTime    = 8
-	ArgonMemory  = 1 << 20
-	ArgonThreads = 8
+	ArgonTime    = 3
+	ArgonMemory  = 64 * 1024
+	ArgonThreads = 4
 	ArgonKeyLen  = 64
 	ArgonSaltLen = 32
 )
@@ -25,15 +25,7 @@ func Hash(password, salt []byte) ([]byte, error) {
 		return nil, fmt.Errorf("expected %d bytes, got %d", ArgonSaltLen, len(salt))
 	}
 
-	key := argon2.IDKey(
-		password,
-		salt,
-		ArgonTime,
-		ArgonMemory,
-		ArgonThreads,
-		ArgonKeyLen,
-	)
-
+	key := argon2.IDKey(password, salt, ArgonTime, ArgonMemory, ArgonThreads, ArgonKeyLen)
 	return key, nil
 }
 
