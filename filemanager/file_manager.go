@@ -112,7 +112,7 @@ func (fm *FileManager) GetFileInfoList(files []string) ([][]any, error) {
 }
 
 func (fm *FileManager) Remove(path string) error {
-	cleanPath := fm.cleanPath(path)
+	cleanPath := filepath.Clean(path)
 
 	if err := fm.requireExists(cleanPath); err != nil {
 		return fmt.Errorf("cannot remove: %w", err)
@@ -122,7 +122,7 @@ func (fm *FileManager) Remove(path string) error {
 }
 
 func (fm *FileManager) CreateFile(path string) (*os.File, error) {
-	cleanPath := fm.cleanPath(path)
+	cleanPath := filepath.Clean(path)
 
 	if err := fm.ensureParentDir(cleanPath); err != nil {
 		return nil, err
@@ -131,7 +131,7 @@ func (fm *FileManager) CreateFile(path string) (*os.File, error) {
 }
 
 func (fm *FileManager) OpenFile(path string) (*os.File, os.FileInfo, error) {
-	cleanPath := fm.cleanPath(path)
+	cleanPath := filepath.Clean(path)
 
 	f, err := os.Open(cleanPath)
 	if err != nil {
@@ -146,7 +146,7 @@ func (fm *FileManager) OpenFile(path string) (*os.File, os.FileInfo, error) {
 }
 
 func (fm *FileManager) GetFileInfo(path string) (os.FileInfo, error) {
-	cleanPath := fm.cleanPath(path)
+	cleanPath := filepath.Clean(path)
 	stat, err := os.Stat(cleanPath)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -158,7 +158,7 @@ func (fm *FileManager) GetFileInfo(path string) (os.FileInfo, error) {
 }
 
 func (fm *FileManager) ValidatePath(path string, mustExist bool) error {
-	cleanPath := fm.cleanPath(path)
+	cleanPath := filepath.Clean(path)
 
 	info, err := fm.GetFileInfo(cleanPath)
 	if err != nil {
@@ -196,8 +196,4 @@ func (fm *FileManager) ensureParentDir(path string) error {
 		return nil
 	}
 	return os.MkdirAll(dir, 0o750)
-}
-
-func (fm *FileManager) cleanPath(path string) string {
-	return filepath.Clean(path)
 }
