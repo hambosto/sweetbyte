@@ -47,10 +47,7 @@
 
         devShells = {
           default = pkgs.mkShell {
-            packages = with pkgs; [
-              go
-              gomod2nix
-            ];
+            packages = with pkgs; [ gomod2nix ];
           };
         };
       }
