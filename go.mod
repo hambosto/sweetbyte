@@ -1,6 +1,6 @@
 module github.com/hambosto/sweetbyte
 
-go 1.25.3
+go 1.25.4
 
 require (
 	github.com/charmbracelet/huh v0.8.0
@@ -8,7 +8,7 @@ require (
 	github.com/klauspost/reedsolomon v1.12.5
 	github.com/schollz/progressbar/v3 v3.18.0
 	github.com/spf13/cobra v1.10.1
-	golang.org/x/crypto v0.44.0
+	golang.org/x/crypto v0.45.0
 )
 
 require (

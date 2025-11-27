@@ -73,7 +73,6 @@ func (a *Interactive) runInteractiveLoop() error {
 		return fmt.Errorf("failed to select file: %w", err)
 	}
 
-	tui.ShowProcessingInfo(operation, selectedFile)
 	if err := a.processFile(selectedFile, operation); err != nil {
 		return fmt.Errorf("failed to process file %s: %w", selectedFile, err)
 	}

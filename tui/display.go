@@ -58,15 +58,15 @@ func ShowFileInfo(filePaths []string, fileSizes []int64, fileEncrypted []bool) {
 	fmt.Println()
 }
 
-func ShowProcessingInfo(mode types.ProcessorMode, file string) {
-	action := "Encrypting"
-	if mode == types.ModeDecrypt {
-		action = "Decrypting"
-	}
-	fmt.Println()
-	fmt.Printf("%s %s ", successStyle.Render("✓"), boldStyle.Render(fmt.Sprintf("%s file: %s", action, file)))
-	fmt.Println()
-}
+// func ShowProcessingInfo(mode types.ProcessorMode, file string) {
+// 	action := "Encrypting"
+// 	if mode == types.ModeDecrypt {
+// 		action = "Decrypting"
+// 	}
+// 	fmt.Println()
+// 	fmt.Printf("%s %s ", successStyle.Render("✓"), boldStyle.Render(fmt.Sprintf("%s file: %s", action, file)))
+// 	fmt.Println()
+// }
 
 func ShowSuccessInfo(mode types.ProcessorMode, destPath string) {
 	action := "encrypted"
