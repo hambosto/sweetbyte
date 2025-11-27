@@ -63,7 +63,7 @@ func (c *Compression) Decompress(data []byte) ([]byte, error) {
 	}
 
 	var buf bytes.Buffer
-	if _, err := io.Copy(&buf, io.LimitReader(reader, 10<<20)); err != nil {
+	if _, err := io.Copy(&buf, reader); err != nil {
 		return nil, fmt.Errorf("failed to decompress data: %w", err)
 	}
 
