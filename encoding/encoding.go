@@ -20,16 +20,6 @@ type Encoding struct {
 }
 
 func NewEncoding(dataShards, parityShards int) (*Encoding, error) {
-	if dataShards <= 0 {
-		return nil, fmt.Errorf("data shards must be positive")
-	}
-	if parityShards <= 0 {
-		return nil, fmt.Errorf("parity shards must be positive")
-	}
-	if dataShards+parityShards > 255 {
-		return nil, fmt.Errorf("total shards cannot exceed 255")
-	}
-
 	enc, err := reedsolomon.New(dataShards, parityShards)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create reed-solomon Encoding: %w", err)

@@ -8,8 +8,8 @@ import (
 	"sync"
 
 	"github.com/hambosto/sweetbyte/derive"
-	"github.com/hambosto/sweetbyte/tui"
 	"github.com/hambosto/sweetbyte/types"
+	"github.com/hambosto/sweetbyte/ui"
 )
 
 const (
@@ -54,7 +54,7 @@ func (s *StreamProcessor) Process(ctx context.Context, input io.Reader, output i
 		return fmt.Errorf("input and output streams must not be nil")
 	}
 
-	bar := tui.NewProgressBar(totalSize, s.processing.String())
+	bar := ui.NewProgressBar(totalSize, s.processing.String())
 	s.writer = NewChunkWriter(s.processing, bar)
 	return s.runPipeline(ctx, input, output)
 }

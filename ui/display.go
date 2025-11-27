@@ -1,4 +1,4 @@
-package tui
+package ui
 
 import (
 	"fmt"
@@ -15,15 +15,13 @@ var (
 	boldStyle    = lipgloss.NewStyle().Bold(true)
 )
 
-func ShowFileInfo(filePaths []string, fileSizes []int64, fileEncrypted []bool) {
+func ShowFileInfo(filePaths []string, fileSizes []int64, fileEncrypted []bool) error {
 	if len(filePaths) == 0 {
-		fmt.Println("No files found.")
-		return
+		return fmt.Errorf("no files found")
 	}
 
 	if len(filePaths) != len(fileSizes) || len(filePaths) != len(fileEncrypted) {
-		fmt.Println("Error: Mismatched input arrays.")
-		return
+		return fmt.Errorf("mismatched input arrays")
 	}
 
 	fmt.Println()
@@ -56,17 +54,9 @@ func ShowFileInfo(filePaths []string, fileSizes []int64, fileEncrypted []bool) {
 
 	fmt.Println(t)
 	fmt.Println()
-}
 
-// func ShowProcessingInfo(mode types.ProcessorMode, file string) {
-// 	action := "Encrypting"
-// 	if mode == types.ModeDecrypt {
-// 		action = "Decrypting"
-// 	}
-// 	fmt.Println()
-// 	fmt.Printf("%s %s ", successStyle.Render("✓"), boldStyle.Render(fmt.Sprintf("%s file: %s", action, file)))
-// 	fmt.Println()
-// }
+	return nil
+}
 
 func ShowSuccessInfo(mode types.ProcessorMode, destPath string) {
 	action := "encrypted"

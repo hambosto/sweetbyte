@@ -6,18 +6,18 @@ import (
 	"io"
 	"math"
 
-	"github.com/hambosto/sweetbyte/tui"
 	"github.com/hambosto/sweetbyte/types"
+	"github.com/hambosto/sweetbyte/ui"
 	"github.com/hambosto/sweetbyte/utils"
 )
 
 type ChunkWriter struct {
 	processing types.Processing
 	buffer     *OrderedBuffer
-	bar        *tui.ProgressBar
+	bar        *ui.ProgressBar
 }
 
-func NewChunkWriter(processing types.Processing, bar *tui.ProgressBar) *ChunkWriter {
+func NewChunkWriter(processing types.Processing, bar *ui.ProgressBar) *ChunkWriter {
 	return &ChunkWriter{
 		processing: processing,
 		buffer:     NewOrderedBuffer(),

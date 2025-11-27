@@ -6,20 +6,20 @@ import (
 
 	"github.com/hambosto/sweetbyte/filemanager"
 	"github.com/hambosto/sweetbyte/processor"
-	"github.com/hambosto/sweetbyte/tui"
 	"github.com/hambosto/sweetbyte/types"
+	"github.com/hambosto/sweetbyte/ui"
 )
 
 type Interactive struct {
 	fileManager *filemanager.FileManager
 	processor   *processor.Processor
-	prompt      *tui.PromptInput
+	prompt      *ui.PromptInput
 }
 
 func NewInteractive() *Interactive {
 	fileManager := filemanager.NewFileManager(filemanager.OverwritePasses)
 	processor := processor.NewProcessor(fileManager)
-	prompt := tui.NewPromptInput(filemanager.PasswordMinLen)
+	prompt := ui.NewPromptInput(filemanager.PasswordMinLen)
 	return &Interactive{
 		fileManager: fileManager,
 		prompt:      prompt,
@@ -28,11 +28,11 @@ func NewInteractive() *Interactive {
 }
 
 func (a *Interactive) Run() {
-	if err := tui.Clear(); err != nil {
+	if err := ui.Clear(); err != nil {
 		fmt.Printf("Failed to clear screen: %v\n", err)
 		os.Exit(1)
 	}
-	tui.PrintBanner()
+	ui.PrintBanner()
 
 	if err := a.runInteractiveLoop(); err != nil {
 		fmt.Printf("Application error: %v\n", err)
@@ -66,7 +66,9 @@ func (a *Interactive) runInteractiveLoop() error {
 		fileEncrypted[i] = fileInfo[2].(bool)
 	}
 
-	tui.ShowFileInfo(filePaths, fileSizes, fileEncrypted)
+	if err := ui.ShowFileInfo(filePaths, fileSizes, fileEncrypted); err != nil {
+		return fmt.Errorf("failed to display file info: %w", err)
+	}
 
 	selectedFile, err := a.prompt.ChooseFile(eligibleFiles)
 	if err != nil {
@@ -120,7 +122,7 @@ func (a *Interactive) processFile(inputPath string, mode types.ProcessorMode) er
 		return err
 	}
 
-	tui.ShowSuccessInfo(mode, outputPath)
+	ui.ShowSuccessInfo(mode, outputPath)
 
 	var fileType string
 	if mode == types.ModeEncrypt {
@@ -133,7 +135,7 @@ func (a *Interactive) processFile(inputPath string, mode types.ProcessorMode) er
 		if err := a.fileManager.Remove(inputPath); err != nil {
 			return fmt.Errorf("failed to delete source file: %w", err)
 		}
-		tui.ShowSourceDeleted(inputPath)
+		ui.ShowSourceDeleted(inputPath)
 	}
 
 	return nil

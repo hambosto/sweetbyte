@@ -5,19 +5,19 @@ import (
 
 	"github.com/hambosto/sweetbyte/filemanager"
 	"github.com/hambosto/sweetbyte/processor"
-	"github.com/hambosto/sweetbyte/tui"
+	"github.com/hambosto/sweetbyte/ui"
 )
 
 type CLI struct {
 	fileManager *filemanager.FileManager
 	processor   *processor.Processor
-	prompt      *tui.PromptInput
+	prompt      *ui.PromptInput
 }
 
 func NewCLI() *CLI {
 	fileManager := filemanager.NewFileManager(filemanager.OverwritePasses)
 	processor := processor.NewProcessor(fileManager)
-	prompt := tui.NewPromptInput(filemanager.PasswordMinLen)
+	prompt := ui.NewPromptInput(filemanager.PasswordMinLen)
 	return &CLI{
 		fileManager: fileManager,
 		processor:   processor,
