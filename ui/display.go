@@ -28,11 +28,7 @@ func ShowFileInfo(filePaths []string, fileSizes []int64, fileEncrypted []bool) e
 	fmt.Printf("%s %s ", successStyle.Render("✓"), boldStyle.Render(fmt.Sprintf("Found %d file(s):", len(filePaths))))
 	fmt.Println()
 
-	t := table.New().
-		Headers("No", "Name", "Size", "Status").
-		Border(lipgloss.NormalBorder()).
-		BorderStyle(boldStyle)
-
+	t := table.New().Headers("No", "Name", "Size", "Status").Border(lipgloss.NormalBorder()).BorderStyle(boldStyle)
 	for i := range filePaths {
 		fileStatus := "unencrypted"
 		if fileEncrypted[i] {

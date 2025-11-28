@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/hambosto/sweetbyte/cmd/cli"
@@ -9,12 +10,13 @@ import (
 
 func main() {
 	if len(os.Args) > 1 {
-		cliApp := cli.NewCommands()
+		cliApp := cli.NewCLI()
 		if err := cliApp.Execute(); err != nil {
 			os.Exit(1)
 		}
 	} else {
-		interactiveApp := interactive.NewInteractive()
-		interactiveApp.Run()
+		if err := interactive.Run(); err != nil {
+			fmt.Print(err)
+		}
 	}
 }

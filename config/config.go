@@ -15,6 +15,6 @@ var (
 
 	ExcludedExts = []string{
 		".go", "go.mod", "go.sum", ".nix", ".gitignore",
-		".exe", ".dll", ".so", ".dylib",
+		".exe", ".dll", ".so", ".dylib", ".rs",
 	}
 )
