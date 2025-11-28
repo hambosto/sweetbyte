@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"math"
 
 	"github.com/hambosto/sweetbyte/types"
 	"github.com/hambosto/sweetbyte/ui"
@@ -45,13 +44,9 @@ func (w *ChunkWriter) WriteChunks(ctx context.Context, output io.Writer, results
 }
 
 func (w *ChunkWriter) writeResults(output io.Writer, results []types.TaskResult) error {
-	proc := w.processing == types.Encryption
 	for _, res := range results {
-		if proc {
+		if w.processing == types.Encryption {
 			size := len(res.Data)
-			if size > math.MaxUint32 {
-				panic("chunk size exceeds uint32 max value")
-			}
 			buffer := utils.ToBytes(uint32(size))
 			if _, err := output.Write(buffer); err != nil {
 				return fmt.Errorf("writing chunk size: %w", err)
