@@ -85,7 +85,7 @@ func processFile(inputPath string, mode types.ProcessorMode) error {
 		return fmt.Errorf("source validation failed: %w", err)
 	}
 
-	if err := file.ValidatePath(outputPath, true); err != nil {
+	if err := file.ValidatePath(outputPath, false); err != nil {
 		if confirm, confirmErr := ui.ConfirmFileOverwrite(outputPath); confirmErr != nil || !confirm {
 			return fmt.Errorf("operation canceled by user")
 		}

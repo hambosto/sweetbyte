@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"time"
+
 	"github.com/schollz/progressbar/v3"
 )
 
@@ -17,6 +19,7 @@ func NewProgressBar(totalSize int64, description string) *ProgressBar {
 		progressbar.OptionShowBytes(true),
 		progressbar.OptionShowCount(),
 		progressbar.OptionFullWidth(),
+		progressbar.OptionThrottle(100*time.Millisecond), // Throttle updates to prevent blinking
 		progressbar.OptionSetTheme(progressbar.Theme{
 			BarStart:      "[",
 			BarEnd:        "]",
