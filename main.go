@@ -12,11 +12,13 @@ func main() {
 	if len(os.Args) > 1 {
 		cliApp := cli.NewCLI()
 		if err := cliApp.Execute(); err != nil {
+			fmt.Print(err)
 			os.Exit(1)
 		}
 	} else {
 		if err := interactive.Run(); err != nil {
 			fmt.Print(err)
+			os.Exit(1)
 		}
 	}
 }

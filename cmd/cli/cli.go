@@ -2,12 +2,12 @@ package cli
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/hambosto/sweetbyte/cmd/interactive"
 	"github.com/hambosto/sweetbyte/config"
 	"github.com/hambosto/sweetbyte/file"
 	"github.com/hambosto/sweetbyte/processor"
+	"github.com/hambosto/sweetbyte/types"
 	"github.com/hambosto/sweetbyte/ui"
 	"github.com/spf13/cobra"
 )
@@ -28,11 +28,9 @@ func (c *CLI) Execute() error {
 
 func (c *CLI) setupCommands() {
 	c.rootCmd = &cobra.Command{
-		Use:   "sweetbyte",
-		Short: "Multi-layered file encryption tool with error correction.",
-		Long: `SweetByte encrypts files using multiple layers of encryption with AES-256-GCM and
-XChaCha20-Poly1305, plus Reed-Solomon error correction for data resilience.
-Run without arguments to start interactive mode.`,
+		Use:     "sweetbyte",
+		Short:   "Multi-layered file encryption with error correction",
+		Long:    "Encrypt files using AES-256-GCM and XChaCha20-Poly1305 with Reed-Solomon error correction. Run without arguments for interactive mode.",
 		Version: config.AppVersion,
 		Run: func(cmd *cobra.Command, args []string) {
 			interactive.Run()
@@ -54,11 +52,8 @@ func (c *CLI) createEncryptCommand() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "encrypt [flags]",
-		Short: "Encrypts a file with multiple layers of encryption.",
-		Long: `This command compresses the file, then encrypts it with two layers:
-AES-256-GCM followed by XChaCha20-Poly1305. It also applies Reed-Solomon
-error correction codes for data resilience. The encryption key is derived
-from your password using Argon2id.`,
+		Short: "Encrypt a file with multi-layered encryption",
+		Long:  "Compresses and encrypts files with AES-256-GCM and XChaCha20-Poly1305, plus Reed-Solomon error correction. Uses Argon2id for key derivation.",
 		Example: `  sweetbyte encrypt -i document.txt -o document.txt.swx
   sweetbyte encrypt -i document.txt -p mypassword --delete-source`,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -67,8 +62,8 @@ from your password using Argon2id.`,
 	}
 
 	cmd.Flags().StringVarP(&inputFile, "input", "i", "", "Input file to encrypt (required)")
-	cmd.Flags().StringVarP(&outputFile, "output", "o", "", "Output encrypted file (default: input + .swx)")
-	cmd.Flags().StringVarP(&password, "password", "p", "", "Encryption password (will prompt if not provided)")
+	cmd.Flags().StringVarP(&outputFile, "output", "o", "", "Output file (default: input + .swx)")
+	cmd.Flags().StringVarP(&password, "password", "p", "", "Encryption password (prompts if not provided)")
 	cmd.Flags().BoolVar(&deleteSource, "delete-source", false, "Delete source file after encryption")
 
 	if err := cmd.MarkFlagRequired("input"); err != nil {
@@ -88,11 +83,8 @@ func (c *CLI) createDecryptCommand() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "decrypt [flags]",
-		Short: "Decrypts a file with error correction and multiple layers.",
-		Long: `This command first uses Reed-Solomon codes to verify and correct any data
-corruption, then decrypts with two layers (XChaCha20-Poly1305 and AES-256-GCM),
-and finally decompresses to restore the original file. The correct password is
-required to derive the decryption key.`,
+		Short: "Decrypt a file with error correction",
+		Long:  "Verifies and corrects data corruption using Reed-Solomon codes, then decrypts with XChaCha20-Poly1305 and AES-256-GCM, and decompresses the file.",
 		Example: `  sweetbyte decrypt -i document.txt.swx -o document.txt
   sweetbyte decrypt -i document.txt.swx -p mypassword
   sweetbyte decrypt -i document.txt.swx --delete-source`,
@@ -102,8 +94,8 @@ required to derive the decryption key.`,
 	}
 
 	cmd.Flags().StringVarP(&inputFile, "input", "i", "", "Input file to decrypt (required)")
-	cmd.Flags().StringVarP(&outputFile, "output", "o", "", "Output decrypted file (default: remove .swx extension)")
-	cmd.Flags().StringVarP(&password, "password", "p", "", "Decryption password (will prompt if not provided)")
+	cmd.Flags().StringVarP(&outputFile, "output", "o", "", "Output file (default: removes .swx extension)")
+	cmd.Flags().StringVarP(&password, "password", "p", "", "Decryption password (prompts if not provided)")
 	cmd.Flags().BoolVar(&deleteSource, "delete-source", false, "Delete source file after decryption")
 
 	if err := cmd.MarkFlagRequired("input"); err != nil {
@@ -116,9 +108,8 @@ required to derive the decryption key.`,
 func (c *CLI) createInteractiveCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "interactive",
-		Short: "Starts a guided session for encryption and decryption.",
-		Long: `This command launches SweetByte in interactive mode with a step-by-step
-interface for encrypting and decrypting files using the multi-layered security process.`,
+		Short: "Start interactive mode",
+		Long:  "Launch a guided interface for encrypting and decrypting files step-by-step.",
 		Run: func(cmd *cobra.Command, args []string) {
 			interactive.Run()
 		},
@@ -126,46 +117,35 @@ interface for encrypting and decrypting files using the multi-layered security p
 }
 
 func (c *CLI) runEncrypt(inputFile, outputFile, password string, deleteSource bool) error {
-	if _, err := os.Stat(inputFile); err != nil {
-		if os.IsNotExist(err) {
-			return fmt.Errorf("input file not found: %s", inputFile)
-		}
-		return fmt.Errorf("failed to access input file %s: %w", inputFile, err)
+	if err := file.ValidatePath(inputFile, true); err != nil {
+		return fmt.Errorf("input file validation failed: %w", err)
 	}
 
 	if len(outputFile) == 0 {
-		outputFile = inputFile + config.FileExtension
+		outputFile = file.GetOutputPath(inputFile, types.ModeEncrypt)
 	}
 
-	if _, err := os.Stat(outputFile); err == nil {
-		return fmt.Errorf("output file already exists: %s", outputFile)
-	} else if !os.IsNotExist(err) {
-		return fmt.Errorf("failed to access output file %s: %w", outputFile, err)
+	if err := file.ValidatePath(outputFile, false); err != nil {
+		return fmt.Errorf("output file validation failed: %w", err)
 	}
 
 	return c.Encrypt(inputFile, outputFile, password, deleteSource)
 }
 
 func (c *CLI) runDecrypt(inputFile, outputFile, password string, deleteSource bool) error {
-	if _, err := os.Stat(inputFile); err != nil {
-		if os.IsNotExist(err) {
-			return fmt.Errorf("input file not found: %s", inputFile)
-		}
-		return fmt.Errorf("failed to access input file %s: %w", inputFile, err)
+	if err := file.ValidatePath(inputFile, true); err != nil {
+		return fmt.Errorf("input file validation failed: %w", err)
 	}
 
 	if len(outputFile) == 0 {
-		if len(inputFile) > len(config.FileExtension) && inputFile[len(inputFile)-len(config.FileExtension):] == config.FileExtension {
-			outputFile = inputFile[:len(inputFile)-len(config.FileExtension)]
-		} else {
+		outputFile = file.GetOutputPath(inputFile, types.ModeDecrypt)
+		if outputFile == inputFile {
 			return fmt.Errorf("cannot determine output filename, please specify with -o flag")
 		}
 	}
 
-	if _, err := os.Stat(outputFile); err == nil {
-		return fmt.Errorf("output file already exists: %s", outputFile)
-	} else if !os.IsNotExist(err) {
-		return fmt.Errorf("failed to access output file %s: %w", outputFile, err)
+	if err := file.ValidatePath(outputFile, false); err != nil {
+		return fmt.Errorf("output file validation failed: %w", err)
 	}
 
 	return c.Decrypt(inputFile, outputFile, password, deleteSource)
@@ -185,13 +165,12 @@ func (c *CLI) Encrypt(inputFile, outputFile, password string, deleteSource bool)
 		return fmt.Errorf("failed to encrypt %s: %w", inputFile, err)
 	}
 
-	fmt.Printf("File encrypted successfully: %s", outputFile)
+	ui.ShowSuccessInfo(types.ModeEncrypt, outputFile)
 	if deleteSource {
-		fmt.Printf("Deleting source file: %s\n", inputFile)
 		if err := file.Remove(inputFile); err != nil {
 			return fmt.Errorf("failed to delete source file: %w", err)
 		}
-		fmt.Printf("Source file deleted successfully\n")
+		ui.ShowSourceDeleted(inputFile)
 	}
 
 	return nil
@@ -211,13 +190,12 @@ func (c *CLI) Decrypt(inputFile, outputFile, password string, deleteSource bool)
 		return fmt.Errorf("failed to decrypt %s: %w", inputFile, err)
 	}
 
-	fmt.Printf("✓ File decrypted successfully: %s\n", outputFile)
+	ui.ShowSuccessInfo(types.ModeDecrypt, outputFile)
 	if deleteSource {
-		fmt.Printf("Deleting source file: %s\n", inputFile)
 		if err := file.Remove(inputFile); err != nil {
 			return fmt.Errorf("failed to delete source file: %w", err)
 		}
-		fmt.Printf("Source file deleted successfully\n")
+		ui.ShowSourceDeleted(inputFile)
 	}
 
 	return nil
