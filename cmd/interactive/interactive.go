@@ -2,6 +2,7 @@ package interactive
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/hambosto/sweetbyte/file"
 	"github.com/hambosto/sweetbyte/processor"
@@ -9,17 +10,17 @@ import (
 	"github.com/hambosto/sweetbyte/ui"
 )
 
-func Run() error {
+func Run() {
 	if err := ui.Clear(); err != nil {
-		return fmt.Errorf("failed to clear screen: %w", err)
+		fmt.Printf("failed to clear screen: %v\n", err)
+		os.Exit(1)
 	}
 	ui.PrintBanner()
 
 	if err := runInteractiveLoop(); err != nil {
-		return fmt.Errorf("application error: %w", err)
+		fmt.Printf("Application error: %v\n", err)
+		os.Exit(1)
 	}
-
-	return nil
 }
 
 func runInteractiveLoop() error {
@@ -112,7 +113,9 @@ func processFile(inputPath string, mode types.ProcessorMode) error {
 		fileType = "encrypted"
 	}
 
-	if shouldDelete, err := ui.ConfirmFileRemoval(inputPath, fileType); err == nil && shouldDelete {
+	if shouldDelete, err := ui.ConfirmFileRemoval(inputPath, fileType); err != nil {
+		return fmt.Errorf("failed to confirm file removal: %w", err)
+	} else if shouldDelete {
 		if err := file.Remove(inputPath); err != nil {
 			return fmt.Errorf("failed to delete source file: %w", err)
 		}

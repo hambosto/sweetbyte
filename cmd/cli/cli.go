@@ -160,7 +160,6 @@ func (c *CLI) Encrypt(inputFile, outputFile, password string, deleteSource bool)
 		}
 	}
 
-	fmt.Printf("Encrypting: %s -> %s\n", inputFile, outputFile)
 	if err := processor.Encryption(inputFile, outputFile, password); err != nil {
 		return fmt.Errorf("failed to encrypt %s: %w", inputFile, err)
 	}
@@ -185,7 +184,6 @@ func (c *CLI) Decrypt(inputFile, outputFile, password string, deleteSource bool)
 		}
 	}
 
-	fmt.Printf("Decrypting: %s -> %s\n", inputFile, outputFile)
 	if err := processor.Decryption(inputFile, outputFile, password); err != nil {
 		return fmt.Errorf("failed to decrypt %s: %w", inputFile, err)
 	}
