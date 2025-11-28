@@ -99,8 +99,8 @@ graph TD
         J[Encoding]
         K[Padding]
 
-        L[Filemanager]
-        M[TUI]
+        L[File]
+        M[UI]
         N[Config]
         P[Utils]
         Q[Types]
@@ -128,7 +128,7 @@ graph TD
 - **User Interfaces:** The `cli` and `interactive` packages provide two distinct ways for users to interact with the application. Both interfaces are built on top of the `processor` package.
 - **Core Logic:** The `processor`, `stream`, and `task pool` packages form the core of the application. The `processor` package orchestrates the high-level workflow, the `stream` package handles concurrent, chunk-based file processing, and the `task pool` package manages concurrent task execution.
 - **Cryptographic & Data Processing:** This layer contains the packages that implement the cryptographic and data processing primitives. These packages are responsible for encryption, key derivation, header serialization, compression, error correction, and padding. They are primarily consumed by the `task pool` package.
-- **Utilities & Support:** This layer provides a set of utility and support packages that are used throughout the application. These packages handle file management (`filemanager`), UI components (`tui`), configuration, and other miscellaneous tasks. The `types` package contains common data structures used throughout the application.
+- **Utilities & Support:** This layer provides a set of utility and support packages that are used throughout the application. These packages handle file management (`file`), UI components (`ui`), configuration, and other miscellaneous tasks. The `types` package contains common data structures used throughout the application.
 
 ## 📦 File Format
 
@@ -191,8 +191,8 @@ SweetByte uses strong, modern cryptographic parameters for key derivation and en
     - **Memory Cost:** 64 KB
     - **Parallelism:** 4
 - **Reed-Solomon Parameters:**
-    - **Data Shards:** 10
-    - **Parity Shards:** 4 (Provides high redundancy)
+    - **Data Shards:** 4
+    - **Parity Shards:** 10 (Provides high redundancy)
 
 #### Data Chunks
 Following the header, the file contains the encrypted data, split into chunks. Each chunk is prefixed with a 4-byte length header, which is essential for the streaming-based decryption process.
@@ -263,14 +263,14 @@ SweetByte is built with a modular architecture, with each package handling a spe
 | `config`          | Stores all application-wide constants and configuration parameters.      |
 | `derive`          | Handles key derivation using Argon2id and secure salt generation.        |
 | `encoding`        | Manages Reed-Solomon error correction encoding and decoding.             |
-| `filemanager`     | Provides utilities for finding, managing, and securely deleting files.   |
+| `file`            | Provides utilities for finding, managing, and securely deleting files.   |
 | `header`          | Manages the serialization, deserialization, and verification of the secure file header. |
 | `interactive`     | Implements the user-friendly interactive mode workflow.                  |
 | `types`           | Defines common types, enums, and data structures used throughout the application. |
 | `padding`         | Implements PKCS7 padding.                                                |
 | `processor`       | Contains the high-level logic for the main encrypt/decrypt file operations. |
 | `stream`          | Manages concurrent, chunk-based file processing with a worker pool.      |
-| `tui`             | Provides UI components like interactive prompts, progress bars, and banners. |
+| `ui`              | Provides UI components like interactive prompts, progress bars, and banners. |
 | `utils`           | Contains miscellaneous helper functions.                                 |
 
 
