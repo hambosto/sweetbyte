@@ -58,12 +58,12 @@ func Encryption(srcPath, destPath, password string) error {
 		return fmt.Errorf("failed to write header: %w", err)
 	}
 
-	processor, err := stream.NewStreamProcessor(key, types.Encryption)
+	pipeline, err := stream.NewPipeline(key, types.Encryption)
 	if err != nil {
-		return fmt.Errorf("failed to create stream processor: %w", err)
+		return fmt.Errorf("failed to create stream pipeline: %w", err)
 	}
 
-	if err := processor.Process(context.Background(), srcFile, destFile, originalSize); err != nil {
+	if err := pipeline.Process(context.Background(), srcFile, destFile, originalSize); err != nil {
 		return fmt.Errorf("failed to process file: %w", err)
 	}
 
@@ -108,9 +108,9 @@ func Decryption(srcPath, destPath, password string) error {
 		return fmt.Errorf("failed to create destination file: %w", err)
 	}
 
-	processor, err := stream.NewStreamProcessor(key, types.Decryption)
+	pipeline, err := stream.NewPipeline(key, types.Decryption)
 	if err != nil {
-		return fmt.Errorf("failed to create stream processor: %w", err)
+		return fmt.Errorf("failed to create stream pipeline: %w", err)
 	}
 
 	originalSize := fileHeader.GetOriginalSize()
@@ -118,7 +118,7 @@ func Decryption(srcPath, destPath, password string) error {
 		return fmt.Errorf("cannot decrypt a file with zero or negative size")
 	}
 
-	if err := processor.Process(context.Background(), srcFile, destFile, originalSize); err != nil {
+	if err := pipeline.Process(context.Background(), srcFile, destFile, originalSize); err != nil {
 		return fmt.Errorf("failed to process file: %w", err)
 	}
 

@@ -28,13 +28,13 @@ func (b *OrderedBuffer) Add(result types.TaskResult) []types.TaskResult {
 	var ready []types.TaskResult
 
 	for {
-		if result, exists := b.results[b.next]; exists {
-			ready = append(ready, result)
-			delete(b.results, b.next)
-			b.next++
-		} else {
+		result, exists := b.results[b.next]
+		if !exists {
 			break
 		}
+		ready = append(ready, result)
+		delete(b.results, b.next)
+		b.next++
 	}
 
 	return ready
@@ -52,13 +52,15 @@ func (b *OrderedBuffer) Flush() []types.TaskResult {
 	for idx := range b.results {
 		indices = append(indices, idx)
 	}
-
 	slices.Sort(indices)
+
 	results := make([]types.TaskResult, len(indices))
 	for i, idx := range indices {
 		results[i] = b.results[idx]
 	}
 
 	clear(b.results)
+	b.next = 0
+
 	return results
 }

@@ -64,10 +64,7 @@ func NewTaskProcessor(key []byte, processing types.Processing) (*TaskProcessor, 
 func (tp *TaskProcessor) Process(ctx context.Context, task types.Task) types.TaskResult {
 	select {
 	case <-ctx.Done():
-		return types.TaskResult{
-			Index: task.Index,
-			Err:   ctx.Err(),
-		}
+		return types.TaskResult{Index: task.Index, Err: ctx.Err()}
 	default:
 	}
 
@@ -76,15 +73,15 @@ func (tp *TaskProcessor) Process(ctx context.Context, task types.Task) types.Tas
 
 	switch tp.processing {
 	case types.Encryption:
-		output, err = tp.Encryption(task.Data)
+		output, err = tp.encryptionPipeline(task.Data)
 	case types.Decryption:
-		output, err = tp.Decryption(task.Data)
+		output, err = tp.decryptionPipeline(task.Data)
 	default:
 		err = fmt.Errorf("unknown processing type: %d", tp.processing)
 	}
 
 	size := len(task.Data)
-	if tp.processing == types.Decryption {
+	if tp.processing == types.Decryption && output != nil {
 		size = len(output)
 	}
 
@@ -96,7 +93,7 @@ func (tp *TaskProcessor) Process(ctx context.Context, task types.Task) types.Tas
 	}
 }
 
-func (tp *TaskProcessor) Encryption(data []byte) ([]byte, error) {
+func (tp *TaskProcessor) encryptionPipeline(data []byte) ([]byte, error) {
 	compressed, err := tp.compressor.Compress(data)
 	if err != nil {
 		return nil, fmt.Errorf("compression failed: %w", err)
@@ -125,7 +122,7 @@ func (tp *TaskProcessor) Encryption(data []byte) ([]byte, error) {
 	return encoded, nil
 }
 
-func (tp *TaskProcessor) Decryption(data []byte) ([]byte, error) {
+func (tp *TaskProcessor) decryptionPipeline(data []byte) ([]byte, error) {
 	decoded, err := tp.encoder.Decode(data)
 	if err != nil {
 		return nil, fmt.Errorf("Reed-Solomon decoding failed (data may be corrupted): %w", err)
