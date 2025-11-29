@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hambosto/sweetbyte/cipher"
-	"github.com/hambosto/sweetbyte/compression"
-	"github.com/hambosto/sweetbyte/derive"
-	"github.com/hambosto/sweetbyte/encoding"
-	"github.com/hambosto/sweetbyte/padding"
-	"github.com/hambosto/sweetbyte/types"
+	"github.com/hambosto/sweetbyte/internal/cipher"
+	"github.com/hambosto/sweetbyte/internal/compression"
+	"github.com/hambosto/sweetbyte/internal/derive"
+	"github.com/hambosto/sweetbyte/internal/encoding"
+	"github.com/hambosto/sweetbyte/internal/padding"
+	"github.com/hambosto/sweetbyte/internal/types"
 )
 
 type TaskProcessor struct {
@@ -98,7 +98,6 @@ func (tp *TaskProcessor) encryptionPipeline(data []byte) ([]byte, error) {
 		return nil, fmt.Errorf("padding failed: %w", err)
 	}
 
-	// First encrypt with AES, then with ChaCha20
 	firstEncrypted, err := tp.cipher.EncryptAES(padded)
 	if err != nil {
 		return nil, fmt.Errorf("first encryption (AES-256-GCM) failed: %w", err)
@@ -123,7 +122,6 @@ func (tp *TaskProcessor) decryptionPipeline(data []byte) ([]byte, error) {
 		return nil, fmt.Errorf("Reed-Solomon decoding failed (data may be corrupted): %w", err)
 	}
 
-	// First decrypt with ChaCha20, then with AES (reverse order of encryption)
 	firstDecrypted, err := tp.cipher.DecryptChaCha20(decoded)
 	if err != nil {
 		return nil, fmt.Errorf("first decryption (XChaCha20-Poly1305) failed - possible tampering detected: %w", err)
