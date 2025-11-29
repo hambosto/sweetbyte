@@ -14,7 +14,7 @@ type Cipher struct {
 
 func NewCipher(key []byte) (*Cipher, error) {
 	if len(key) < derive.ArgonKeyLen {
-		return nil, fmt.Errorf("key must be at least 64 bytes for unified cipher")
+		return nil, fmt.Errorf("key must be at least %d bytes for cipher", derive.ArgonKeyLen)
 	}
 
 	aesCipher, err := algorithm.NewAESCipher(key[:32])
