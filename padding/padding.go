@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	BlockSize    = 16
+	BlockSize    = 128
 	MaxBlockSize = 255
 )
 

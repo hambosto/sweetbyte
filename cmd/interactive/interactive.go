@@ -81,7 +81,7 @@ func getEligibleFiles(operation types.ProcessorMode) ([]string, error) {
 func processFile(inputPath string, mode types.ProcessorMode) error {
 	outputPath := file.GetOutputPath(inputPath, mode)
 
-	if err := file.ValidatePath(outputPath, false); err != nil {
+	if err := file.ValidatePath(inputPath, true); err != nil {
 		return fmt.Errorf("source validation failed: %w", err)
 	}
 
