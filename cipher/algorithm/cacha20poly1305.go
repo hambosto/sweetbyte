@@ -1,4 +1,4 @@
-package cipher
+package algorithm
 
 import (
 	"crypto/cipher"

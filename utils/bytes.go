@@ -8,7 +8,6 @@ import (
 
 func ToBytes[T safecast.Number, V safecast.Number](v V) []byte {
 	converted := safecast.MustConvert[T](v)
-
 	var zero T
 	switch any(zero).(type) {
 	case uint16:
@@ -30,7 +29,6 @@ func ToBytes[T safecast.Number, V safecast.Number](v V) []byte {
 
 func FromBytes[T safecast.Number](b []byte) T {
 	var zero T
-
 	switch any(zero).(type) {
 	case uint16:
 		if len(b) < 2 {

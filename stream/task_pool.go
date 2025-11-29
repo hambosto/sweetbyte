@@ -13,12 +13,11 @@ import (
 )
 
 type TaskProcessor struct {
-	firstCipher  *cipher.AESCipher
-	secondCipher *cipher.ChaCha20Cipher
-	encoder      *encoding.Encoding
-	compressor   *compression.Compression
-	padding      *padding.Padding
-	processing   types.Processing
+	cipher     *cipher.Cipher
+	encoder    *encoding.Encoding
+	compressor *compression.Compression
+	padding    *padding.Padding
+	processing types.Processing
 }
 
 func NewTaskProcessor(key []byte, processing types.Processing) (*TaskProcessor, error) {
@@ -26,14 +25,9 @@ func NewTaskProcessor(key []byte, processing types.Processing) (*TaskProcessor, 
 		return nil, fmt.Errorf("encryption key must be at least %d bytes long, got %d bytes", derive.ArgonKeyLen, len(key))
 	}
 
-	firstCipher, err := cipher.NewAESCipher(key[:32])
+	cipherInstance, err := cipher.NewCipher(key)
 	if err != nil {
-		return nil, fmt.Errorf("failed to initialize AES-256-GCM cipher: %w", err)
-	}
-
-	secondCipher, err := cipher.NewChaCha20Cipher(key[32:64])
-	if err != nil {
-		return nil, fmt.Errorf("failed to initialize XChaCha20-Poly1305 cipher: %w", err)
+		return nil, fmt.Errorf("failed to initialize unified cipher: %w", err)
 	}
 
 	encoder, err := encoding.NewEncoding(encoding.DataShards, encoding.ParityShards)
@@ -52,12 +46,11 @@ func NewTaskProcessor(key []byte, processing types.Processing) (*TaskProcessor, 
 	}
 
 	return &TaskProcessor{
-		firstCipher:  firstCipher,
-		secondCipher: secondCipher,
-		encoder:      encoder,
-		compressor:   compressor,
-		padding:      padder,
-		processing:   processing,
+		cipher:     cipherInstance,
+		encoder:    encoder,
+		compressor: compressor,
+		padding:    padder,
+		processing: processing,
 	}, nil
 }
 
@@ -105,12 +98,13 @@ func (tp *TaskProcessor) encryptionPipeline(data []byte) ([]byte, error) {
 		return nil, fmt.Errorf("padding failed: %w", err)
 	}
 
-	firstEncrypted, err := tp.firstCipher.Encrypt(padded)
+	// First encrypt with AES, then with ChaCha20
+	firstEncrypted, err := tp.cipher.EncryptAES(padded)
 	if err != nil {
 		return nil, fmt.Errorf("first encryption (AES-256-GCM) failed: %w", err)
 	}
 
-	secondEncrypted, err := tp.secondCipher.Encrypt(firstEncrypted)
+	secondEncrypted, err := tp.cipher.EncryptChaCha20(firstEncrypted)
 	if err != nil {
 		return nil, fmt.Errorf("second encryption (XChaCha20-Poly1305) failed: %w", err)
 	}
@@ -129,12 +123,13 @@ func (tp *TaskProcessor) decryptionPipeline(data []byte) ([]byte, error) {
 		return nil, fmt.Errorf("Reed-Solomon decoding failed (data may be corrupted): %w", err)
 	}
 
-	firstDecrypted, err := tp.secondCipher.Decrypt(decoded)
+	// First decrypt with ChaCha20, then with AES (reverse order of encryption)
+	firstDecrypted, err := tp.cipher.DecryptChaCha20(decoded)
 	if err != nil {
 		return nil, fmt.Errorf("first decryption (XChaCha20-Poly1305) failed - possible tampering detected: %w", err)
 	}
 
-	secondDecrypted, err := tp.firstCipher.Decrypt(firstDecrypted)
+	secondDecrypted, err := tp.cipher.DecryptAES(firstDecrypted)
 	if err != nil {
 		return nil, fmt.Errorf("second decryption (AES-256-GCM) failed - possible tampering detected: %w", err)
 	}
