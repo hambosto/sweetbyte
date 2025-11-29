@@ -10,6 +10,9 @@ schema = 3
   [mod."github.com/catppuccin/go"]
     version = "v0.3.0"
     hash = "sha256-otcMhI62ezoKGqzG7Owi/NROep7O0voJxp6bwXYg9+Q="
+  [mod."github.com/ccoveille/go-safecast/v2"]
+    version = "v2.0.0"
+    hash = "sha256-B7k2OBUbgzkEIf/IP0S+aCT/xihc8m9FErE57/0Q8zM="
   [mod."github.com/charmbracelet/bubbles"]
     version = "v0.21.1-0.20250623103423-23b8fd6302d7"
     hash = "sha256-UpFrV82xWIydxE4wPEQ3GK56+L9d/PDCkBAOYTifKlw="

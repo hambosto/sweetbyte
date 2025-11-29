@@ -28,7 +28,7 @@ func (s *Serializer) Marshal(salt, key []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	magic := utils.ToBytes(MagicBytes)
+	magic := utils.ToBytes[uint32](MagicBytes)
 	headerData := s.serialize(s.header)
 
 	mac, err := ComputeMAC(key, magic, salt, headerData)
@@ -103,7 +103,7 @@ func (s *Serializer) buildLengthsHeader(lengthSections map[SectionType]*EncodedS
 		if !ok || sec == nil {
 			panic(fmt.Sprintf("missing encoded length section for %s", sectionType))
 		}
-		lengthsHeader = append(lengthsHeader, utils.ToBytes(sec.Length)...)
+		lengthsHeader = append(lengthsHeader, utils.ToBytes[uint32](sec.Length)...)
 	}
 	return lengthsHeader
 }
@@ -137,8 +137,8 @@ func (s *Serializer) assembleEncodedHeader(
 
 func (s *Serializer) serialize(h *Header) []byte {
 	data := make([]byte, 0, HeaderDataSize)
-	data = append(data, utils.ToBytes(h.Version)...)
-	data = append(data, utils.ToBytes(h.Flags)...)
-	data = append(data, utils.ToBytes(h.OriginalSize)...)
+	data = append(data, utils.ToBytes[uint16](h.Version)...)
+	data = append(data, utils.ToBytes[uint32](h.Flags)...)
+	data = append(data, utils.ToBytes[uint64](h.OriginalSize)...)
 	return data
 }

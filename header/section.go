@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 
+	"github.com/ccoveille/go-safecast/v2"
 	"github.com/hambosto/sweetbyte/encoding"
 	"github.com/hambosto/sweetbyte/utils"
 )
@@ -46,10 +47,10 @@ func (se *SectionEncoder) EncodeSection(data []byte) (*EncodedSection, error) {
 		return nil, fmt.Errorf("failed to encode data: %w", err)
 	}
 
-	encodedLen := len(encoded)
+	encodedLen := safecast.MustConvert[uint32](len(encoded))
 	return &EncodedSection{
 		Data:   encoded,
-		Length: uint32(encodedLen),
+		Length: encodedLen,
 	}, nil
 }
 
@@ -67,7 +68,7 @@ func (se *SectionEncoder) DecodeSection(section *EncodedSection) ([]byte, error)
 }
 
 func (se *SectionEncoder) EncodeLengthPrefix(length uint32) (*EncodedSection, error) {
-	lengthBytes := utils.ToBytes(length)
+	lengthBytes := utils.ToBytes[uint32](length)
 	return se.EncodeSection(lengthBytes)
 }
 
@@ -85,5 +86,5 @@ func (se *SectionEncoder) DecodeLengthPrefix(section *EncodedSection) (uint32, e
 }
 
 func VerifyMagic(magic []byte) bool {
-	return bytes.Equal(magic, utils.ToBytes(MagicBytes))
+	return bytes.Equal(magic, utils.ToBytes[uint32](MagicBytes))
 }

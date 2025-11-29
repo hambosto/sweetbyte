@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/ccoveille/go-safecast/v2"
 	"github.com/hambosto/sweetbyte/derive"
 )
 
@@ -31,7 +32,7 @@ func NewHeader() (*Header, error) {
 }
 
 func (h *Header) GetOriginalSize() int64 {
-	return int64(h.OriginalSize)
+	return safecast.MustConvert[int64](h.OriginalSize)
 }
 
 func (h *Header) SetOriginalSize(size uint64) {

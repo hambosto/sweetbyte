@@ -50,7 +50,7 @@ func (w *ChunkWriter) writeResults(output io.Writer, results []types.TaskResult)
 	for _, res := range results {
 
 		if w.processing == types.Encryption {
-			sizeBytes := utils.ToBytes(uint32(len(res.Data)))
+			sizeBytes := utils.ToBytes[uint32](len(res.Data))
 			if _, err := output.Write(sizeBytes); err != nil {
 				return fmt.Errorf("writing chunk size: %w", err)
 			}

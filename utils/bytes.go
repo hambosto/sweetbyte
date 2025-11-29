@@ -2,50 +2,52 @@ package utils
 
 import (
 	"encoding/binary"
+
+	"github.com/ccoveille/go-safecast/v2"
 )
 
-var ByteOrder binary.ByteOrder = binary.BigEndian
+func ToBytes[T safecast.Number, V safecast.Number](v V) []byte {
+	converted := safecast.MustConvert[T](v)
 
-type UintType interface {
-	uint16 | uint32 | uint64
-}
-
-func ToBytes[T UintType](v T) []byte {
-	switch any(v).(type) {
-	case uint16:
-		b := make([]byte, 2)
-		ByteOrder.PutUint16(b, uint16(any(v).(uint16)))
-		return b
-	case uint32:
-		b := make([]byte, 4)
-		ByteOrder.PutUint32(b, uint32(any(v).(uint32)))
-		return b
-	case uint64:
-		b := make([]byte, 8)
-		ByteOrder.PutUint64(b, uint64(any(v).(uint64)))
-		return b
-	}
-	return nil
-}
-
-func FromBytes[T UintType](b []byte) T {
 	var zero T
 	switch any(zero).(type) {
 	case uint16:
+		b := make([]byte, 2)
+		binary.BigEndian.PutUint16(b, uint16(converted))
+		return b
+	case uint32:
+		b := make([]byte, 4)
+		binary.BigEndian.PutUint32(b, uint32(converted))
+		return b
+	case uint64:
+		b := make([]byte, 8)
+		binary.BigEndian.PutUint64(b, uint64(converted))
+		return b
+	default:
+		panic("unsupported type")
+	}
+}
+
+func FromBytes[T safecast.Number](b []byte) T {
+	var zero T
+
+	switch any(zero).(type) {
+	case uint16:
 		if len(b) < 2 {
-			panic("insufficient bytes for uint16")
+			return zero
 		}
-		return T(ByteOrder.Uint16(b))
+		return T(binary.BigEndian.Uint16(b))
 	case uint32:
 		if len(b) < 4 {
-			panic("insufficient bytes for uint32")
+			return zero
 		}
-		return T(ByteOrder.Uint32(b))
+		return T(binary.BigEndian.Uint32(b))
 	case uint64:
 		if len(b) < 8 {
-			panic("insufficient bytes for uint64")
+			return zero
 		}
-		return T(ByteOrder.Uint64(b))
+		return T(binary.BigEndian.Uint64(b))
+	default:
+		panic("unsupported type")
 	}
-	return zero
 }

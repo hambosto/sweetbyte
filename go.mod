@@ -3,6 +3,7 @@ module github.com/hambosto/sweetbyte
 go 1.25.4
 
 require (
+	github.com/ccoveille/go-safecast/v2 v2.0.0
 	github.com/charmbracelet/huh v0.8.0
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/klauspost/compress v1.18.1
