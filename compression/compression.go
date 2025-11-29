@@ -2,9 +2,10 @@ package compression
 
 import (
 	"bytes"
-	"compress/zlib"
 	"fmt"
 	"io"
+
+	"github.com/klauspost/compress/zlib"
 )
 
 type Compression struct {

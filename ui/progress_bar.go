@@ -19,7 +19,7 @@ func NewProgressBar(totalSize int64, description string) *ProgressBar {
 		progressbar.OptionShowBytes(true),
 		progressbar.OptionShowCount(),
 		progressbar.OptionFullWidth(),
-		progressbar.OptionThrottle(100*time.Millisecond), // Throttle updates to prevent blinking
+		progressbar.OptionThrottle(100*time.Millisecond),
 		progressbar.OptionSetTheme(progressbar.Theme{
 			BarStart:      "[",
 			BarEnd:        "]",
