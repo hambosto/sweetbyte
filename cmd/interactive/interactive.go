@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/hambosto/sweetbyte/file"
-	"github.com/hambosto/sweetbyte/processor"
-	"github.com/hambosto/sweetbyte/types"
-	"github.com/hambosto/sweetbyte/ui"
+	"github.com/hambosto/sweetbyte/internal/file"
+	"github.com/hambosto/sweetbyte/internal/processor"
+	"github.com/hambosto/sweetbyte/internal/types"
+	"github.com/hambosto/sweetbyte/internal/ui"
 )
 
 func Run() {

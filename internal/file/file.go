@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/hambosto/sweetbyte/config"
-	"github.com/hambosto/sweetbyte/types"
+	"github.com/hambosto/sweetbyte/internal/config"
+	"github.com/hambosto/sweetbyte/internal/types"
 )
 
 type FileInfo struct {

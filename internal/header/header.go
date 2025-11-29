@@ -5,7 +5,7 @@ import (
 	"io"
 
 	"github.com/ccoveille/go-safecast/v2"
-	"github.com/hambosto/sweetbyte/derive"
+	"github.com/hambosto/sweetbyte/internal/derive"
 )
 
 const (

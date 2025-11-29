@@ -4,7 +4,7 @@ import (
 	"crypto/cipher"
 	"fmt"
 
-	"github.com/hambosto/sweetbyte/derive"
+	"github.com/hambosto/sweetbyte/internal/derive"
 	"golang.org/x/crypto/chacha20poly1305"
 )
 

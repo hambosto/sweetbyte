@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/huh"
-	"github.com/hambosto/sweetbyte/types"
+	"github.com/hambosto/sweetbyte/internal/types"
 )
 
 const passwordMinLength = 8

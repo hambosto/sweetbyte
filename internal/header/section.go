@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"github.com/ccoveille/go-safecast/v2"
-	"github.com/hambosto/sweetbyte/encoding"
-	"github.com/hambosto/sweetbyte/utils"
+	"github.com/hambosto/sweetbyte/internal/encoding"
+	"github.com/hambosto/sweetbyte/internal/utils"
 )
 
 type SectionType string

@@ -6,8 +6,8 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/table"
-	"github.com/hambosto/sweetbyte/types"
-	"github.com/hambosto/sweetbyte/utils"
+	"github.com/hambosto/sweetbyte/internal/types"
+	"github.com/hambosto/sweetbyte/internal/utils"
 )
 
 var (

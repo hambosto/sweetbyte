@@ -3,8 +3,8 @@ package cipher
 import (
 	"fmt"
 
-	"github.com/hambosto/sweetbyte/cipher/algorithm"
-	"github.com/hambosto/sweetbyte/derive"
+	"github.com/hambosto/sweetbyte/internal/cipher/algorithm"
+	"github.com/hambosto/sweetbyte/internal/derive"
 )
 
 type Cipher struct {

@@ -5,7 +5,7 @@ import (
 	"crypto/cipher"
 	"fmt"
 
-	"github.com/hambosto/sweetbyte/derive"
+	"github.com/hambosto/sweetbyte/internal/derive"
 )
 
 const (

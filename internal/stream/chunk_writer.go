@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/hambosto/sweetbyte/types"
-	"github.com/hambosto/sweetbyte/ui"
-	"github.com/hambosto/sweetbyte/utils"
+	"github.com/hambosto/sweetbyte/internal/types"
+	"github.com/hambosto/sweetbyte/internal/ui"
+	"github.com/hambosto/sweetbyte/internal/utils"
 )
 
 type ChunkWriter struct {

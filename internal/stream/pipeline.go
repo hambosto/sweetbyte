@@ -6,9 +6,9 @@ import (
 	"io"
 	"runtime"
 
-	"github.com/hambosto/sweetbyte/derive"
-	"github.com/hambosto/sweetbyte/types"
-	"github.com/hambosto/sweetbyte/ui"
+	"github.com/hambosto/sweetbyte/internal/derive"
+	"github.com/hambosto/sweetbyte/internal/types"
+	"github.com/hambosto/sweetbyte/internal/ui"
 	"golang.org/x/sync/errgroup"
 )
 

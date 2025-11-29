@@ -4,7 +4,7 @@ import (
 	"context"
 	"sync"
 
-	"github.com/hambosto/sweetbyte/types"
+	"github.com/hambosto/sweetbyte/internal/types"
 )
 
 type WorkerPool struct {

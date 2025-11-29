@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hambosto/sweetbyte/derive"
-	"github.com/hambosto/sweetbyte/file"
-	"github.com/hambosto/sweetbyte/header"
-	"github.com/hambosto/sweetbyte/stream"
-	"github.com/hambosto/sweetbyte/types"
+	"github.com/hambosto/sweetbyte/internal/derive"
+	"github.com/hambosto/sweetbyte/internal/file"
+	"github.com/hambosto/sweetbyte/internal/header"
+	"github.com/hambosto/sweetbyte/internal/stream"
+	"github.com/hambosto/sweetbyte/internal/types"
 )
 
 func Encryption(srcPath, destPath, password string) error {
