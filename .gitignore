@@ -1,4 +1,4 @@
 *.bin
-*.swb
+*.swx
 .idx
 dist/

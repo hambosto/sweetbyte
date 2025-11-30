@@ -12,63 +12,64 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-const (
-	DefaultChunkSize = 256 * 1024
-)
+const DefaultChunkSize = 256 * 1024
 
 type Pipeline struct {
-	key           []byte
-	processing    types.Processing
-	concurrency   int
-	chunkSize     int
-	taskProcessor *TaskProcessor
-	reader        *ChunkReader
-	pool          *WorkerPool
+	key            []byte
+	chunkSize      int
+	concurrency    int
+	dataProcessing *DataProcessing
+	executor       *ConcurrentExecutor
+	processing     types.Processing
 }
 
 func NewPipeline(key []byte, processing types.Processing) (*Pipeline, error) {
 	if len(key) != derive.ArgonKeyLen {
-		return nil, fmt.Errorf("key must be %d bytes long", derive.ArgonKeyLen)
+		return nil, fmt.Errorf("key must be exactly %d bytes, got %d", derive.ArgonKeyLen, len(key))
 	}
 
-	taskProcessor, err := NewTaskProcessor(key, processing)
+	dataProcessing, err := NewDataProcessing(key, processing)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create task processor: %w", err)
+		return nil, fmt.Errorf("data processing creation: %w", err)
 	}
 
 	concurrency := runtime.NumCPU()
+	executor := NewConcurrentExecutor(dataProcessing, concurrency)
+
 	return &Pipeline{
-		key:           key,
-		processing:    processing,
-		concurrency:   concurrency,
-		chunkSize:     DefaultChunkSize,
-		taskProcessor: taskProcessor,
-		reader:        NewChunkReader(processing, DefaultChunkSize, concurrency),
-		pool:          NewWorkerPool(taskProcessor, concurrency),
+		key:            key,
+		chunkSize:      DefaultChunkSize,
+		concurrency:    concurrency,
+		dataProcessing: dataProcessing,
+		executor:       executor,
+		processing:     processing,
 	}, nil
 }
 
 func (p *Pipeline) Process(ctx context.Context, input io.Reader, output io.Writer, totalSize int64) error {
 	if input == nil || output == nil {
-		return fmt.Errorf("input and output streams must not be nil")
+		return fmt.Errorf("input and output must not be nil")
+	}
+
+	reader, err := NewChunkReader(p.processing, DefaultChunkSize)
+	if err != nil {
+		return fmt.Errorf("reader creation: %w", err)
 	}
 
 	bar := ui.NewProgressBar(totalSize, p.processing.String())
-
 	writer := NewChunkWriter(p.processing, bar)
 
-	return p.runPipeline(ctx, input, output, writer)
+	return p.run(ctx, input, output, reader, writer, p.processing)
 }
 
-func (p *Pipeline) runPipeline(ctx context.Context, input io.Reader, output io.Writer, writer *ChunkWriter) error {
+func (p *Pipeline) run(ctx context.Context, input io.Reader, output io.Writer, reader *ChunkReader, writer *ChunkWriter, mode types.Processing) error {
 	g, ctx := errgroup.WithContext(ctx)
 
-	tasks, readerErr := p.reader.ReadChunks(ctx, input)
-
-	results := p.pool.Process(ctx, tasks)
+	tasks, readerErr := reader.Read(ctx, input)
+	results := p.executor.Process(ctx, tasks, mode)
 
 	g.Go(func() error {
-		return writer.WriteChunks(ctx, output, results)
+		return writer.Write(ctx, output, results)
 	})
 
 	g.Go(func() error {

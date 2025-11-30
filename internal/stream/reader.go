@@ -9,22 +9,25 @@ import (
 	"github.com/hambosto/sweetbyte/internal/utils"
 )
 
+const MinChunkSize = 256 * 1024 // 256 KB
+
 type ChunkReader struct {
-	processing  types.Processing
-	chunkSize   int
-	concurrency int
+	processing types.Processing
+	chunkSize  int
 }
 
-func NewChunkReader(processing types.Processing, chunkSize, concurrency int) *ChunkReader {
-	return &ChunkReader{
-		processing:  processing,
-		chunkSize:   chunkSize,
-		concurrency: concurrency,
+func NewChunkReader(processing types.Processing, chunkSize int) (*ChunkReader, error) {
+	if chunkSize < MinChunkSize {
+		return nil, fmt.Errorf("chunk size must be at least %d bytes (256 KB), got %d", MinChunkSize, chunkSize)
 	}
+	return &ChunkReader{
+		processing: processing,
+		chunkSize:  chunkSize,
+	}, nil
 }
 
-func (r *ChunkReader) ReadChunks(ctx context.Context, input io.Reader) (<-chan types.Task, <-chan error) {
-	tasks := make(chan types.Task, r.concurrency)
+func (r *ChunkReader) Read(ctx context.Context, input io.Reader) (<-chan types.Task, <-chan error) {
+	tasks := make(chan types.Task)
 	errCh := make(chan error, 1)
 
 	go func() {
@@ -57,7 +60,6 @@ func (r *ChunkReader) readForEncryption(ctx context.Context, reader io.Reader, t
 	var index uint64
 
 	for {
-
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
