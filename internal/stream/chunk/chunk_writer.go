@@ -1,26 +1,27 @@
-package stream
+package chunk
 
 import (
 	"context"
 	"fmt"
 	"io"
 
+	"github.com/hambosto/sweetbyte/internal/stream/buffer"
 	"github.com/hambosto/sweetbyte/internal/types"
-	"github.com/hambosto/sweetbyte/internal/ui"
+	"github.com/hambosto/sweetbyte/internal/ui/bar"
 	"github.com/hambosto/sweetbyte/internal/utils"
 )
 
 type ChunkWriter struct {
-	mode          types.Processing
-	progressBar   *ui.ProgressBar
-	orderedBuffer *OrderedBuffer
+	mode             types.Processing
+	progressBar      *bar.ProgressBar
+	sequentialBuffer *buffer.SequentialBuffer
 }
 
-func NewChunkWriter(mode types.Processing, progressBar *ui.ProgressBar) *ChunkWriter {
+func NewChunkWriter(mode types.Processing, progressBar *bar.ProgressBar) *ChunkWriter {
 	return &ChunkWriter{
-		mode:          mode,
-		progressBar:   progressBar,
-		orderedBuffer: NewOrderedBuffer(),
+		mode:             mode,
+		progressBar:      progressBar,
+		sequentialBuffer: buffer.NewSequentialBuffer(),
 	}
 }
 
@@ -31,14 +32,14 @@ func (w *ChunkWriter) Write(ctx context.Context, output io.Writer, results <-cha
 			return ctx.Err()
 		case result, ok := <-results:
 			if !ok {
-				return w.writeOrdered(output, w.orderedBuffer.Flush())
+				return w.writeOrdered(output, w.sequentialBuffer.Flush())
 			}
 
 			if result.Err != nil {
 				return fmt.Errorf("task %d failed: %w", result.Index, result.Err)
 			}
 
-			ready := w.orderedBuffer.Add(result)
+			ready := w.sequentialBuffer.Add(result)
 			if err := w.writeOrdered(output, ready); err != nil {
 				return err
 			}

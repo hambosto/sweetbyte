@@ -1,4 +1,4 @@
-package stream
+package buffer
 
 import (
 	"slices"
@@ -7,20 +7,20 @@ import (
 	"github.com/hambosto/sweetbyte/internal/types"
 )
 
-type OrderedBuffer struct {
+type SequentialBuffer struct {
 	mu      sync.Mutex
 	buffer  map[uint64]types.TaskResult
 	nextIdx uint64
 }
 
-func NewOrderedBuffer() *OrderedBuffer {
-	return &OrderedBuffer{
+func NewSequentialBuffer() *SequentialBuffer {
+	return &SequentialBuffer{
 		buffer:  make(map[uint64]types.TaskResult),
 		nextIdx: 0,
 	}
 }
 
-func (b *OrderedBuffer) Add(result types.TaskResult) []types.TaskResult {
+func (b *SequentialBuffer) Add(result types.TaskResult) []types.TaskResult {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
@@ -40,7 +40,7 @@ func (b *OrderedBuffer) Add(result types.TaskResult) []types.TaskResult {
 	return ready
 }
 
-func (b *OrderedBuffer) Flush() []types.TaskResult {
+func (b *SequentialBuffer) Flush() []types.TaskResult {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 

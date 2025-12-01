@@ -1,18 +1,19 @@
-package stream
+package concurrent
 
 import (
 	"context"
 	"sync"
 
+	"github.com/hambosto/sweetbyte/internal/stream/processing"
 	"github.com/hambosto/sweetbyte/internal/types"
 )
 
 type ConcurrentExecutor struct {
-	dataProcessing *DataProcessing
+	dataProcessing *processing.DataProcessing
 	concurrency    int
 }
 
-func NewConcurrentExecutor(dataProcessing *DataProcessing, concurrency int) *ConcurrentExecutor {
+func NewConcurrentExecutor(dataProcessing *processing.DataProcessing, concurrency int) *ConcurrentExecutor {
 	return &ConcurrentExecutor{
 		dataProcessing: dataProcessing,
 		concurrency:    concurrency,

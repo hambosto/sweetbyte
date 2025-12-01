@@ -1,6 +1,6 @@
 module github.com/hambosto/sweetbyte
 
-go 1.25.4
+go 1.25
 
 require (
 	github.com/ccoveille/go-safecast/v2 v2.0.0

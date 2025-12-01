@@ -8,7 +8,8 @@ import (
 	"github.com/hambosto/sweetbyte/internal/file"
 	"github.com/hambosto/sweetbyte/internal/processor"
 	"github.com/hambosto/sweetbyte/internal/types"
-	"github.com/hambosto/sweetbyte/internal/ui"
+	"github.com/hambosto/sweetbyte/internal/ui/display"
+	"github.com/hambosto/sweetbyte/internal/ui/prompt"
 	"github.com/spf13/cobra"
 )
 
@@ -154,7 +155,7 @@ func (c *CLI) runDecrypt(inputFile, outputFile, password string, deleteSource bo
 func (c *CLI) Encrypt(inputFile, outputFile, password string, deleteSource bool) error {
 	if len(password) == 0 {
 		var err error
-		password, err = ui.GetEncryptionPassword()
+		password, err = prompt.GetEncryptionPassword()
 		if err != nil {
 			return fmt.Errorf("failed to get password: %w", err)
 		}
@@ -164,12 +165,12 @@ func (c *CLI) Encrypt(inputFile, outputFile, password string, deleteSource bool)
 		return fmt.Errorf("failed to encrypt %s: %w", inputFile, err)
 	}
 
-	ui.ShowSuccessInfo(types.ModeEncrypt, outputFile)
+	display.ShowSuccessInfo(types.ModeEncrypt, outputFile)
 	if deleteSource {
 		if err := file.Remove(inputFile); err != nil {
 			return fmt.Errorf("failed to delete source file: %w", err)
 		}
-		ui.ShowSourceDeleted(inputFile)
+		display.ShowSourceDeleted(inputFile)
 	}
 
 	return nil
@@ -178,7 +179,7 @@ func (c *CLI) Encrypt(inputFile, outputFile, password string, deleteSource bool)
 func (c *CLI) Decrypt(inputFile, outputFile, password string, deleteSource bool) error {
 	if len(password) == 0 {
 		var err error
-		password, err = ui.GetDecryptionPassword()
+		password, err = prompt.GetDecryptionPassword()
 		if err != nil {
 			return fmt.Errorf("failed to get password: %w", err)
 		}
@@ -188,12 +189,12 @@ func (c *CLI) Decrypt(inputFile, outputFile, password string, deleteSource bool)
 		return fmt.Errorf("failed to decrypt %s: %w", inputFile, err)
 	}
 
-	ui.ShowSuccessInfo(types.ModeDecrypt, outputFile)
+	display.ShowSuccessInfo(types.ModeDecrypt, outputFile)
 	if deleteSource {
 		if err := file.Remove(inputFile); err != nil {
 			return fmt.Errorf("failed to delete source file: %w", err)
 		}
-		ui.ShowSourceDeleted(inputFile)
+		display.ShowSourceDeleted(inputFile)
 	}
 
 	return nil

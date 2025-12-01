@@ -7,8 +7,11 @@ import (
 	"runtime"
 
 	"github.com/hambosto/sweetbyte/internal/derive"
+	"github.com/hambosto/sweetbyte/internal/stream/chunk"
+	"github.com/hambosto/sweetbyte/internal/stream/concurrent"
+	"github.com/hambosto/sweetbyte/internal/stream/processing"
 	"github.com/hambosto/sweetbyte/internal/types"
-	"github.com/hambosto/sweetbyte/internal/ui"
+	"github.com/hambosto/sweetbyte/internal/ui/bar"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -18,23 +21,23 @@ type Pipeline struct {
 	key            []byte
 	chunkSize      int
 	concurrency    int
-	dataProcessing *DataProcessing
-	executor       *ConcurrentExecutor
+	dataProcessing *processing.DataProcessing
+	executor       *concurrent.ConcurrentExecutor
 	processing     types.Processing
 }
 
-func NewPipeline(key []byte, processing types.Processing) (*Pipeline, error) {
+func NewPipeline(key []byte, processMode types.Processing) (*Pipeline, error) {
 	if len(key) != derive.ArgonKeyLen {
 		return nil, fmt.Errorf("key must be exactly %d bytes, got %d", derive.ArgonKeyLen, len(key))
 	}
 
-	dataProcessing, err := NewDataProcessing(key, processing)
+	dataProcessing, err := processing.NewDataProcessing(key, processMode)
 	if err != nil {
 		return nil, fmt.Errorf("data processing creation: %w", err)
 	}
 
 	concurrency := runtime.NumCPU()
-	executor := NewConcurrentExecutor(dataProcessing, concurrency)
+	executor := concurrent.NewConcurrentExecutor(dataProcessing, concurrency)
 
 	return &Pipeline{
 		key:            key,
@@ -42,7 +45,7 @@ func NewPipeline(key []byte, processing types.Processing) (*Pipeline, error) {
 		concurrency:    concurrency,
 		dataProcessing: dataProcessing,
 		executor:       executor,
-		processing:     processing,
+		processing:     processMode,
 	}, nil
 }
 
@@ -51,18 +54,18 @@ func (p *Pipeline) Process(ctx context.Context, input io.Reader, output io.Write
 		return fmt.Errorf("input and output must not be nil")
 	}
 
-	reader, err := NewChunkReader(p.processing, DefaultChunkSize)
+	reader, err := chunk.NewChunkReader(p.processing, DefaultChunkSize)
 	if err != nil {
 		return fmt.Errorf("reader creation: %w", err)
 	}
 
-	bar := ui.NewProgressBar(totalSize, p.processing.String())
-	writer := NewChunkWriter(p.processing, bar)
+	bar := bar.NewProgressBar(totalSize, p.processing.String())
+	writer := chunk.NewChunkWriter(p.processing, bar)
 
 	return p.run(ctx, input, output, reader, writer, p.processing)
 }
 
-func (p *Pipeline) run(ctx context.Context, input io.Reader, output io.Writer, reader *ChunkReader, writer *ChunkWriter, mode types.Processing) error {
+func (p *Pipeline) run(ctx context.Context, input io.Reader, output io.Writer, reader *chunk.ChunkReader, writer *chunk.ChunkWriter, mode types.Processing) error {
 	g, ctx := errgroup.WithContext(ctx)
 
 	tasks, readerErr := reader.Read(ctx, input)

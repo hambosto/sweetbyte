@@ -7,15 +7,17 @@ import (
 	"github.com/hambosto/sweetbyte/internal/file"
 	"github.com/hambosto/sweetbyte/internal/processor"
 	"github.com/hambosto/sweetbyte/internal/types"
-	"github.com/hambosto/sweetbyte/internal/ui"
+	"github.com/hambosto/sweetbyte/internal/ui/display"
+	"github.com/hambosto/sweetbyte/internal/ui/prompt"
+	"github.com/hambosto/sweetbyte/internal/ui/term"
 )
 
 func Run() {
-	if err := ui.Clear(); err != nil {
+	if err := term.Clear(); err != nil {
 		fmt.Printf("failed to clear screen: %v\n", err)
 		os.Exit(1)
 	}
-	ui.PrintBanner()
+	term.PrintBanner()
 
 	if err := runInteractiveLoop(); err != nil {
 		fmt.Printf("Application error: %v\n", err)
@@ -24,7 +26,7 @@ func Run() {
 }
 
 func runInteractiveLoop() error {
-	operation, err := ui.GetProcessingMode()
+	operation, err := prompt.GetProcessingMode()
 	if err != nil {
 		return fmt.Errorf("failed to get processing mode: %w", err)
 	}
@@ -49,11 +51,11 @@ func runInteractiveLoop() error {
 		fileEncrypted = append(fileEncrypted, info.IsEncrypted)
 	}
 
-	if err := ui.ShowFileInfo(filePaths, fileSizes, fileEncrypted); err != nil {
+	if err := display.ShowFileInfo(filePaths, fileSizes, fileEncrypted); err != nil {
 		return fmt.Errorf("failed to display file info: %w", err)
 	}
 
-	selectedFile, err := ui.ChooseFile(eligibleFiles)
+	selectedFile, err := prompt.ChooseFile(eligibleFiles)
 	if err != nil {
 		return fmt.Errorf("failed to select file: %w", err)
 	}
@@ -86,7 +88,7 @@ func processFile(inputPath string, mode types.ProcessorMode) error {
 	}
 
 	if err := file.ValidatePath(outputPath, false); err != nil {
-		if confirm, confirmErr := ui.ConfirmFileOverwrite(outputPath); confirmErr != nil || !confirm {
+		if confirm, confirmErr := prompt.ConfirmFileOverwrite(outputPath); confirmErr != nil || !confirm {
 			return fmt.Errorf("operation canceled by user")
 		}
 	}
@@ -105,7 +107,7 @@ func processFile(inputPath string, mode types.ProcessorMode) error {
 		return err
 	}
 
-	ui.ShowSuccessInfo(mode, outputPath)
+	display.ShowSuccessInfo(mode, outputPath)
 	var fileType string
 	if mode == types.ModeEncrypt {
 		fileType = "original"
@@ -113,20 +115,20 @@ func processFile(inputPath string, mode types.ProcessorMode) error {
 		fileType = "encrypted"
 	}
 
-	if shouldDelete, err := ui.ConfirmFileRemoval(inputPath, fileType); err != nil {
+	if shouldDelete, err := prompt.ConfirmFileRemoval(inputPath, fileType); err != nil {
 		return fmt.Errorf("failed to confirm file removal: %w", err)
 	} else if shouldDelete {
 		if err := file.Remove(inputPath); err != nil {
 			return fmt.Errorf("failed to delete source file: %w", err)
 		}
-		ui.ShowSourceDeleted(inputPath)
+		display.ShowSourceDeleted(inputPath)
 	}
 
 	return nil
 }
 
 func encryptFile(srcPath, destPath string) error {
-	password, err := ui.GetEncryptionPassword()
+	password, err := prompt.GetEncryptionPassword()
 	if err != nil {
 		return fmt.Errorf("password prompt failed: %w", err)
 	}
@@ -139,7 +141,7 @@ func encryptFile(srcPath, destPath string) error {
 }
 
 func decryptFile(srcPath, destPath string) error {
-	password, err := ui.GetDecryptionPassword()
+	password, err := prompt.GetDecryptionPassword()
 	if err != nil {
 		return fmt.Errorf("password prompt failed: %w", err)
 	}
