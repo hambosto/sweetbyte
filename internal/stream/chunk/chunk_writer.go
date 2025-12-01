@@ -48,9 +48,9 @@ func (w *ChunkWriter) Write(ctx context.Context, output io.Writer, results <-cha
 }
 
 func (w *ChunkWriter) writeOrdered(output io.Writer, results []types.TaskResult) error {
-	for _, res := range results {
-		switch w.mode {
-		case types.Encryption:
+	switch w.mode {
+	case types.Encryption:
+		for _, res := range results {
 			sizePrefix := utils.ToBytes[uint32](len(res.Data))
 			if _, err := output.Write(sizePrefix); err != nil {
 				return fmt.Errorf("writing chunk size prefix: %w", err)
@@ -58,17 +58,22 @@ func (w *ChunkWriter) writeOrdered(output io.Writer, results []types.TaskResult)
 			if _, err := output.Write(res.Data); err != nil {
 				return fmt.Errorf("writing chunk data: %w", err)
 			}
-		case types.Decryption:
+			if err := w.progressBar.Add(int64(res.Size)); err != nil {
+				return fmt.Errorf("updating progress: %w", err)
+			}
+		}
+	case types.Decryption:
+		for _, res := range results {
 			if _, err := output.Write(res.Data); err != nil {
 				return fmt.Errorf("writing chunk data: %w", err)
 			}
-		default:
-			return fmt.Errorf("unsupported processing mode: %v", w.mode)
+			if err := w.progressBar.Add(int64(res.Size)); err != nil {
+				return fmt.Errorf("updating progress: %w", err)
+			}
 		}
-
-		if err := w.progressBar.Add(int64(res.Size)); err != nil {
-			return fmt.Errorf("updating progress: %w", err)
-		}
+	default:
+		return fmt.Errorf("unsupported processing mode: %v", w.mode)
 	}
+
 	return nil
 }
