@@ -54,13 +54,17 @@ func (p *Pipeline) Process(ctx context.Context, input io.Reader, output io.Write
 		return fmt.Errorf("input and output must not be nil")
 	}
 
+	bar := bar.NewProgressBar(totalSize, p.processing.String())
+
 	reader, err := chunk.NewChunkReader(p.processing, DefaultChunkSize)
 	if err != nil {
 		return fmt.Errorf("reader creation: %w", err)
 	}
 
-	bar := bar.NewProgressBar(totalSize, p.processing.String())
-	writer := chunk.NewChunkWriter(p.processing, bar)
+	writer, err := chunk.NewChunkWriter(p.processing, bar)
+	if err != nil {
+		return fmt.Errorf("writer creation: %w", err)
+	}
 
 	return p.run(ctx, input, output, reader, writer, p.processing)
 }

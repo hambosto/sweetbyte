@@ -1,6 +1,7 @@
 package buffer
 
 import (
+	"fmt"
 	"slices"
 	"sync"
 
@@ -13,11 +14,15 @@ type SequentialBuffer struct {
 	nextIdx uint64
 }
 
-func NewSequentialBuffer() *SequentialBuffer {
+func NewSequentialBuffer(start uint64) (*SequentialBuffer, error) {
+	if start > ^uint64(0) {
+		return nil, fmt.Errorf("invalid start index: %d", start)
+	}
+
 	return &SequentialBuffer{
 		buffer:  make(map[uint64]types.TaskResult),
-		nextIdx: 0,
-	}
+		nextIdx: start,
+	}, nil
 }
 
 func (b *SequentialBuffer) Add(result types.TaskResult) []types.TaskResult {

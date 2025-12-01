@@ -17,12 +17,16 @@ type ChunkWriter struct {
 	sequentialBuffer *buffer.SequentialBuffer
 }
 
-func NewChunkWriter(mode types.Processing, progressBar *bar.ProgressBar) *ChunkWriter {
+func NewChunkWriter(mode types.Processing, progressBar *bar.ProgressBar) (*ChunkWriter, error) {
+	seqBuf, err := buffer.NewSequentialBuffer(0)
+	if err != nil {
+		return nil, fmt.Errorf("creating sequential buffer: %w", err)
+	}
 	return &ChunkWriter{
 		mode:             mode,
 		progressBar:      progressBar,
-		sequentialBuffer: buffer.NewSequentialBuffer(),
-	}
+		sequentialBuffer: seqBuf,
+	}, nil
 }
 
 func (w *ChunkWriter) Write(ctx context.Context, output io.Writer, results <-chan types.TaskResult) error {
