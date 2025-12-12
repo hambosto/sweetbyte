@@ -6,7 +6,7 @@
 
 [![Quality Checks](https://github.com/hambosto/sweetbyte/actions/workflows/quality-checks.yaml/badge.svg)](https://github.com/hambosto/sweetbyte/actions/workflows/quality-checks.yaml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/hambosto/sweetbyte)](https://goreportcard.com/report/github.com/hambosto/sweetbyte)
-[![Go Version](https://img.shields.io/badge/Go-1.24.6-blue.svg)](https://golang.org/)
+[![Go Version](https://img.shields.io/badge/Go-1.25.4-blue.svg)](https://golang.org/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 </div>
@@ -243,12 +243,56 @@ sweetbyte decrypt -i my_document.swx -p "my-secret-password" --delete-source
 
 ## 🏗️ Building from Source
 
-To build the project from source, clone the repository and use the `go build` command.
+SweetByte is built with Go 1.25.4 and follows Go modules for dependency management. To build from source, follow these steps:
+
+### Prerequisites
+- Go 1.25.4 or higher
+- Git
+
+### Build Process
+To build the project from source, clone the repository and use the `go build` command:
 
 ```sh
 git clone https://github.com/hambosto/sweetbyte.git
 cd sweetbyte
 go build .
+```
+
+This will create a binary named `sweetbyte` in the current directory.
+
+### Cross-Compilation
+You can also cross-compile for different platforms:
+
+```sh
+# Build for Windows
+GOOS=windows GOARCH=amd64 go build -o sweetbyte.exe .
+
+# Build for macOS
+GOOS=darwin GOARCH=amd64 go build -o sweetbyte-darwin .
+
+# Build for Linux (ARM64)
+GOOS=linux GOARCH=arm64 go build -o sweetbyte-linux-arm64 .
+```
+
+### Running Tests
+To run the project's tests:
+
+```sh
+go test ./...
+```
+
+### Using Nix (Optional)
+If you have Nix installed with flakes enabled, you can use the provided flake.nix:
+
+```sh
+# Build using Nix
+nix build
+
+# Enter development shell
+nix develop
+
+# Run directly with Nix
+nix run
 ```
 
 ## 🏛️ Internal Packages Overview
@@ -257,22 +301,21 @@ SweetByte is built with a modular architecture, with each package handling a spe
 
 | Package           | Description                                                              |
 | ----------------- | ------------------------------------------------------------------------ |
-| `cipher`          | Implements the AES and XChaCha20-Poly1305 encryption algorithms.         |
-| `cli`             | Contains the command-line interface logic using the Cobra library.       |
-| `compression`     | Handles Zlib compression and decompression.                              |
-| `config`          | Stores all application-wide constants and configuration parameters.      |
-| `derive`          | Handles key derivation using Argon2id and secure salt generation.        |
-| `encoding`        | Manages Reed-Solomon error correction encoding and decoding.             |
-| `file`            | Provides utilities for finding, managing, and securely deleting files.   |
-| `header`          | Manages the serialization, deserialization, and verification of the secure file header. |
-| `interactive`     | Implements the user-friendly interactive mode workflow.                  |
-| `types`           | Defines common types, enums, and data structures used throughout the application. |
-| `padding`         | Implements PKCS7 padding.                                                |
-| `processor`       | Contains the high-level logic for the main encrypt/decrypt file operations. |
-| `stream`          | Manages concurrent, chunk-based file processing with a worker pool.      |
-| `ui`              | Provides UI components like interactive prompts, progress bars, and banners. |
-| `utils`           | Contains miscellaneous helper functions.                                 |
-
+| `cipher`          | Implements the AES and XChaCha20-Poly1305 encryption algorithms. The main `Cipher` struct manages both AES-GCM and XChaCha20-Poly1305 ciphers for layered encryption. The `cipher/algorithm` subpackage contains the actual implementations using Go's crypto packages, with proper nonce generation and authenticated encryption. |
+| `cli`             | Contains the command-line interface logic using the Cobra library. The CLI package provides both `encrypt` and `decrypt` commands with their respective flags and functionality, as well as managing the password prompts and file operations for the command-line mode. |
+| `compression`     | Handles Zlib compression and decompression with configurable compression levels (NoCompression, BestSpeed, DefaultCompression, BestCompression). The package integrates seamlessly with the encryption pipeline to reduce file sizes before encryption. |
+| `config`          | Stores all application-wide constants and configuration parameters. This includes app name, version, file extension, and exclusion patterns for file operations. The package also defines which files should be excluded during file discovery operations. |
+| `derive`          | Handles key derivation using Argon2id and secure salt generation. This package implements the secure key derivation function with recommended parameters (Time=3, Memory=64KB, Threads=4) and provides utilities for generating cryptographically secure random bytes. |
+| `encoding`        | Manages Reed-Solomon error correction encoding and decoding. This package implements the Reed-Solomon forward error correction with 4 data shards and 10 parity shards (total of 14) to ensure data resilience. The `Shards` subcomponent handles splitting data into shards, combining them, and extracting data from potentially corrupted shards. |
+| `file`            | Provides utilities for finding, managing, and securely deleting files. The package includes functions for validating file paths, checking file existence, creating directory structures, finding eligible files for processing based on file type and exclusion patterns, and handling file discovery through directory walking. |
+| `header`          | Manages the serialization, deserialization, and verification of the secure file header. This complex package handles the multi-layered header format with Reed-Solomon protection, HMAC authentication with constant-time comparison, and proper deserialization of the various header sections. It includes the `Serializer` and `Deserializer` components for marshaling/unmarshaling headers with Reed-Solomon error correction. |
+| `interactive`     | Implements the user-friendly interactive mode workflow. The interactive package provides a guided experience that prompts users through the encryption/decryption process using the `huh` library for beautiful prompts, handles file selection, and manages user preferences in a user-friendly way. |
+| `types`           | Defines common types, enums, and data structures used throughout the application. This package includes processing modes (encrypt/decrypt), processing types (Encryption/Decryption), and task-related structures (Task, TaskResult) that are used for concurrent operations. |
+| `padding`         | Implements PKCS7 padding with a configurable block size. The padding package ensures that data is properly padded to meet block cipher requirements, with proper padding/unpadding functions that handle both padding and unpadding operations. |
+| `processor`       | Contains the high-level logic for the main encrypt/decrypt file operations. This package coordinates between various internal packages to execute the complete encryption or decryption workflow, handling file I/O, header operations, and process flow. It manages the entire pipeline from file opening to completion. |
+| `stream`          | Manages concurrent, chunk-based file processing with a worker pool. The stream package includes subpackages for buffering (`buffer`), chunking (`chunk`), concurrent execution (`concurrent`), and processing (`processing`). It handles the streaming of data through the encryption pipeline with proper concurrency management using `runtime.NumCPU()` workers. The `ChunkReader` reads files in chunks for encryption or decryption, while `ChunkWriter` writes the processed chunks to output in sequential order. The `SequentialBuffer` ensures chunks are written in the correct sequence. |
+| `ui`              | Provides UI components like interactive prompts, progress bars, and banners. The UI package includes subpackages for progress bars (`bar`) using the progressbar library with configurable themes, display functions (`display`) for showing file information and results in tables using lipgloss, prompts (`prompt`) for interactive user input using the huh library, and terminal utilities (`term`) for clearing the screen and printing banners. |
+| `utils`           | Contains miscellaneous helper functions. This package provides utility functions for byte operations with safe casting, formatting (including human-readable byte formats), and general-purpose functions used throughout the application. The `bytes` subpackage includes functions for converting values to bytes and back using big-endian encoding. |
 
 ## 🛡️ Security Considerations
 
