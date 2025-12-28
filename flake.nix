@@ -18,15 +18,47 @@
       gomod2nix,
       ...
     }:
-    let
-      sweetbyteOverlay = final: prev: {
-        sweetbyte = final.buildGoApplication {
+    flake-utils.lib.eachDefaultSystem (
+      system:
+      let
+        pkgs = import nixpkgs {
+          inherit system;
+          overlays = [ gomod2nix.overlays.default ];
+        };
+
+        sweetbyteOverlay = final: prev: {
+          sweetbyte = pkgs.buildGoApplication {
+            pname = "sweetbyte";
+            version = "1.0.0";
+            src = ./.;
+            modules = ./gomod2nix.toml;
+
+            nativeBuildInputs = with pkgs; [ installShellFiles ];
+
+            postInstall = ''
+              installShellCompletion --cmd sweetbyte \
+                --bash <($out/bin/sweetbyte completion bash) \
+                --fish <($out/bin/sweetbyte completion fish) \
+                --zsh <($out/bin/sweetbyte completion zsh)
+            '';
+
+            meta = with pkgs.lib; {
+              description = "A very small, very simple, yet very secure encryption tool";
+              homepage = "https://github.com/hambosto/sweetbyte";
+              license = licenses.mit;
+              mainProgram = "sweetbyte";
+            };
+          };
+        };
+      in
+      {
+        packages.default = pkgs.buildGoApplication {
           pname = "sweetbyte";
-          version = "1.0.0";
+          version = "1.0";
           src = ./.;
           modules = ./gomod2nix.toml;
 
-          nativeBuildInputs = with final; [ installShellFiles ];
+          nativeBuildInputs = with pkgs; [ installShellFiles ];
 
           postInstall = ''
             installShellCompletion --cmd sweetbyte \
@@ -35,31 +67,15 @@
               --zsh <($out/bin/sweetbyte completion zsh)
           '';
 
-          meta = with final.lib; {
+          meta = with pkgs.lib; {
             description = "A very small, very simple, yet very secure encryption tool";
             homepage = "https://github.com/hambosto/sweetbyte";
             license = licenses.mit;
             mainProgram = "sweetbyte";
           };
         };
-      };
-    in
-    flake-utils.lib.eachDefaultSystem (
-      system:
-      let
-        pkgs = import nixpkgs {
-          inherit system;
-          overlays = [
-            gomod2nix.overlays.default
-            sweetbyteOverlay
-          ];
-        };
-      in
-      {
-        packages.default = pkgs.sweetbyte;
+
+        overlays.default = sweetbyteOverlay;
       }
-    )
-    // {
-      overlays.default = sweetbyteOverlay;
-    };
+    );
 }
