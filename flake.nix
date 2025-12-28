@@ -19,10 +19,8 @@
       ...
     }:
     let
-      overlays = [ gomod2nix.overlays.default ];
-
-      overlay = final: prev: {
-        sweetbyte = prev.buildGoApplication {
+      sweetbyteOverlay = final: prev: {
+        sweetbyte = final.buildGoApplication {
           pname = "sweetbyte";
           version = "1.0.0";
           src = ./.;
@@ -46,19 +44,22 @@
         };
       };
     in
-    {
-      overlays.default = overlay;
-    }
-    // flake-utils.lib.eachDefaultSystem (
+    flake-utils.lib.eachDefaultSystem (
       system:
       let
         pkgs = import nixpkgs {
           inherit system;
-          overlays = overlays ++ [ overlay ];
+          overlays = [
+            gomod2nix.overlays.default
+            sweetbyteOverlay
+          ];
         };
       in
       {
         packages.default = pkgs.sweetbyte;
       }
-    );
+    )
+    // {
+      overlays.default = sweetbyteOverlay;
+    };
 }
