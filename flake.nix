@@ -4,31 +4,30 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
-    gomod2nix.url = "github:nix-community/gomod2nix";
-    gomod2nix.inputs.nixpkgs.follows = "nixpkgs";
-    gomod2nix.inputs.flake-utils.follows = "flake-utils";
+    gomod2nix = {
+      url = "github:nix-community/gomod2nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.flake-utils.follows = "flake-utils";
+    };
   };
 
   outputs =
-    inputs@{ ... }:
-    inputs.flake-utils.lib.eachDefaultSystem (
-      system:
-      let
-        overlays = [
-          inputs.gomod2nix.overlays.default
-        ];
-        pkgs = import inputs.nixpkgs {
-          inherit system overlays;
-        };
-      in
-      {
-        packages.default = pkgs.buildGoApplication {
+    {
+      nixpkgs,
+      flake-utils,
+      gomod2nix,
+      ...
+    }:
+    let
+      # Overlay definition
+      overlay = final: prev: {
+        sweetbyte = final.buildGoApplication {
           pname = "sweetbyte";
-          version = "1.0";
+          version = "1.0.0";
           src = ./.;
           modules = ./gomod2nix.toml;
 
-          nativeBuildInputs = [ pkgs.installShellFiles ];
+          nativeBuildInputs = [ final.installShellFiles ];
 
           postInstall = ''
             installShellCompletion --cmd sweetbyte \
@@ -37,19 +36,31 @@
               --zsh <($out/bin/sweetbyte completion zsh)
           '';
 
-          meta = with pkgs.lib; {
-            description = "A very small, very simple, yet very secure encryption tool.";
+          meta = with final.lib; {
+            description = "A very small, very simple, yet very secure encryption tool";
             homepage = "https://github.com/hambosto/sweetbyte";
             license = licenses.mit;
             mainProgram = "sweetbyte";
           };
         };
-
-        devShells = {
-          default = pkgs.mkShell {
-            packages = with pkgs; [ gomod2nix ];
-          };
+      };
+    in
+    flake-utils.lib.eachDefaultSystem (
+      system:
+      let
+        pkgs = import nixpkgs {
+          inherit system;
+          overlays = [
+            gomod2nix.overlays.default
+            overlay
+          ];
         };
+      in
+      {
+        packages.default = pkgs.sweetbyte;
       }
-    );
+    )
+    // {
+      overlays.default = overlay;
+    };
 }
