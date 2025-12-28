@@ -6,22 +6,17 @@ before:
 
 builds:
   - id: sweetbyte
-
     env:
       - CGO_ENABLED=0
-
     flags:
       - -trimpath
-      
     ldflags:
       - -s -w
-
     goos:
       - linux
       - windows
       - darwin
       - freebsd
-
     goarch:
       - amd64
       - arm64
@@ -29,7 +24,6 @@ builds:
 
 archives:
   - formats: [tar.gz]
-
     name_template: >-
       {{ .ProjectName }}_
       {{- title .Os }}_
@@ -37,19 +31,13 @@ archives:
       {{- else if eq .Arch "386" }}i386
       {{- else }}{{ .Arch }}{{ end }}
       {{- if .Arm }}v{{ .Arm }}{{ end }}
-      
     format_overrides:
       - goos: windows
         formats: zip
 
 changelog:
-  # Sort commits by date (asc or desc)
   sort: asc
-  
-  # Use GitHub for changelog generation
   use: github
-  
-  # Group commits by type for better organization
   groups:
     - title: Features
       regexp: '^.*?feat(\([[:word:]]+\))??!?:.+$'
@@ -76,7 +64,6 @@ changelog:
       order: 999
 
   filters:
-    # Exclude commits that match these patterns
     exclude:
       - "^docs:"
       - "^test:"
@@ -95,9 +82,3 @@ changelog:
       - "^release"
       - "^prepare"
       - "^[Uu]pdate README"
-
-    # Include only commits that match these patterns (optional)
-    # include:
-    #   - "^feat:"
-    #   - "^fix:"
-    #   - "^perf:"
