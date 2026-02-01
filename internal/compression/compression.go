@@ -8,6 +8,15 @@ import (
 	"github.com/klauspost/compress/zlib"
 )
 
+type Level int
+
+const (
+	LevelNoCompression Level = iota
+	LevelBestSpeed
+	LevelDefaultCompression
+	LevelBestCompression
+)
+
 type Compression struct {
 	level int
 }
