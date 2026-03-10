@@ -45,8 +45,8 @@ func (c *Compression) Compress(data []byte) ([]byte, error) {
 		return nil, fmt.Errorf("data cannot be empty")
 	}
 
-	var buf bytes.Buffer
-	writer, err := zlib.NewWriterLevel(&buf, c.level)
+	var buffer bytes.Buffer
+	writer, err := zlib.NewWriterLevel(&buffer, c.level)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create compressor: %w", err)
 	}
@@ -59,7 +59,7 @@ func (c *Compression) Compress(data []byte) ([]byte, error) {
 		return nil, fmt.Errorf("failed to finalize compression: %w", err)
 	}
 
-	return buf.Bytes(), nil
+	return buffer.Bytes(), nil
 }
 
 func (c *Compression) Decompress(data []byte) ([]byte, error) {
@@ -72,8 +72,8 @@ func (c *Compression) Decompress(data []byte) ([]byte, error) {
 		return nil, fmt.Errorf("failed to create decompressor: %w", err)
 	}
 
-	var buf bytes.Buffer
-	if _, err := io.Copy(&buf, reader); err != nil {
+	var buffer bytes.Buffer
+	if _, err := io.Copy(&buffer, reader); err != nil {
 		return nil, fmt.Errorf("failed to decompress data: %w", err)
 	}
 
@@ -81,5 +81,5 @@ func (c *Compression) Decompress(data []byte) ([]byte, error) {
 		return nil, fmt.Errorf("failed to finalize decompression: %w", err)
 	}
 
-	return buf.Bytes(), nil
+	return buffer.Bytes(), nil
 }

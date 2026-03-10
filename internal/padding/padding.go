@@ -27,7 +27,7 @@ func (p *Padding) Pad(data []byte) ([]byte, error) {
 	}
 
 	paddingLen := p.blockSize - (len(data) % p.blockSize)
-	padding := bytes.Repeat([]byte{byte(paddingLen)}, paddingLen)
+	padding := bytes.Repeat([]byte{byte(paddingLen & 0xff)}, paddingLen)
 	return append(data, padding...), nil
 }
 
