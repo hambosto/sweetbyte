@@ -8,7 +8,7 @@ require (
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/gobwas/glob v0.2.3
 	github.com/klauspost/compress v1.19.2
-	github.com/klauspost/reedsolomon v1.14.1
+	github.com/klauspost/reedsolomon v1.14.2
 	github.com/schollz/progressbar/v3 v3.19.1
 	github.com/spf13/cobra v1.10.2
 	golang.org/x/crypto v0.55.0
