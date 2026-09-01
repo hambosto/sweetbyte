@@ -6,7 +6,7 @@ require (
 	github.com/ccoveille/go-safecast/v2 v2.0.1
 	github.com/charmbracelet/huh v1.0.0
 	github.com/charmbracelet/lipgloss v1.1.0
-	github.com/gobwas/glob v0.2.3
+	github.com/gobwas/glob v1.0.0
 	github.com/klauspost/compress v1.19.2
 	github.com/klauspost/reedsolomon v1.14.1
 	github.com/schollz/progressbar/v3 v3.19.1
